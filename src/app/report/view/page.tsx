@@ -1,7 +1,8 @@
-// deploy-1781714347
-﻿import type { CompanyMRIReport, DimensionScore, Opportunity, Risk, GrowthChannel, WeekPlan } from "@/types/company";
+import type { CompanyMRIReport, DimensionScore, Opportunity, Risk, GrowthChannel, WeekPlan } from "@/types/company";
 import Link from "next/link";
 import { Building2, BarChart3, TrendingUp, Shield, Target, Calendar, BrainCircuit, ArrowLeft, AlertTriangle, Globe, ArrowRight } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 function ScoreBar({ name, score }: { name: string; score: number }) {
   const color = score >= 75 ? "bg-emerald-500" : score >= 55 ? "bg-amber-500" : "bg-rose-500";
@@ -22,8 +23,8 @@ function buildReport(): CompanyMRIReport {
     { name: "SEO Visibility", score: 88, detail: "Excellent organic presence" },
     { name: "Community Strength", score: 72, detail: "Active developer community" },
     { name: "Founder Branding", score: 85, detail: "Founders are well-known" },
-    { name: "Hiring Momentum", score: 78, detail: "Steady hiring across depts" },
-    { name: "Developer Ecosystem", score: 92, detail: "Best-in-class dev platform" },
+    { name: "Hiring Momentum", score: 78, detail: "Steady hiring across departments" },
+    { name: "Developer Ecosystem", score: 92, detail: "Best-in-class developer platform" },
     { name: "Global Expansion", score: 80, detail: "Present in 45+ countries" },
     { name: "Product Momentum", score: 90, detail: "Regular product launches" },
   ];
@@ -70,7 +71,9 @@ function buildReport(): CompanyMRIReport {
 const knownIds = ["stripe-demo", "opengradient-demo", "monad-demo"];
 
 export default function ReportViewPage({ searchParams }: { searchParams: { id?: string } }) {
-  const reportId = searchParams?.id || ''; if (!knownIds.includes(reportId)) {
+  const reportId = searchParams?.id || "";
+
+  if (!knownIds.includes(reportId)) {
     return (
       <div className="mx-auto max-w-lg px-6 py-24 text-center">
         <AlertTriangle className="mx-auto h-12 w-12 text-gray-600" />
@@ -81,8 +84,8 @@ export default function ReportViewPage({ searchParams }: { searchParams: { id?: 
     );
   }
 
-  const report = buildReport();
-  const { growthScores, overallGrowthScore, topOpportunities, topRisks, recommendedChannels, thirtyDayPlan } = report;
+  const r = buildReport();
+  const { growthScores, overallGrowthScore, topOpportunities, topRisks, recommendedChannels, thirtyDayPlan } = r;
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -92,7 +95,7 @@ export default function ReportViewPage({ searchParams }: { searchParams: { id?: 
           <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-blue-500/30 bg-blue-500/[0.06]">
             <span className="text-3xl font-bold text-blue-400">{overallGrowthScore}</span>
           </div>
-          <span className="mt-1 text-xs text-gray-500">Overall Score</span>
+          <span className="mt-1 text-xs text-gray-500">Overall Company Score</span>
         </div>
         <div>
           <Building2 className="h-5 w-5 text-blue-400" />
@@ -101,33 +104,29 @@ export default function ReportViewPage({ searchParams }: { searchParams: { id?: 
         </div>
       </div>
       <section className="mb-10">
-        <BarChart3 className="h-4 w-4 text-purple-400" /><h2 className="text-sm font-semibold text-white ml-1">Growth Health Scores</h2>
+        <BarChart3 className="h-4 w-4 text-purple-400" /><h2 className="text-sm font-semibold text-white ml-1">Company MRI</h2>
         <div className="space-y-2.5 mt-4">{growthScores.map((s) => (<ScoreBar key={s.name} name={s.name} score={s.score} />))}</div>
       </section>
       <section className="grid gap-4 md:grid-cols-2 mb-10">
         <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/[0.03] p-5">
-          <TrendingUp className="h-4 w-4 text-emerald-400" /><h3 className="text-sm font-semibold text-white">Top Opportunity</h3>
+          <TrendingUp className="h-4 w-4 text-emerald-400" /><h3 className="text-sm font-semibold text-white mt-1">Top Opportunity</h3>
           {topOpportunities[0] && <p className="text-sm text-gray-300 mt-2">{topOpportunities[0].title}</p>}
         </div>
         <div className="rounded-xl border border-rose-500/10 bg-rose-500/[0.03] p-5">
-          <Shield className="h-4 w-4 text-rose-400" /><h3 className="text-sm font-semibold text-white">Top Risk</h3>
+          <Shield className="h-4 w-4 text-rose-400" /><h3 className="text-sm font-semibold text-white mt-1">Top Risk</h3>
           {topRisks[0] && <p className="text-sm text-gray-300 mt-2">{topRisks[0].title}</p>}
         </div>
       </section>
       <section className="mb-10">
-        <TrendingUp className="h-4 w-4 text-emerald-400" /><h2 className="text-sm font-semibold text-white ml-1">Opportunities</h2>
-        <div className="grid gap-2 mt-4">{topOpportunities.slice(0,4).map((o,i) => (<div key={i} className="flex items-start gap-3 bg-white/[0.02] border border-white/5 rounded-xl p-3"><span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10 text-[10px] font-bold text-emerald-400 shrink-0">{i+1}</span><div><p className="text-sm font-medium text-white">{o.title}</p></div></div>))}</div>
+        <h2 className="text-lg font-semibold text-white">Growth Opportunities</h2>
+        <div className="grid gap-2 mt-4">{topOpportunities.slice(0,4).map((o,i) => (<div key={i} className="flex items-start gap-3 bg-white/[0.02] border border-white/5 rounded-xl p-3"><span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10 text-[10px] font-bold text-emerald-400 shrink-0">{i+1}</span><div><p className="text-sm font-medium text-white">{o.title}</p><p className="text-xs text-gray-500 mt-0.5">{o.description}</p></div></div>))}</div>
       </section>
       <section className="mb-10">
-        <Shield className="h-4 w-4 text-rose-400" /><h2 className="text-sm font-semibold text-white ml-1">Risks</h2>
-        <div className="grid gap-2 mt-4">{topRisks.map((r,i) => (<div key={i} className="flex items-start gap-3 bg-rose-500/[0.03] border border-rose-500/10 rounded-xl p-3"><AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" /><div><p className="text-sm font-medium text-white">{r.title}</p></div></div>))}</div>
+        <h2 className="text-lg font-semibold text-white">Key Risks</h2>
+        <div className="grid gap-2 mt-4">{topRisks.map((r,i) => (<div key={i} className="flex items-start gap-3 bg-rose-500/[0.03] border border-rose-500/10 rounded-xl p-3"><AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" /><div><p className="text-sm font-medium text-white">{r.title}</p><p className="text-xs text-gray-500 mt-0.5">{r.description}</p></div></div>))}</div>
       </section>
       <section className="mb-10">
-        <Target className="h-4 w-4 text-blue-400" /><h2 className="text-sm font-semibold text-white ml-1">Recommendations</h2>
-        <div className="grid gap-2 mt-4">{recommendedChannels.slice(0,5).map((ch,i) => (<div key={i} className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl p-3"><Globe className="h-4 w-4 text-gray-400 shrink-0" /><div className="flex-1"><p className="text-sm font-medium text-white">{ch.name}</p></div><span className={`text-[10px] border rounded px-1.5 py-0.5 font-medium shrink-0 ${ch.priority==="Critical"?"border-rose-500/30 text-rose-300":ch.priority==="High"?"border-amber-500/30 text-amber-300":"border-gray-500/30 text-gray-400"}`}>{ch.priority}</span></div>))}</div>
-      </section>
-      <section className="mb-10">
-        <Calendar className="h-4 w-4 text-amber-400" /><h2 className="text-sm font-semibold text-white ml-1">Action Plan</h2>
+        <h2 className="text-lg font-semibold text-white">Next 30 Days Action Plan</h2>
         <div className="grid gap-4 md:grid-cols-2 mt-4">{thirtyDayPlan.map((w) => (<div key={w.week} className="bg-white/[0.02] border border-white/5 rounded-xl p-4"><span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Week {w.week}</span><ul className="mt-2 space-y-1">{w.actions.slice(0,2).map((a,j) => (<li key={j} className="flex items-start gap-1.5 text-xs text-gray-400"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-blue-500/50" />{a}</li>))}</ul></div>))}</div>
       </section>
       <section className="text-center rounded-xl border border-white/5 bg-white/[0.02] p-8">
@@ -138,4 +137,3 @@ export default function ReportViewPage({ searchParams }: { searchParams: { id?: 
     </div>
   );
 }
-
