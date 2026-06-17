@@ -11,7 +11,7 @@ export default function Header() {
           <span className="text-lg font-semibold tracking-tight text-white">GroIntel</span>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
-          <Link href="/report" className="text-sm text-gray-400 transition-colors hover:text-white">
+          <Link href="/analyze" className="text-sm text-gray-400 transition-colors hover:text-white">
             Report
           </Link>
           <Link href="/feed" className="text-sm text-gray-400 transition-colors hover:text-white">Feed</Link><Link href="/signals" className="text-sm text-gray-400 transition-colors hover:text-white">
@@ -34,5 +34,6 @@ export default function Header() {
     </header>
   );
 }
+
 
 
