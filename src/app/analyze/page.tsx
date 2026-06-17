@@ -51,7 +51,7 @@ export default function AnalyzePage() {
   const handleViewFullReport = () => {
     if (!result) return;
     const id = saveReport(result);
-    router.push('/report/' + id);
+    router.push('/report/view?id=' + id);
   };
 
   const showResult = result && !analyzing;
@@ -166,5 +166,6 @@ export default function AnalyzePage() {
     </div>
   );
 }
+
 
 
