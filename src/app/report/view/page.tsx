@@ -70,10 +70,10 @@ function buildReport(): CompanyMRIReport {
 
 const knownIds = ["stripe-demo", "opengradient-demo", "monad-demo"];
 
-export default function ReportViewPage({ searchParams }: { searchParams: { id?: string } }) {
-  const reportId = searchParams?.id || "";
+export default async function ReportViewPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
+  const { id: reportId } = await searchParams;
 
-  if (!knownIds.includes(reportId)) {
+  if (!reportId || !knownIds.includes(reportId)) {
     return (
       <div className="mx-auto max-w-lg px-6 py-24 text-center">
         <AlertTriangle className="mx-auto h-12 w-12 text-gray-600" />
