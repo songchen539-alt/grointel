@@ -1,5 +1,7 @@
-import { AlertTriangle, Database, Mail, Building2, Globe, Calendar, Clock } from "lucide-react";
+﻿import { cookies } from "next/headers";
+import { AlertTriangle, Database, Mail, Building2, Globe, Calendar, Clock, Lock, LogOut } from "lucide-react";
 import Link from "next/link";
+import AdminLoginForm from "@/components/AdminLoginForm";
 
 export const dynamic = "force-dynamic";
 
@@ -55,20 +57,49 @@ async function fetchLeads(): Promise<{ leads: Lead[]; error: string | null }> {
 
     const leads: Lead[] = await res.json();
     return { leads, error: null };
-  } catch (err) {
+  } catch {
     return { leads: [], error: "Network error while fetching leads." };
   }
 }
 
 export default async function AdminLeadsPage() {
-  const { leads, error } = await fetchLeads();
+  const store = await cookies();
+  const session = store.get("grointel_admin_session");
+  const auth = session?.value === "true";
+  const adminPasswordConfigured = !!process.env.ADMIN_ACCESS_PASSWORD;
 
+  // Not authenticated
+  if (!auth) {
+    if (!adminPasswordConfigured) {
+      return (
+        <div className="mx-auto max-w-sm px-6 py-24 text-center">
+          <AlertTriangle className="mx-auto h-10 w-10 text-amber-500" />
+          <h1 className="mt-4 text-lg font-semibold text-white">Not Configured</h1>
+          <p className="mt-2 text-xs text-gray-500">Admin access not configured.</p>
+          <Link href="/analyze" className="mt-6 inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300">Back to App</Link>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mx-auto max-w-sm px-6 py-24 text-center">
+        <Lock className="mx-auto h-10 w-10 text-gray-600" />
+        <h1 className="mt-4 text-lg font-semibold text-white">Admin Access</h1>
+        <p className="mt-1 text-xs text-gray-500">Enter the admin password to continue.</p>
+        <div className="mt-6">
+          <AdminLoginForm />
+        </div>
+      </div>
+    );
+  }
+
+  // Authenticated - fetch leads
+  const { leads, error } = await fetchLeads();
   const totalCount = leads.length;
   const todayCount = leads.filter((l) => isToday(l.created_at)).length;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-2">
@@ -77,12 +108,17 @@ export default async function AdminLeadsPage() {
           </div>
           <p className="text-xs text-gray-500 mt-1">Internal lead management</p>
         </div>
-        <Link href="/analyze" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
-          Back to App
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/analyze" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Back to App</Link>
+          <form action="/api/admin/logout" method="POST">
+            <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:border-white/20 transition-colors">
+              <LogOut className="h-3 w-3" />
+              Logout
+            </button>
+          </form>
+        </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
           <div className="flex items-center gap-2">
@@ -100,7 +136,6 @@ export default async function AdminLeadsPage() {
         </div>
       </div>
 
-      {/* Error State */}
       {error && (
         <div className="rounded-xl border border-red-500/20 bg-red-500/[0.03] p-6 text-center mb-8">
           <AlertTriangle className="mx-auto h-8 w-8 text-red-400" />
@@ -108,7 +143,6 @@ export default async function AdminLeadsPage() {
         </div>
       )}
 
-      {/* Table */}
       {!error && leads.length === 0 && (
         <div className="rounded-xl border border-white/5 bg-white/[0.02] p-8 text-center">
           <Database className="mx-auto h-8 w-8 text-gray-600" />
@@ -121,12 +155,9 @@ export default async function AdminLeadsPage() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-white/5">
-                <Th sort="created_at">Date</Th>
-                <Th sort="email">Email</Th>
-                <Th sort="company">Company</Th>
-                <Th sort="role">Role</Th>
-                <Th sort="report">Report</Th>
-                <Th sort="source">Source</Th>
+                {["Date", "Email", "Company", "Role", "Report", "Source"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-500">{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -165,21 +196,7 @@ export default async function AdminLeadsPage() {
           </table>
         </div>
       )}
-
-      {/* Auth placeholder */}
-      <div className="mt-8 text-center">
-        <p className="text-[10px] text-gray-600">
-          Auth coming soon.
-        </p>
-      </div>
     </div>
   );
 }
 
-function Th({ sort, children }: { sort: string; children: React.ReactNode }) {
-  return (
-    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-      {children}
-    </th>
-  );
-}
