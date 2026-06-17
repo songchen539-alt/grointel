@@ -17,51 +17,53 @@ function ScoreBar({ name, score }: { name: string; score: number }) {
   );
 }
 
-function LeadForm() {
+function LeadForm({ reportId, companyName }: { reportId: string; companyName: string }) {
   return (
-    <div id="lead-form">
+    <div>
       <form
-        action=""
-        method="GET"
         onSubmit={async (e) => {
           e.preventDefault();
           const form = e.currentTarget;
+          const btn = form.querySelector("button") as HTMLButtonElement;
           const email = (form.elements.namedItem("email") as HTMLInputElement).value;
           const name = (form.elements.namedItem("name") as HTMLInputElement).value;
           const role = (form.elements.namedItem("role") as HTMLInputElement).value;
           if (!email || !email.includes("@")) return;
-          form.classList.add("hidden");
-          document.getElementById("lead-success")?.classList.remove("hidden");
+          btn.disabled = true;
+          btn.innerHTML = "Submitting...";
+          try {
+            const res = await fetch("/api/report-leads", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reportId, companyName, workEmail: email, role }),
+            });
+            const data = await res.json();
+            if (data.success) {
+              form.classList.add("hidden");
+              document.getElementById("lead-success")?.classList.remove("hidden");
+            } else {
+              alert(data.error || "Something went wrong");
+              btn.disabled = false;
+              btn.innerHTML = "Request Full Report";
+            }
+          } catch {
+            alert("Network error. Please try again.");
+            btn.disabled = false;
+            btn.innerHTML = "Request Full Report";
+          }
         }}
         className="space-y-3"
       >
-        <input
-          type="email"
-          name="email"
-          placeholder="Work email"
-          required
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50"
-        />
+        <input type="email" name="email" placeholder="Work email" required
+          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50" />
         <div className="grid grid-cols-2 gap-3">
-          <input
-            type="text"
-            name="name"
-            placeholder="Company name"
-            required
-            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50"
-          />
-          <input
-            type="text"
-            name="role"
-            placeholder="Your role"
-            required
-            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50"
-          />
+          <input type="text" name="name" placeholder="Company name" required
+            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50" />
+          <input type="text" name="role" placeholder="Your role" required
+            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50" />
         </div>
-        <button
-          type="submit"
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-medium text-white hover:from-blue-500 hover:to-purple-500 transition-all"
-        >
+        <button type="submit"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-medium text-white hover:from-blue-500 hover:to-purple-500 transition-all">
           <Send className="h-4 w-4" />
           Request Full Report
         </button>
@@ -153,7 +155,7 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
       <p className="mt-2 text-sm text-gray-500 text-center max-w-md mx-auto">Get deeper signals, competitor tracking, market entry recommendations and a 30-day growth action plan.</p>
       <div className="mt-6 max-w-md mx-auto">
         
-        <LeadForm />
+        <LeadForm reportId={reportId} companyName="Stripe" />
       </div>
     </section>
   );
@@ -217,6 +219,8 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
     </div>
   );
 }
+
+
 
 
 
