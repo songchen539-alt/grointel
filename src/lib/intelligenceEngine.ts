@@ -1,5 +1,7 @@
 // GroIntel Intelligence Engine — Central Data Hub
 // All homepage data flows through this module.
+// NOTE: No Unicode special characters — they corrupt in Vercel production.
+// Use plain ASCII only: -, >, (c), [icon-text] instead of emoji.
 
 export interface IntelligenceScore {
   name: string;
@@ -43,14 +45,14 @@ export const companyScores: IntelligenceScore[] = [
 ];
 
 export const liveSignals: SignalItem[] = [
-  { type: "Hiring Surge", icon: "👥", company: "OpenGradient", confidence: 92, impact: "High", whyItMatters: "8 new engineering roles in AI infrastructure signals strong product investment and scaling phase.", time: "2h ago" },
-  { type: "Funding", icon: "💰", company: "Monad", confidence: 95, impact: "High", whyItMatters: "$50M Series B from top-tier VCs positions Monad as the leading EVM-compatible L1 alternative.", time: "4h ago" },
-  { type: "Traffic Growth", icon: "📈", company: "Phantom", confidence: 78, impact: "Medium", whyItMatters: "Organic traffic up 45% month-over-month driven by cross-chain feature launch and viral social content.", time: "6h ago" },
-  { type: "Technology Migration", icon: "🔄", company: "Squads", confidence: 71, impact: "Medium", whyItMatters: "Migration from basic multisig to smart accounts signals institutional product maturity and enterprise readiness.", time: "8h ago" },
-  { type: "Pricing Change", icon: "💵", company: "Fun.xyz", confidence: 65, impact: "Low", whyItMatters: "New freemium tier targeting Southeast Asian user acquisition signals regional expansion strategy.", time: "12h ago" },
-  { type: "Executive Hire", icon: "👤", company: "Immunefi", confidence: 88, impact: "High", whyItMatters: "New Chief Revenue Officer from HackerOne signals enterprise sales motion expansion beyond crypto-native market.", time: "14h ago" },
-  { type: "Product Launch", icon: "🚀", company: "NEAR", confidence: 85, impact: "High", whyItMatters: "Sharding upgrade improves throughput by 10x, enabling new developer use cases and enterprise adoption.", time: "1d ago" },
-  { type: "Strategic Partnership", icon: "🤝", company: "Sui", confidence: 82, impact: "Medium", whyItMatters: "Gaming partnership with top Korean studio opens Asian market and drives new developer onboarding pipeline.", time: "1d ago" },
+  { type: "Hiring Surge", icon: "[team]", company: "OpenGradient", confidence: 92, impact: "High", whyItMatters: "8 new engineering roles in AI infrastructure signals strong product investment and scaling phase.", time: "2h ago" },
+  { type: "Funding", icon: "[fund]", company: "Monad", confidence: 95, impact: "High", whyItMatters: "$50M Series B from top-tier VCs positions Monad as the leading EVM-compatible L1 alternative.", time: "4h ago" },
+  { type: "Traffic Growth", icon: "[chart]", company: "Phantom", confidence: 78, impact: "Medium", whyItMatters: "Organic traffic up 45% month-over-month driven by cross-chain feature launch and viral social content.", time: "6h ago" },
+  { type: "Technology Migration", icon: "[sync]", company: "Squads", confidence: 71, impact: "Medium", whyItMatters: "Migration from basic multisig to smart accounts signals institutional product maturity and enterprise readiness.", time: "8h ago" },
+  { type: "Pricing Change", icon: "[dollar]", company: "Fun.xyz", confidence: 65, impact: "Low", whyItMatters: "New freemium tier targeting Southeast Asian user acquisition signals regional expansion strategy.", time: "12h ago" },
+  { type: "Executive Hire", icon: "[user]", company: "Immunefi", confidence: 88, impact: "High", whyItMatters: "New Chief Revenue Officer from HackerOne signals enterprise sales motion expansion beyond crypto-native market.", time: "14h ago" },
+  { type: "Product Launch", icon: "[rocket]", company: "NEAR", confidence: 85, impact: "High", whyItMatters: "Sharding upgrade improves throughput by 10x, enabling new developer use cases and enterprise adoption.", time: "1d ago" },
+  { type: "Strategic Partnership", icon: "[handshake]", company: "Sui", confidence: 82, impact: "Medium", whyItMatters: "Gaming partnership with top Korean studio opens Asian market and drives new developer onboarding pipeline.", time: "1d ago" },
 ];
 
 export const growthRecommendations: GrowthRecommendation[] = [
@@ -63,7 +65,7 @@ export const growthRecommendations: GrowthRecommendation[] = [
 export const pipelineSteps = [
   { name: "Website", description: "Enter any company website to begin deep intelligence analysis", icon: "01" },
   { name: "Signal Collection", description: "AI scans 50+ public data sources across the open web", icon: "02" },
-  { name: "Knowledge Graph", description: "Relationships are mapped — people, products, markets, technologies", icon: "03" },
+  { name: "Knowledge Graph", description: "Relationships are mapped - people, products, markets, technologies", icon: "03" },
   { name: "AI Reasoning", description: "Multi-model inference engine analyzes company trajectory", icon: "04" },
   { name: "Company MRI", description: "Comprehensive report with scores, benchmarks, and risk assessment", icon: "05" },
   { name: "Growth Recommendations", description: "Prioritized actions with expected outcomes and ROI estimates", icon: "06" },
@@ -79,10 +81,10 @@ export const graphCategories = [
 ];
 
 export const whyGroIntelPillars = [
-  { title: "Company MRI", description: "Comprehensive intelligence reports that analyze every dimension of a company — from financial health to technology stack, market position to team dynamics. Understand any company in minutes, not weeks.", metric: "10,000+", metricLabel: "Companies Analyzed", icon: "🔍" },
-  { title: "Signal Intelligence", description: "Real-time detection of growth signals, competitive moves, market shifts, and emerging risks across 50+ public data sources. Know what matters before it becomes public knowledge.", metric: "50+", metricLabel: "Data Sources", icon: "📡" },
-  { title: "Company Graph", description: "A living knowledge graph of business relationships connecting companies, people, markets, technologies, and signals into a single intelligence layer. See the full picture, not isolated data points.", metric: "1M+", metricLabel: "Relationships", icon: "🕸️" },
-  { title: "Growth Intelligence", description: "AI-powered recommendations that tell companies exactly what actions to take, which markets to enter, and how to execute their growth strategy. Stop guessing. Start growing.", metric: "92%", metricLabel: "Accuracy Rate", icon: "🎯" },
+  { title: "Company MRI", description: "Comprehensive intelligence reports that analyze every dimension of a company - from financial health to technology stack, market position to team dynamics. Understand any company in minutes, not weeks.", metric: "10,000+", metricLabel: "Companies Analyzed", icon: "[search]" },
+  { title: "Signal Intelligence", description: "Real-time detection of growth signals, competitive moves, market shifts, and emerging risks across 50+ public data sources. Know what matters before it becomes public knowledge.", metric: "50+", metricLabel: "Data Sources", icon: "[signal]" },
+  { title: "Company Graph", description: "A living knowledge graph of business relationships connecting companies, people, markets, technologies, and signals into a single intelligence layer. See the full picture, not isolated data points.", metric: "1M+", metricLabel: "Relationships", icon: "[graph]" },
+  { title: "Growth Intelligence", description: "AI-powered recommendations that tell companies exactly what actions to take, which markets to enter, and how to execute their growth strategy. Stop guessing. Start growing.", metric: "92%", metricLabel: "Accuracy Rate", icon: "[target]" },
 ];
 
 export const enterpriseFeatures = [

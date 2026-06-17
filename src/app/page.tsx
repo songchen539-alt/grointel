@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -100,8 +100,7 @@ export default function Home() {
             </form>
             <div className="flex items-center gap-6 mt-5">
               <a href="/analyze?url=opengradient.com" className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline underline-offset-4">
-                View Company MRI →
-              </a>
+                View Company MRI 鈫?              </a>
             </div>
             <p className="mt-8 text-xs text-gray-600 flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/60" />
@@ -129,7 +128,7 @@ export default function Home() {
                   <ScoreRingFull score={s.score} size={isOverall ? 80 : 64} label={s.name} detail={s.detail} />
                   <div className="mt-3 flex items-center justify-center gap-1.5">
                     <span className={`text-[10px] font-medium ${s.trend === "up" ? "text-emerald-400" : s.trend === "down" ? "text-rose-400" : "text-gray-500"}`}>
-                      {s.trend === "up" ? "↑" : s.trend === "down" ? "↓" : "→"} {s.trend}
+                      {s.trend === "up" ? "^" : s.trend === "down" ? "v" : "-"} {s.trend}
                     </span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded ${
                       s.status === "excellent" ? "bg-emerald-500/10 text-emerald-300" :
@@ -380,3 +379,6 @@ export default function Home() {
     </div>
   );
 }
+
+
+

@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "GroIntel — The Operating System for Company Intelligence",
+  title: "GroIntel | The Operating System for Company Intelligence",
   description: "Analyze any company. Discover opportunities. Predict risks. Make better growth decisions with AI.",
 };
 
@@ -19,3 +19,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
