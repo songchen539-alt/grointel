@@ -1,6 +1,6 @@
-import type { CompanyMRIReport, DimensionScore, Opportunity, Risk, GrowthChannel, WeekPlan } from "@/types/company";
 import Link from "next/link";
 import LeadForm from "@/components/LeadForm";
+import { getReport } from "@/lib/reportStore";
 import { Building2, BarChart3, TrendingUp, Shield, Target, Calendar, BrainCircuit, ArrowLeft, AlertTriangle, Globe, ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -18,63 +18,12 @@ function ScoreBar({ name, score }: { name: string; score: number }) {
   );
 }
 
-function buildReport(): CompanyMRIReport {
-  const growthScores: DimensionScore[] = [
-    { name: "Market Awareness", score: 94, detail: "Strong market presence" },
-    { name: "SEO Visibility", score: 88, detail: "Excellent organic presence" },
-    { name: "Community Strength", score: 72, detail: "Active developer community" },
-    { name: "Founder Branding", score: 85, detail: "Founders are well-known" },
-    { name: "Hiring Momentum", score: 78, detail: "Steady hiring across departments" },
-    { name: "Developer Ecosystem", score: 92, detail: "Best-in-class developer platform" },
-    { name: "Global Expansion", score: 80, detail: "Present in 45+ countries" },
-    { name: "Product Momentum", score: 90, detail: "Regular product launches" },
-  ];
-  const overall = Math.round(growthScores.reduce((s, d) => s + d.score, 0) / growthScores.length);
-  const opportunities: Opportunity[] = [
-    { title: "Expand in Southeast Asia", description: "SEA digital payments growing 25% CAGR", confidence: 82, expectedImpact: "High", difficulty: "Medium", estimatedTime: "3-4 months" },
-    { title: "Deepen Enterprise Suite", description: "Enterprise revenue represents 60% of opportunity", confidence: 85, expectedImpact: "High", difficulty: "Hard", estimatedTime: "6-8 months" },
-    { title: "Embedded Finance API", description: "Embedded finance market projected to reach $185B", confidence: 78, expectedImpact: "High", difficulty: "Medium", estimatedTime: "4-6 months" },
-    { title: "Developer Advocacy Program", description: "Dev communities drive 3x higher retention", confidence: 75, expectedImpact: "Medium", difficulty: "Easy", estimatedTime: "1-2 months" },
-    { title: "Strategic Acquisitions", description: "Acquire complementary fintech tools", confidence: 68, expectedImpact: "High", difficulty: "Hard", estimatedTime: "6-12 months" },
-  ];
-  const risks: Risk[] = [
-    { title: "Intense Competition", description: "PayPal, Adyen, Square competing aggressively", severity: "High", recommendation: "Accelerate platform differentiation" },
-    { title: "Regulatory Pressure", description: "Global payment regulations becoming more complex", severity: "Medium", recommendation: "Invest in compliance automation" },
-    { title: "Margin Compression", description: "Competition driving down payment margins", severity: "Medium", recommendation: "Focus on value-added services" },
-  ];
-  const channels: GrowthChannel[] = [
-    { name: "Developer Communities", category: "Developer", priority: "Critical", reason: "Core acquisition channel", estimatedROI: "Very High" },
-    { name: "Enterprise Sales", category: "Enterprise", priority: "Critical", reason: "Largest revenue opportunity", estimatedROI: "Very High" },
-    { name: "Technical Blog / SEO", category: "Content", priority: "High", reason: "Long-term organic acquisition", estimatedROI: "High" },
-    { name: "Industry Conferences", category: "Events", priority: "Medium", reason: "Enterprise decision-maker presence", estimatedROI: "Medium" },
-    { name: "Podcast Appearances", category: "Podcast", priority: "Medium", reason: "Thought leadership", estimatedROI: "Medium" },
-  ];
-  const plan: WeekPlan[] = [
-    { week: 1, goals: ["Assess SEA market"], actions: ["Research top 5 SEA markets", "Identify enterprise prospects"], expectedResult: "Market entry strategy" },
-    { week: 2, goals: ["Launch content push"], actions: ["Publish 2 technical blog posts", "Reach out to 10 enterprise prospects"], expectedResult: "Enterprise meetings booked" },
-    { week: 3, goals: ["Scale partnerships"], actions: ["Finalize 2 pilot agreements", "Launch partner program"], expectedResult: "Pilot agreements signed" },
-    { week: 4, goals: ["Measure and plan"], actions: ["Analyze channel performance", "Generate Q3 growth plan"], expectedResult: "Data-driven Q3 plan" },
-  ];
-  return {
-    companySnapshot: { company: "Stripe", industry: "Financial Technology", businessModel: "B2B/B2C Payments", headquarters: "San Francisco, CA", estimatedStage: "Growth Stage", fundingStage: "Growth ($50M+)", employeeSize: "500+", targetCustomer: "Online Businesses", productDescription: "Online payment platform", summary: "Stripe is in mature growth stage" },
-    growthScores,
-    overallGrowthScore: overall,
-    benchmark: { yourScore: overall, industryAverage: 72, top10: 92, bottom20: 55, dimensions: [] },
-    topOpportunities: opportunities,
-    topRisks: risks,
-    recommendedChannels: channels,
-    similarCompanies: [],
-    thirtyDayPlan: plan,
-    summary: { biggestOpportunity: "Expand into SEA markets", biggestWeakness: "Margin compression risk", oneThing: "Launch SEA market entry program" },
-  };
-}
-
-const knownIds = ["stripe-demo", "opengradient-demo", "monad-demo"];
-
 export default async function ReportViewPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const { id: reportId } = await searchParams;
 
-  if (!reportId || !knownIds.includes(reportId)) {
+  const r = reportId ? getReport(reportId) : undefined;
+
+  if (!r) {
     return (
       <div className="mx-auto max-w-lg px-6 py-24 text-center">
         <AlertTriangle className="mx-auto h-12 w-12 text-gray-600" />
@@ -85,15 +34,15 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
     );
   }
 
-  const r = buildReport();
-  const { growthScores, overallGrowthScore, topOpportunities, topRisks, thirtyDayPlan } = r;
+  const { companySnapshot, growthScores, overallGrowthScore, topOpportunities, topRisks, thirtyDayPlan } = r;
+  const companyName = companySnapshot.company;
 
   const ctaSection = (
     <section className="rounded-xl border border-white/5 bg-gradient-to-br from-blue-500/[0.04] to-purple-500/[0.04] p-8">
       <h3 className="text-lg font-semibold text-white text-center">Want the full Company Intelligence report?</h3>
       <p className="mt-2 text-sm text-gray-500 text-center max-w-md mx-auto">Get deeper signals, competitor tracking, market entry recommendations and a 30-day growth action plan.</p>
       <div className="mt-6 max-w-md mx-auto">
-        <LeadForm reportId={reportId} companyName="Stripe" />
+        <LeadForm reportId={reportId || ""} companyName={companyName} />
       </div>
     </section>
   );
@@ -114,8 +63,8 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
         </div>
         <div>
           <Building2 className="h-5 w-5 text-blue-400" />
-          <h1 className="text-2xl font-bold text-white">Stripe</h1>
-          <p className="text-sm text-gray-500">Financial Technology</p>
+          <h1 className="text-2xl font-bold text-white">{companySnapshot.company}</h1>
+          <p className="text-sm text-gray-500">{companySnapshot.industry}</p>
         </div>
       </div>
 

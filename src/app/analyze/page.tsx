@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { generateCompanyMRIReport } from "@/lib/analysisEngine";
+import { generateReport } from "@/lib/intelligence/reportGenerator";
 import { saveReport } from "@/lib/reportStore";
+import type { CompanyMRI } from "@/lib/intelligence/types";
 import {
   Search, Loader2, BrainCircuit, Building2, TrendingUp, Shield,
   Target, Globe, ArrowRight, Check, Activity, Users,
@@ -14,7 +15,7 @@ export default function AnalyzePage() {
   const [inputUrl, setInputUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<ReturnType<typeof generateCompanyMRIReport> | null>(null);
+  const [result, setResult] = useState<CompanyMRI | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -22,7 +23,7 @@ export default function AnalyzePage() {
       const u = params.get("url") || "";
       if (u) {
         setInputUrl(u);
-        setResult(generateCompanyMRIReport(u));
+        setResult(generateReport(u));
       }
     }, 0);
     return () => clearTimeout(timer);
@@ -43,14 +44,14 @@ export default function AnalyzePage() {
     setResult(null);
     setTimeout(() => {
       setAnalyzing(false);
-      setResult(generateCompanyMRIReport(url));
+      setResult(generateReport(url));
       window.history.pushState({}, "", `/analyze?url=${encodeURIComponent(url)}`);
     }, 800);
   };
 
   const handleViewFullReport = () => {
     if (!result) return;
-    const id = saveReport(result);
+    const id = saveReport(result.website);
     router.push('/report/view?id=' + id);
   };
 
@@ -79,7 +80,7 @@ export default function AnalyzePage() {
           {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
           <div className="mt-4 flex items-center justify-center gap-3 text-xs text-gray-600">
             <span>Try:</span>
-            {["stripe.com", "opengradient.com", "monad.xyz"].map((d) => (
+            {["stripe.com", "opengradient.ai", "monad.xyz"].map((d) => (
               <button key={d} onClick={() => { setInputUrl(d); setError(""); }}
                 className="text-gray-400 hover:text-white underline underline-offset-2 transition-colors">{d}</button>
             ))}
@@ -116,17 +117,22 @@ export default function AnalyzePage() {
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
               <div className="flex flex-col items-center">
                 <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-blue-500/30 bg-blue-500/[0.06]">
-                  <span className="text-3xl font-bold text-blue-400">{result.overallGrowthScore}</span>
+                  <span className="text-3xl font-bold text-blue-400">{result.overallScore}</span>
                 </div>
                 <span className="mt-1 text-xs text-gray-500">Overall Score</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">{result.companySnapshot.company}</h2>
-                <p className="text-sm text-gray-500">{result.companySnapshot.industry} - {result.companySnapshot.headquarters}</p>
+                <h2 className="text-2xl font-bold text-white">{result.companyName}</h2>
+                <p className="text-sm text-gray-500">{result.industry} - {result.stage}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {result.growthScores.slice(0, 4).map((s) => (
+              {[
+                { name: "Growth Score", score: result.growthScore },
+                { name: "Market Readiness", score: result.marketReadiness },
+                { name: "Technology Health", score: result.technologyHealth },
+                { name: "Expansion Readiness", score: result.expansionReadiness },
+              ].map((s) => (
                 <div key={s.name} className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] uppercase tracking-wider text-gray-500">{s.name}</span>
@@ -141,14 +147,22 @@ export default function AnalyzePage() {
             <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/[0.03] p-5">
               <TrendingUp className="h-4 w-4 text-emerald-400" />
               <h3 className="text-sm font-semibold text-white mt-1">Top Opportunity</h3>
-              {result.topOpportunities[0] && <p className="text-sm text-gray-300 mt-1">{result.topOpportunities[0].title}</p>}
+              {result.growthOpportunities[0] && <p className="text-sm text-gray-300 mt-1">{result.growthOpportunities[0].title}</p>}
             </div>
             <div className="rounded-xl border border-rose-500/10 bg-rose-500/[0.03] p-5">
               <Shield className="h-4 w-4 text-rose-400" />
               <h3 className="text-sm font-semibold text-white mt-1">Top Risk</h3>
-              {result.topRisks[0] && <p className="text-sm text-gray-300 mt-1">{result.topRisks[0].title}</p>}
+              {result.keyRisks[0] && <p className="text-sm text-gray-300 mt-1">{result.keyRisks[0].title}</p>}
             </div>
           </section>
+
+          <div className="text-center">
+            <button onClick={handleViewFullReport}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3.5 text-sm font-medium text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-500 hover:to-purple-500 transition-all">
+              <Globe className="h-4 w-4" />
+              Generate Full Report
+            </button>
+          </div>
         </div>
       )}
 
@@ -166,7 +180,3 @@ export default function AnalyzePage() {
     </div>
   );
 }
-
-
-
-
