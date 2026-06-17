@@ -1,3 +1,4 @@
+// deploy-1781714347
 ﻿import type { CompanyMRIReport, DimensionScore, Opportunity, Risk, GrowthChannel, WeekPlan } from "@/types/company";
 import Link from "next/link";
 import { Building2, BarChart3, TrendingUp, Shield, Target, Calendar, BrainCircuit, ArrowLeft, AlertTriangle, Globe, ArrowRight } from "lucide-react";
