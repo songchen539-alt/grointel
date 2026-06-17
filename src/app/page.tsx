@@ -372,13 +372,14 @@ export default function Home() {
             ))}
           </div>
           <div className="mt-16 pt-6 border-t border-white/5 text-xs text-gray-600">
-            &copy; {new Date().getFullYear()} GroIntel. All rights reserved.
+            (C) {new Date().getFullYear()} GroIntel. All rights reserved.
           </div>
         </div>
       </footer>
     </div>
   );
 }
+
 
 
 
