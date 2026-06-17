@@ -32,7 +32,7 @@ export default function FeedPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Signals Feed</h1>
           <p className="text-sm text-gray-500">
-            {signals.length} signals today — {highCount} high priority
+            {signals.length} signals today - {highCount} high priority
           </p>
         </div>
       </div>

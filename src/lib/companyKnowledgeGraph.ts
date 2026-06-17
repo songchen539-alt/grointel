@@ -1,4 +1,4 @@
-// GroIntel Company Knowledge Graph — Mock Data
+// GroIntel Company Knowledge Graph - Mock Data
 // 10+ companies with complete profiles.
 // Replace with database queries in production.
 

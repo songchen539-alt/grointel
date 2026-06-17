@@ -100,7 +100,7 @@ export default function Home() {
             </form>
             <div className="flex items-center gap-6 mt-5">
               <a href="/analyze?url=opengradient.com" className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline underline-offset-4">
-                View Company MRI 鈫?              </a>
+                View Company MRI              </a>
             </div>
             <p className="mt-8 text-xs text-gray-600 flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/60" />
@@ -379,6 +379,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 
 

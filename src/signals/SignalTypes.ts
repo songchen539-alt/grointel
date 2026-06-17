@@ -1,5 +1,5 @@
-// GroIntel Signal Types
-// Independent module — replace with real data sources later.
+// GroIntel Signal Types - ASCII-safe
+// No emoji, no Unicode - all plain ASCII for safe Vercel production builds.
 
 export type SignalType =
   | "Funding"
@@ -21,8 +21,8 @@ export interface FeedSignal {
   companyUrl: string;
   type: SignalType;
   priority: SignalPriority;
-  confidence: number;   // 0-100
-  publishedAt: string;  // ISO date
+  confidence: number;
+  publishedAt: string;
   summary: string;
 }
 
@@ -32,18 +32,18 @@ export interface SignalFeed {
 }
 
 export const SIGNAL_TYPE_CONFIG: Record<SignalType, { icon: string; color: string; description: string }> = {
-  "Funding":           { icon: "💰", color: "emerald",  description: "New funding round raised" },
-  "Hiring":            { icon: "👥", color: "blue",     description: "Active hiring across departments" },
-  "Expansion":         { icon: "🌍", color: "violet",   description: "Geographic or vertical expansion" },
-  "Product Launch":    { icon: "🚀", color: "amber",    description: "New product or major feature release" },
-  "Partnership":       { icon: "🤝", color: "cyan",     description: "Strategic partnership or integration" },
-  "Community Growth":  { icon: "📈", color: "green",    description: "Community size or engagement growth" },
-  "SEO Growth":        { icon: "🔍", color: "orange",   description: "Organic search visibility increase" },
-  "GitHub Activity":   { icon: "📦", color: "slate",    description: "Open-source contributions or stars" },
-  "Media Coverage":    { icon: "📰", color: "rose",     description: "Major press or analyst coverage" },
-  "Conference":        { icon: "🎤", color: "purple",   description: "Speaking at or hosting events" },
+  "Funding":           { icon: "$", color: "emerald",  description: "New funding round raised" },
+  "Hiring":            { icon: "+", color: "blue",     description: "Active hiring across departments" },
+  "Expansion":         { icon: ">", color: "violet",   description: "Geographic or vertical expansion" },
+  "Product Launch":    { icon: "!", color: "amber",    description: "New product or major feature release" },
+  "Partnership":       { icon: "&", color: "cyan",     description: "Strategic partnership or integration" },
+  "Community Growth":  { icon: "#", color: "green",    description: "Community size or engagement growth" },
+  "SEO Growth":        { icon: "@", color: "orange",   description: "Organic search visibility increase" },
+  "GitHub Activity":   { icon: "*", color: "slate",    description: "Open-source contributions or stars" },
+  "Media Coverage":    { icon: "%", color: "rose",     description: "Major press or analyst coverage" },
+  "Conference":        { icon: "~", color: "purple",   description: "Speaking at or hosting events" },
 };
 
 export function getSignalTypeConfig(type: SignalType) {
-  return SIGNAL_TYPE_CONFIG[type] || { icon: "📌", color: "gray", description: "Signal" };
+  return SIGNAL_TYPE_CONFIG[type] || { icon: "?", color: "gray", description: "Signal" };
 }

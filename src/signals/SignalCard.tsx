@@ -1,4 +1,4 @@
-import { SignalType, SignalPriority, getSignalTypeConfig } from "./SignalTypes";
+﻿import { SignalType, SignalPriority, getSignalTypeConfig } from "./SignalTypes";
 
 const colorMap: Record<string, { bg: string; text: string; dot: string }> = {
   emerald:  { bg: "bg-emerald-500/15", text: "text-emerald-300", dot: "bg-emerald-400" },
@@ -25,7 +25,7 @@ export function SignalBadge({ type }: { type: SignalType }) {
   const c = colorMap[config.color] || colorMap.gray;
   return (
     <span className={`inline-flex items-center gap-1 rounded-md ${c.bg} ${c.text} px-2 py-0.5 text-[11px] font-medium`}>
-      <span className="text-xs">{config.icon}</span>
+      <span className="text-xs">{''}</span>
       {type}
     </span>
   );
@@ -49,7 +49,7 @@ export function SignalCard({ signal, compact }: { signal: import("./SignalTypes"
   if (compact) {
     return (
       <div className={`flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2.5 ${priorityBorder[signal.priority]}`}>
-        <span className="text-base">{config.icon}</span>
+        <span className="text-base">{''}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-white truncate">{signal.companyName}</span>
@@ -70,7 +70,7 @@ export function SignalCard({ signal, compact }: { signal: import("./SignalTypes"
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
           <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${c.bg}`}>
-            <span className="text-base">{config.icon}</span>
+            <span className="text-base">{''}</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -102,3 +102,4 @@ export function SignalFeed({ signals }: { signals: import("./SignalTypes").FeedS
     </div>
   );
 }
+

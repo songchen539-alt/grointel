@@ -21,7 +21,7 @@ const summaryTemplates: Record<SignalType, string[]> = {
   "Hiring": [
     "Hiring %d+ engineers across %s and product teams",
     "Opened %d new positions in growth and %s",
-    "Building out %s team — %d roles currently open",
+    "Building out %s team - %d roles currently open",
   ],
   "Expansion": [
     "Expanding into %s market with local team",
@@ -29,7 +29,7 @@ const summaryTemplates: Record<SignalType, string[]> = {
     "Opening new office in %s to serve regional clients",
   ],
   "Product Launch": [
-    "Launched %s — a new platform for %s teams",
+    "Launched %s - a new platform for %s teams",
     "Released v%d of core product with major %s improvements",
     "Introduced %s feature to address enterprise needs",
   ],
@@ -55,13 +55,13 @@ const summaryTemplates: Record<SignalType, string[]> = {
   ],
   "Media Coverage": [
     "Featured in %s for breakthrough %s technology",
-    "Covered by %s — \"The future of %s\"",
+    "Covered by %s - \"The future of %s\"",
     "Profile in %s discussing %s industry trends",
   ],
   "Conference": [
     "Speaking at %s conference next month",
-    "Hosting %s — the premier event for %s builders",
-    "Presenting at %s — expecting %d+ attendees",
+    "Hosting %s - the premier event for %s builders",
+    "Presenting at %s - expecting %d+ attendees",
   ],
 };
 

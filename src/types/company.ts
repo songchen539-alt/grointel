@@ -1,4 +1,4 @@
-// GroIntel Company Knowledge Graph — Type Definitions
+// GroIntel Company Knowledge Graph - Type Definitions
 // Database-ready schema for all Company data.
 
 export interface SocialLinks {

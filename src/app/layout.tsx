@@ -1,7 +1,6 @@
 ﻿import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "GroIntel | The Operating System for Company Intelligence",
@@ -14,7 +13,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-black text-white antialiased">
         <Header />
         <main className="pt-16">{children}</main>
-        <Footer />
       </body>
     </html>
   );

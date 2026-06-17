@@ -1,6 +1,6 @@
-// GroIntel Intelligence Engine — Central Data Hub
+// GroIntel Intelligence Engine - Central Data Hub
 // All homepage data flows through this module.
-// NOTE: No Unicode special characters — they corrupt in Vercel production.
+// NOTE: No Unicode special characters - they corrupt in Vercel production.
 // Use plain ASCII only: -, >, (c), [icon-text] instead of emoji.
 
 export interface IntelligenceScore {

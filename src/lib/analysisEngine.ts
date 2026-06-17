@@ -241,7 +241,7 @@ function generateSummary(company: Company, scores: { name: string; score: number
 
   return {
     biggestOpportunity: `Leverage your strong ${strongest.name.toLowerCase()} (${strongest.score}/100) to expand into adjacent growth channels and new markets.`,
-    biggestWeakness: `Address your weak ${weakest.name.toLowerCase()} (${weakest.score}/100) — this is the critical gap holding back your overall growth score.`,
+    biggestWeakness: `Address your weak ${weakest.name.toLowerCase()} (${weakest.score}/100) - this is the critical gap holding back your overall growth score.`,
     oneThing: `Run a focused 30-day program to improve ${weakest.name.toLowerCase()}. Set a target of reaching 60+ within the next quarter.`,
   };
 }
