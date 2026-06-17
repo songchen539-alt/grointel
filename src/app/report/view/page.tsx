@@ -1,6 +1,8 @@
 import Link from "next/link";
 import LeadForm from "@/components/LeadForm";
 import { getReport } from "@/lib/reportStore";
+import { loadReportFromSupabase } from "@/lib/intelligence/supabaseLoader";
+import { convertToReportFormat } from "@/lib/intelligence/supabaseAdapter";
 import { Building2, BarChart3, TrendingUp, Shield, Target, Calendar, BrainCircuit, ArrowLeft, AlertTriangle, Globe, ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +23,35 @@ function ScoreBar({ name, score }: { name: string; score: number }) {
 export default async function ReportViewPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const { id: reportId } = await searchParams;
 
-  const r = reportId ? getReport(reportId) : undefined;
+  if (!reportId) {
+    return (
+      <div className="mx-auto max-w-lg px-6 py-24 text-center">
+        <AlertTriangle className="mx-auto h-12 w-12 text-gray-600" />
+        <h1 className="mt-4 text-2xl font-bold text-white">Report Not Found</h1>
+        <p className="mt-2 text-sm text-gray-500">No report ID provided.</p>
+        <Link href="/analyze" className="mt-6 inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"><ArrowLeft className="h-4 w-4" /> Return to Analyze</Link>
+      </div>
+    );
+  }
+
+  // Try Supabase first
+  let r;
+  let dataSource = "local";
+
+  try {
+    const mri = await loadReportFromSupabase(reportId);
+    if (mri) {
+      r = convertToReportFormat(mri);
+      dataSource = "supabase";
+    }
+  } catch {
+    // Fallback to local
+  }
+
+  // Fallback to local engine
+  if (!r) {
+    r = getReport(reportId);
+  }
 
   if (!r) {
     return (
@@ -42,7 +72,7 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
       <h3 className="text-lg font-semibold text-white text-center">Want the full Company Intelligence report?</h3>
       <p className="mt-2 text-sm text-gray-500 text-center max-w-md mx-auto">Get deeper signals, competitor tracking, market entry recommendations and a 30-day growth action plan.</p>
       <div className="mt-6 max-w-md mx-auto">
-        <LeadForm reportId={reportId || ""} companyName={companyName} />
+        <LeadForm reportId={reportId} companyName={companyName} />
       </div>
     </section>
   );
@@ -64,7 +94,7 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
         <div>
           <Building2 className="h-5 w-5 text-blue-400" />
           <h1 className="text-2xl font-bold text-white">{companySnapshot.company}</h1>
-          <p className="text-sm text-gray-500">{companySnapshot.industry}</p>
+          <p className="text-sm text-gray-500">{companySnapshot.industry} {dataSource === "supabase" ? "- (from database)" : ""}</p>
         </div>
       </div>
 
