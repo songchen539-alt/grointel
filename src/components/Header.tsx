@@ -14,7 +14,7 @@ export default function Header() {
           <Link href="/report" className="text-sm text-gray-400 transition-colors hover:text-white">
             Report
           </Link>
-          <Link href="/feed" className="text-sm text-gray-400 transition-colors hover:text-white">\n            Feed\n          </Link>\n          <Link href="/signals" className="text-sm text-gray-400 transition-colors hover:text-white">
+          <Link href="/feed" className="text-sm text-gray-400 transition-colors hover:text-white">Feed</Link><Link href="/signals" className="text-sm text-gray-400 transition-colors hover:text-white">
             Signals
           </Link>
           <Link href="/about" className="text-sm text-gray-400 transition-colors hover:text-white">
@@ -34,4 +34,5 @@ export default function Header() {
     </header>
   );
 }
+
 

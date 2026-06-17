@@ -1,0 +1,5 @@
+c = open(r'C:\Users\LENOVO\.openclaw\workspace\grointel\src\lib\supabase.ts', encoding='utf-8').read()
+c = c.replace('catch (err: unknown) {', 'catch (err: unknown) {\n    const message = err instanceof Error ? err.message : "Unknown error";')
+c = c.replace('error: err.message || "Failed to save lead"', 'error: message')
+open(r'C:\Users\LENOVO\.openclaw\workspace\grointel\src\lib\supabase.ts', 'w', encoding='utf-8').write(c)
+print('Fixed')

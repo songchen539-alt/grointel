@@ -53,9 +53,10 @@ export async function submitLead(lead: Lead): Promise<{ success: boolean; error?
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[GroIntel] Supabase error:", err);
-    return { success: false, error: err.message || "Failed to save lead" };
+    return { success: false, error: message };
   }
 }
 
@@ -76,4 +77,5 @@ export async function submitLead(lead: Lead): Promise<{ success: boolean; error?
 //
 // alter table leads enable row level security;
 // create policy "Allow anonymous insert" on leads for insert to anon with check (true);
+
 
