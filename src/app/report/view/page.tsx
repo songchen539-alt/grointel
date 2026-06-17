@@ -1,6 +1,6 @@
-import type { CompanyMRIReport, DimensionScore, Opportunity, Risk, GrowthChannel, WeekPlan } from "@/types/company";
+﻿import type { CompanyMRIReport, DimensionScore, Opportunity, Risk, GrowthChannel, WeekPlan } from "@/types/company";
 import Link from "next/link";
-import { Building2, BarChart3, TrendingUp, Shield, Target, Calendar, BrainCircuit, ArrowLeft, AlertTriangle, Globe, ArrowRight } from "lucide-react";
+import { Building2, BarChart3, TrendingUp, Shield, Target, Calendar, BrainCircuit, ArrowLeft, AlertTriangle, Globe, ArrowRight, Check, Send } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +13,66 @@ function ScoreBar({ name, score }: { name: string; score: number }) {
         <div className={`h-full rounded-full ${color}`} style={{ width: `${score}%` }} />
       </div>
       <span className={`w-8 text-right text-xs font-bold ${score >= 75 ? "text-emerald-400" : score >= 55 ? "text-amber-400" : "text-rose-400"}`}>{score}</span>
+    </div>
+  );
+}
+
+function LeadForm() {
+  return (
+    <div id="lead-form">
+      <form
+        action=""
+        method="GET"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+          const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+          const role = (form.elements.namedItem("role") as HTMLInputElement).value;
+          if (!email || !email.includes("@")) return;
+          form.classList.add("hidden");
+          document.getElementById("lead-success")?.classList.remove("hidden");
+        }}
+        className="space-y-3"
+      >
+        <input
+          type="email"
+          name="email"
+          placeholder="Work email"
+          required
+          className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50"
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="text"
+            name="name"
+            placeholder="Company name"
+            required
+            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50"
+          />
+          <input
+            type="text"
+            name="role"
+            placeholder="Your role"
+            required
+            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-medium text-white hover:from-blue-500 hover:to-purple-500 transition-all"
+        >
+          <Send className="h-4 w-4" />
+          Request Full Report
+        </button>
+      </form>
+      <div id="lead-success" className="hidden text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Check className="h-5 w-5 text-emerald-400" />
+          <p className="text-sm font-medium text-emerald-300">Request received</p>
+        </div>
+        <p className="text-xs text-gray-500">Our team will contact you soon.</p>
+      </div>
     </div>
   );
 }
@@ -85,12 +145,27 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
   }
 
   const r = buildReport();
-  const { growthScores, overallGrowthScore, topOpportunities, topRisks, recommendedChannels, thirtyDayPlan } = r;
+  const { growthScores, overallGrowthScore, topOpportunities, topRisks, thirtyDayPlan } = r;
+
+  const ctaSection = (
+    <section className="rounded-xl border border-white/5 bg-gradient-to-br from-blue-500/[0.04] to-purple-500/[0.04] p-8">
+      <h3 className="text-lg font-semibold text-white text-center">Want the full Company Intelligence report?</h3>
+      <p className="mt-2 text-sm text-gray-500 text-center max-w-md mx-auto">Get deeper signals, competitor tracking, market entry recommendations and a 30-day growth action plan.</p>
+      <div className="mt-6 max-w-md mx-auto">
+        
+        <LeadForm />
+      </div>
+    </section>
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-      <Link href="/analyze" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 mb-8"><ArrowLeft className="h-3.5 w-3.5" /> Back</Link>
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-10">
+      <Link href="/analyze" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 mb-8"><ArrowLeft className="h-3.5 w-3.5" /> Back to Analyze</Link>
+
+      {/* Top CTA */}
+      {ctaSection}
+
+      <div className="my-10 flex flex-col md:flex-row items-start md:items-center gap-6">
         <div className="flex flex-col items-center">
           <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-blue-500/30 bg-blue-500/[0.06]">
             <span className="text-3xl font-bold text-blue-400">{overallGrowthScore}</span>
@@ -103,6 +178,7 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
           <p className="text-sm text-gray-500">Financial Technology</p>
         </div>
       </div>
+
       <section className="mb-10">
         <BarChart3 className="h-4 w-4 text-purple-400" /><h2 className="text-sm font-semibold text-white ml-1">Company MRI</h2>
         <div className="space-y-2.5 mt-4">{growthScores.map((s) => (<ScoreBar key={s.name} name={s.name} score={s.score} />))}</div>
@@ -129,11 +205,18 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
         <h2 className="text-lg font-semibold text-white">Next 30 Days Action Plan</h2>
         <div className="grid gap-4 md:grid-cols-2 mt-4">{thirtyDayPlan.map((w) => (<div key={w.week} className="bg-white/[0.02] border border-white/5 rounded-xl p-4"><span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Week {w.week}</span><ul className="mt-2 space-y-1">{w.actions.slice(0,2).map((a,j) => (<li key={j} className="flex items-start gap-1.5 text-xs text-gray-400"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-blue-500/50" />{a}</li>))}</ul></div>))}</div>
       </section>
-      <section className="text-center rounded-xl border border-white/5 bg-white/[0.02] p-8">
-        <BrainCircuit className="mx-auto h-8 w-8 text-blue-400" />
-        <h3 className="mt-3 text-lg font-semibold text-white">Get the full intelligence report</h3>
-        <Link href="/contact" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-medium text-white hover:from-blue-500 hover:to-purple-500">Request Analysis <ArrowRight className="h-4 w-4" /></Link>
-      </section>
+
+      {/* Bottom CTA */}
+      {ctaSection}
+
+      <div className="mt-8 text-center">
+        <Link href="/analyze" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-300 transition-colors">
+          <ArrowLeft className="h-3.5 w-3.5" /> Analyze Another Company
+        </Link>
+      </div>
     </div>
   );
 }
+
+
+
