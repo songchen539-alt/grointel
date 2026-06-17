@@ -1,4 +1,4 @@
-import { Lightbulb, Target, Network, TrendingUp } from "lucide-react";
+﻿import { Lightbulb, Target, Network, TrendingUp } from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -16,7 +16,7 @@ export default function AboutPage() {
               <Lightbulb className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">Signal Detection at Scale</h3>
+              <h3 className="font-semibold text-white">Company Intelligence</h3>
               <p className="mt-1 text-sm leading-relaxed text-gray-500">
                 We monitor thousands of companies across web3, AI, fintech, and SaaS to identify
                 growth signals before they become obvious. Our engine analyzes developer activity,
@@ -74,3 +74,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

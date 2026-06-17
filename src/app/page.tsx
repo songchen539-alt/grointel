@@ -2,193 +2,189 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight, Search } from "lucide-react";
 import {
-  ArrowRight, Search, Activity, TrendingUp, Shield, Users,
-  Globe, Target, ChevronRight, Zap, BarChart3, Database,
-  Cpu, Network, LineChart, Sparkles, Building2,
-} from "lucide-react";
-import {
-  companyScores, liveSignals, growthRecommendations, pipelineSteps,
-  graphNodes, whyGroIntelPillars, enterpriseFeatures,
+  companyScores, liveSignals, growthRecommendations,
+  pipelineSteps, graphCategories, whyGroIntelPillars,
+  enterpriseFeatures, footerLinks,
 } from "@/lib/intelligenceEngine";
 
-// ========== Sub-components ==========
+// ========== UTILITY ==========
 
-function ScoreRing({ score, size = 64, label }: { score: number; size?: number; label?: string }) {
-  const r = 24;
-  const circumference = 2 * Math.PI * r;
-  const offset = circumference - (score / 100) * circumference;
-  const color = score >= 80 ? "stroke-emerald-400 text-emerald-400" : score >= 60 ? "stroke-amber-400 text-amber-400" : "stroke-rose-400 text-rose-400";
+function ScoreRingFull({ score, size = 72, label, detail }: { score: number; size?: number; label?: string; detail?: string }) {
+  const r = 28;
+  const circ = 2 * Math.PI * r;
+  const off = circ - (score / 100) * circ;
+  const c = score >= 80 ? "stroke-emerald-400" : score >= 60 ? "stroke-amber-400" : "stroke-rose-400";
+  const t = score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-400" : "text-rose-400";
   return (
     <div className="flex flex-col items-center">
-      <svg width={size} height={size} viewBox="0 0 56 56" className="-rotate-90">
-        <circle cx={28} cy={28} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={4} />
-        <circle cx={28} cy={28} r={r} fill="none" className={color.split(" ")[0]} strokeWidth={4}
-          strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" />
+      <svg width={size} height={size} viewBox="0 0 64 64" className="-rotate-90">
+        <circle cx={32} cy={32} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={4} />
+        <circle cx={32} cy={32} r={r} fill="none" className={c} strokeWidth={4}
+          strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round" />
       </svg>
-      <span className={`-mt-10 text-base font-bold ${color.split(" ")[1]}`}>{score}</span>
-      {label && <span className="mt-0.5 text-[10px] text-gray-500 text-center leading-tight">{label}</span>}
+      <span className={`-mt-11 text-xl font-bold ${t}`}>{score}</span>
+      {label && <span className="mt-0.5 text-[10px] text-gray-500 font-medium uppercase tracking-wider">{label}</span>}
+      {detail && <span className="text-[9px] text-gray-600 mt-0.5 max-w-[80px] text-center leading-tight">{detail}</span>}
     </div>
   );
 }
 
-function GraphCircle({ label, x, y }: { label: string; x: number; y: number }) {
+function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="absolute flex flex-col items-center" style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)" }}>
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] border border-white/10 text-[10px] font-medium text-gray-300">
-        {label.slice(0, 3)}
-      </div>
-      <span className="mt-1 text-[9px] text-gray-500 whitespace-nowrap">{label}</span>
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5">
+      <span className="text-[10px] uppercase tracking-widest text-gray-500">{label}</span>
+      <p className="mt-1 text-2xl font-bold text-white">{value}</p>
+      {sub && <p className="mt-0.5 text-xs text-gray-500">{sub}</p>}
     </div>
   );
 }
+
+function Badge({ text, color = "gray" }: { text: string; color?: string }) {
+  const colors: Record<string, string> = {
+    emerald: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+    blue: "bg-blue-500/10 text-blue-300 border-blue-500/30",
+    amber: "bg-amber-500/10 text-amber-300 border-amber-500/30",
+    gray: "bg-white/[0.04] text-gray-400 border-white/10",
+    rose: "bg-rose-500/10 text-rose-300 border-rose-500/30",
+  };
+  return <span className={`border rounded-md px-2 py-0.5 text-[10px] font-medium ${colors[color] || colors.gray}`}>{text}</span>;
+}
+
+// ========== MAIN ==========
 
 export default function Home() {
   const router = useRouter();
   const [url, setUrl] = useState("");
-  const [hoveredPipeline, setHoveredPipeline] = useState<number | null>(null);
+  const [pipeHover, setPipeHover] = useState<number | null>(null);
+  const [graphHover, setGraphHover] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (url.trim()) {
-      router.push(`/analyze?url=${encodeURIComponent(url.trim())}`);
-    }
+    if (url.trim()) router.push(`/analyze?url=${encodeURIComponent(url.trim())}`);
   };
 
-  const overallScore = companyScores.find(s => s.name === "Overall Company Score")?.score || 83;
-
   return (
-    <div>
-      {/* ======== HERO ======== */}
-      <section className="relative overflow-hidden border-b border-white/5">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.08)_0%,transparent_60%)]" />
-        <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+    <div className="overflow-hidden">
+      {/* ======== 1. HERO ======== */}
+      <section className="relative min-h-screen flex items-center border-b border-white/5">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.06)_0%,transparent_60%)]" />
+        <div className="mx-auto max-w-7xl px-8 py-32 w-full">
           <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-sm text-gray-400 mb-6">
-              <Cpu className="h-3.5 w-3.5 text-blue-400" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-sm text-gray-400 mb-8">
+              <svg className="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
               The Operating System for Company Intelligence
             </div>
-            <h1 className="text-5xl font-bold tracking-tight text-white md:text-7xl leading-[1.05]">
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white leading-[0.95]">
               The Operating System<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400">
                 for Company Intelligence
               </span>
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-gray-400">
-              Analyze any company. Understand its strengths, weaknesses, opportunities and risks.
-              Make smarter growth decisions powered by AI.
+            <p className="mt-6 max-w-2xl text-lg md:text-xl leading-relaxed text-gray-400">
+              Analyze any company. Discover opportunities. Predict risks.
+              Make better growth decisions with AI.
             </p>
-
-            {/* CTA Form */}
-            <form onSubmit={handleSubmit} className="mt-8 flex max-w-lg gap-2">
+            <form onSubmit={handleSubmit} className="mt-10 flex max-w-lg gap-3">
               <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
-                <input
-                  type="text" placeholder="Enter company website..."
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
+                <input type="text" placeholder="Enter company website..."
                   value={url} onChange={(e) => setUrl(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3.5 pl-10 pr-4 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50 focus:bg-white/[0.06]"
-                />
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-4 pl-11 pr-4 text-sm text-white placeholder-gray-600 outline-none transition-all focus:border-blue-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-blue-500/20" />
               </div>
               <button type="submit"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3.5 text-sm font-medium text-white hover:from-blue-500 hover:to-purple-500 transition-all">
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-7 py-4 text-sm font-medium text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-500 hover:to-purple-500 transition-all">
                 Analyze Company <ArrowRight className="h-4 w-4" />
               </button>
             </form>
-            <div className="flex items-center gap-2 mt-4">
-              <a href="/analyze?url=opengradient.com" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
-                View Example MRI →
+            <div className="flex items-center gap-6 mt-5">
+              <a href="/analyze?url=opengradient.com" className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline underline-offset-4">
+                View Company MRI →
               </a>
             </div>
-            <p className="mt-6 text-xs text-gray-600">Trusted by founders, operators, investors and growth teams.</p>
+            <p className="mt-8 text-xs text-gray-600 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/60" />
+              Trusted by founders, operators, investors and growth teams
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ======== COMPANY MRI DASHBOARD ======== */}
-      <section className="border-b border-white/5 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex items-center gap-2 mb-8">
-            <BarChart3 className="h-5 w-5 text-blue-400" />
-            <h2 className="text-xl font-bold text-white">Company MRI</h2>
-            <span className="text-xs text-gray-500">Executive Intelligence Dashboard</span>
+      {/* ======== 2. COMPANY MRI ======== */}
+      <section className="border-b border-white/5 py-28">
+        <div className="mx-auto max-w-7xl px-8">
+          <div className="max-w-2xl mb-14">
+            <span className="text-xs font-mono text-blue-400">/company-mri</span>
+            <h2 className="mt-3 text-3xl font-bold text-white">Company MRI</h2>
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">An executive intelligence dashboard that scores every dimension of a company. Understand strengths, weaknesses, and momentum at a glance.</p>
           </div>
 
-          {/* Overall Score */}
-          <div className="flex items-center gap-6 mb-10 p-6 rounded-xl border border-white/5 bg-white/[0.02]">
-            <ScoreRing score={overallScore} size={80} label="Overall" />
-            <div>
-              <p className="text-2xl font-bold text-white">{overallScore}/100</p>
-              <p className="text-sm text-gray-400">Company Intelligence Score</p>
-              <p className="text-xs text-emerald-400 mt-1">↑ 4 points from last month</p>
-            </div>
-          </div>
-
-          {/* Score Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {companyScores.filter(s => s.name !== "Overall Company Score").map((s) => {
-              const trendIcon = s.trend === "up" ? "↑" : s.trend === "down" ? "↓" : "→";
-              const trendColor = s.trend === "up" ? "text-emerald-400" : s.trend === "down" ? "text-rose-400" : "text-gray-500";
+          {/* Overall + 7 dimension scores */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+            {companyScores.map((s) => {
+              const isOverall = s.name === "Overall Score";
               return (
-                <div key={s.name} className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] uppercase tracking-wider text-gray-500">{s.name}</span>
-                    <span className={`text-[10px] ${trendColor}`}>{trendIcon}</span>
+                <div key={s.name} className={`rounded-xl border ${isOverall ? "border-blue-500/20 bg-blue-500/[0.04]" : "border-white/5 bg-white/[0.02]"} p-5 text-center`}>
+                  <ScoreRingFull score={s.score} size={isOverall ? 80 : 64} label={s.name} detail={s.detail} />
+                  <div className="mt-3 flex items-center justify-center gap-1.5">
+                    <span className={`text-[10px] font-medium ${s.trend === "up" ? "text-emerald-400" : s.trend === "down" ? "text-rose-400" : "text-gray-500"}`}>
+                      {s.trend === "up" ? "↑" : s.trend === "down" ? "↓" : "→"} {s.trend}
+                    </span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      s.status === "excellent" ? "bg-emerald-500/10 text-emerald-300" :
+                      s.status === "good" ? "bg-blue-500/10 text-blue-300" :
+                      s.status === "average" ? "bg-amber-500/10 text-amber-300" :
+                      "bg-rose-500/10 text-rose-300"
+                    }`}>{s.status}</span>
                   </div>
-                  <ScoreRing score={s.score} size={56} />
-                  <span className={`mt-1.5 inline-block text-[10px] px-1.5 py-0.5 rounded ${
-                    s.status === "excellent" ? "bg-emerald-500/10 text-emerald-300" :
-                    s.status === "good" ? "bg-blue-500/10 text-blue-300" :
-                    s.status === "average" ? "bg-amber-500/10 text-amber-300" :
-                    "bg-rose-500/10 text-rose-300"
-                  }`}>{s.status}</span>
                 </div>
               );
             })}
           </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <StatCard label="Companies Analyzed" value="10,000+" sub="Across 50+ industries" />
+            <StatCard label="Data Sources" value="50+" sub="Public and private" />
+            <StatCard label="Avg. Analysis Time" value="30s" sub="From URL to report" />
+            <StatCard label="Accuracy Rate" value="92%" sub="AI-verified" />
+          </div>
         </div>
       </section>
 
-      {/* ======== INTELLIGENCE PIPELINE ======== */}
-      <section className="border-b border-white/5 py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.03] px-4 py-1.5 text-sm text-gray-500 mb-4">
-              <Database className="h-3.5 w-3.5" />
-              Intelligence Pipeline
-            </div>
-            <h2 className="text-2xl font-bold text-white">From Website to Intelligence</h2>
-            <p className="mt-2 text-sm text-gray-500">Eight stages of automated company analysis</p>
+      {/* ======== 3. INTELLIGENCE PIPELINE ======== */}
+      <section className="border-b border-white/5 py-28">
+        <div className="mx-auto max-w-6xl px-8">
+          <div className="max-w-2xl mb-14">
+            <span className="text-xs font-mono text-blue-400">/pipeline</span>
+            <h2 className="mt-3 text-3xl font-bold text-white">Intelligence Pipeline</h2>
+            <p className="mt-2 text-sm text-gray-500">From a single URL to deep company intelligence in six stages.</p>
           </div>
-          <div className="grid gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pipelineSteps.map((step, i) => {
-              const icons = [Search, Database, Activity, Network, Cpu, LineChart, BarChart3, Target];
-              const Icon = icons[i];
+              const icons = [Search, Search, Search, Search, Search, Search];
+              const isHovered = pipeHover === i;
               return (
                 <div key={step.name}
-                  onMouseEnter={() => setHoveredPipeline(i)}
-                  onMouseLeave={() => setHoveredPipeline(null)}
-                  className={`flex items-center gap-4 rounded-xl border p-4 transition-all ${
-                    hoveredPipeline === i
-                      ? "border-blue-500/30 bg-white/[0.04]"
-                      : "border-white/5 bg-white/[0.02]"
+                  onMouseEnter={() => setPipeHover(i)}
+                  onMouseLeave={() => setPipeHover(null)}
+                  className={`group relative rounded-xl border p-6 transition-all duration-300 ${
+                    isHovered ? "border-blue-500/30 bg-white/[0.04] shadow-lg shadow-blue-500/5" : "border-white/5 bg-white/[0.02]"
                   }`}>
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all ${
-                    hoveredPipeline === i ? "bg-blue-500/20" : "bg-white/[0.04]"
-                  }`}>
-                    <Icon className={`h-4 w-4 ${hoveredPipeline === i ? "text-blue-400" : "text-gray-500"}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-gray-600">0{i + 1}</span>
-                      <span className="text-sm font-medium text-white">{step.name}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
-                  </div>
+                  {/* Connector line */}
                   {i < pipelineSteps.length - 1 && (
-                    <ChevronRight className={`h-4 w-4 shrink-0 transition-all ${
-                      hoveredPipeline === i ? "text-blue-400" : "text-gray-700"
-                    }`} />
+                    <div className="hidden lg:block absolute -right-2 top-1/2 -translate-y-1/2 z-10">
+                      <ArrowRight className={`h-4 w-4 transition-colors ${isHovered ? "text-blue-400" : "text-gray-700"}`} />
+                    </div>
                   )}
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-[10px] font-mono text-gray-600">{step.icon}</span>
+                    <span className={`text-xs font-medium uppercase tracking-wider transition-colors ${isHovered ? "text-blue-300" : "text-gray-500"}`}>{step.name}</span>
+                  </div>
+                  <p className="text-sm text-gray-400 leading-relaxed">{step.description}</p>
+                  {/* Bottom accent bar */}
+                  <div className={`mt-4 h-0.5 w-8 rounded-full transition-all duration-300 ${isHovered ? "bg-blue-500 w-12" : "bg-white/[0.06]"}`} />
                 </div>
               );
             })}
@@ -196,114 +192,110 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ======== COMPANY GRAPH ======== */}
-      <section className="border-b border-white/5 py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.03] px-4 py-1.5 text-sm text-gray-500 mb-4">
-              <Network className="h-3.5 w-3.5" />
-              Knowledge Graph
-            </div>
-            <h2 className="text-2xl font-bold text-white">Company Graph</h2>
-            <p className="mt-2 text-sm text-gray-500">Every company is a node in a living intelligence network</p>
+      {/* ======== 4. COMPANY GRAPH ======== */}
+      <section className="border-b border-white/5 py-28">
+        <div className="mx-auto max-w-7xl px-8">
+          <div className="max-w-2xl mb-14">
+            <span className="text-xs font-mono text-blue-400">/graph</span>
+            <h2 className="mt-3 text-3xl font-bold text-white">Company Graph</h2>
+            <p className="mt-2 text-sm text-gray-500">Every company is a living network of relationships. We map them all.</p>
           </div>
-          <div className="relative h-[360px] rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden">
-            {/* Center node */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/20">
-                <Building2 className="h-6 w-6 text-white" />
-              </div>
-              <span className="block text-center text-xs font-medium text-white mt-2">Company</span>
-            </div>
-            {/* Graph nodes positioned around center */}
-            <GraphCircle label="Founders" x={15} y={25} />
-            <GraphCircle label="Employees" x={85} y={25} />
-            <GraphCircle label="Investors" x={10} y={55} />
-            <GraphCircle label="Competitors" x={90} y={55} />
-            <GraphCircle label="Customers" x={20} y={82} />
-            <GraphCircle label="Partners" x={80} y={82} />
-            <GraphCircle label="Markets" x={50} y={12} />
-            <GraphCircle label="Technology" x={50} y={88} />
-            {/* Connection lines via SVG */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.15 }}>
-              <line x1="50%" y1="50%" x2="15%" y2="25%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-              <line x1="50%" y1="50%" x2="85%" y2="25%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-              <line x1="50%" y1="50%" x2="10%" y2="55%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-              <line x1="50%" y1="50%" x2="90%" y2="55%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-              <line x1="50%" y1="50%" x2="20%" y2="82%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-              <line x1="50%" y1="50%" x2="80%" y2="82%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-              <line x1="50%" y1="50%" x2="50%" y2="12%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-              <line x1="50%" y1="50%" x2="50%" y2="88%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-            </svg>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {graphCategories.map((cat) => {
+              const isHovered = graphHover === cat.name;
+              return (
+                <div key={cat.name}
+                  onMouseEnter={() => setGraphHover(cat.name)}
+                  onMouseLeave={() => setGraphHover(null)}
+                  className={`rounded-xl border p-4 transition-all duration-200 ${
+                    isHovered ? "border-blue-500/30 bg-white/[0.04]" : "border-white/5 bg-white/[0.02]"
+                  }`}>
+                  <span className={`text-[10px] uppercase tracking-widest font-medium transition-colors ${isHovered ? "text-blue-300" : "text-gray-500"}`}>{cat.name}</span>
+                  <div className="mt-3 space-y-1.5">
+                    {cat.items.map((item) => (
+                      <div key={item} className={`flex items-center gap-2 text-xs transition-colors ${isHovered ? "text-gray-300" : "text-gray-500"}`}>
+                        <span className={`h-1 w-1 rounded-full transition-colors ${isHovered ? "bg-blue-400" : "bg-gray-600"}`} />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
+          <p className="mt-8 text-xs text-gray-600 text-center">Companies. Founders. Investors. Competitors. Markets. Technologies. Signals. One graph.</p>
         </div>
       </section>
 
-      {/* ======== LIVE SIGNAL INTELLIGENCE ======== */}
-      <section className="border-b border-white/5 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex items-center gap-2 mb-8">
-            <Activity className="h-5 w-5 text-emerald-400" />
-            <h2 className="text-xl font-bold text-white">Live Signal Intelligence</h2>
-            <span className="text-xs text-gray-500">Real-time company signals detected in the last 24 hours</span>
+      {/* ======== 5. LIVE SIGNAL INTELLIGENCE ======== */}
+      <section className="border-b border-white/5 py-28">
+        <div className="mx-auto max-w-7xl px-8">
+          <div className="flex items-end justify-between mb-14">
+            <div className="max-w-2xl">
+              <span className="text-xs font-mono text-emerald-400">/signals</span>
+              <h2 className="mt-3 text-3xl font-bold text-white">Live Signal Intelligence</h2>
+              <p className="mt-2 text-sm text-gray-500">Real-time company signals detected in the last 24 hours across 50+ sources.</p>
+            </div>
+            <a href="/feed" className="hidden md:flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors">
+              View All <ArrowRight className="h-3 w-3" />
+            </a>
           </div>
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             {liveSignals.map((s, i) => (
-              <div key={i} className="flex items-center gap-4 rounded-xl border border-white/5 bg-white/[0.02] p-4 hover:border-white/10 transition-all">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/[0.04] text-lg">
+              <div key={i} className="flex items-center gap-5 rounded-xl border border-white/5 bg-white/[0.02] px-5 py-4 hover:border-white/10 hover:bg-white/[0.03] transition-all group">
+                {/* Icon */}
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/[0.04] text-base shrink-0">
                   {s.icon}
                 </div>
-                <div className="flex-1 min-w-0">
+                {/* Content */}
+                <div className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] items-center gap-x-6 gap-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.04] px-2 py-0.5 text-[11px] text-gray-400">{s.type}</span>
-                    <span className="text-sm font-medium text-white">{s.company}</span>
+                    <Badge text={s.type} color={s.impact === "High" ? "amber" : "gray"} />
+                    <span className="text-sm font-medium text-white truncate">{s.company}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">{s.whyItMatters}</p>
+                  <div className="flex items-center gap-3 justify-self-start lg:justify-self-end">
+                    <span className="text-xs text-gray-500">{s.confidence}% confidence</span>
                     <span className="text-[10px] text-gray-600">{s.time}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">{s.whyItMatters}</p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[11px] text-gray-500">{s.confidence}%</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                    s.impact === "High" ? "bg-amber-500/15 text-amber-300" :
-                    "bg-gray-500/15 text-gray-400"
-                  }`}>{s.impact}</span>
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center md:hidden">
             <a href="/feed" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300">
-              View all signals <ArrowRight className="h-3 w-3" />
+              View All Signals <ArrowRight className="h-3 w-3" />
             </a>
           </div>
         </div>
       </section>
 
-      {/* ======== GROWTH INTELLIGENCE ======== */}
-      <section className="border-b border-white/5 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex items-center gap-2 mb-8">
-            <Target className="h-5 w-5 text-blue-400" />
-            <h2 className="text-xl font-bold text-white">Growth Intelligence</h2>
-            <span className="text-xs text-gray-500">AI-powered recommendations for your company</span>
+      {/* ======== 6. GROWTH INTELLIGENCE ======== */}
+      <section className="border-b border-white/5 py-28">
+        <div className="mx-auto max-w-7xl px-8">
+          <div className="max-w-2xl mb-14">
+            <span className="text-xs font-mono text-blue-400">/recommendations</span>
+            <h2 className="mt-3 text-3xl font-bold text-white">Growth Intelligence</h2>
+            <p className="mt-2 text-sm text-gray-500">AI-powered recommendations that tell companies exactly what to do next.</p>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             {growthRecommendations.map((r, i) => {
-              const confColor = r.confidence === "High" ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" :
-                r.confidence === "Medium" ? "bg-amber-500/10 text-amber-300 border-amber-500/30" :
-                "bg-gray-500/10 text-gray-300 border-gray-500/30";
+              const colorMap: Record<string, string> = { High: "emerald", Medium: "amber", Low: "gray" };
               return (
-                <div key={i} className="rounded-xl border border-white/5 bg-white/[0.02] p-5 hover:border-white/10 transition-all">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`text-[10px] border rounded-md px-2 py-0.5 font-medium ${confColor}`}>{r.confidence} Confidence</span>
-                    <span className="text-[10px] text-gray-600">{r.timeline}</span>
+                <div key={i} className="rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:border-white/10 hover:bg-white/[0.03] transition-all group">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <Badge text={r.priority + " Priority"} color={r.priority === "Critical" ? "rose" : r.priority === "High" ? "emerald" : "amber"} />
+                      <h3 className="mt-2 text-lg font-semibold text-white">{r.title}</h3>
+                    </div>
+                    <Badge text={r.confidence + " Confidence"} color={colorMap[r.confidence] || "gray"} />
                   </div>
-                  <h3 className="font-semibold text-white">{r.title}</h3>
-                  <p className="text-xs text-gray-500 mt-1.5">{r.reason}</p>
-                  <div className="flex items-center gap-3 mt-3 text-[11px] text-gray-500">
-                    <span>ROI: {r.expectedROI}</span>
-                    {r.marketSize && <span>Market: {r.marketSize}</span>}
-                    <span>Impact: {r.expectedImpact}</span>
+                  <p className="text-sm text-gray-500 leading-relaxed">{r.reason}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500 pt-4 border-t border-white/5">
+                    <span className="flex items-center gap-1"><span className="text-emerald-400 font-medium">ROI</span> {r.expectedROI}</span>
+                    {r.marketSize && <span className="flex items-center gap-1"><span className="text-blue-400 font-medium">Market</span> {r.marketSize}</span>}
+                    <span className="flex items-center gap-1"><span className="text-amber-400 font-medium">Timeline</span> {r.timeline}</span>
+                    <span className="flex items-center gap-1"><span className="text-purple-400 font-medium">Impact</span> {r.expectedImpact}</span>
                   </div>
                 </div>
               );
@@ -312,73 +304,67 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ======== WHY GROINTEL ======== */}
-      <section className="border-b border-white/5 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-white">Why GroIntel</h2>
-            <p className="mt-2 text-sm text-gray-500">Four intelligence capabilities. One platform.</p>
+      {/* ======== 7. WHY GROINTEL ======== */}
+      <section className="border-b border-white/5 py-28">
+        <div className="mx-auto max-w-7xl px-8">
+          <div className="max-w-2xl mb-14">
+            <span className="text-xs font-mono text-blue-400">/why</span>
+            <h2 className="mt-3 text-3xl font-bold text-white">Why GroIntel</h2>
+            <p className="mt-2 text-sm text-gray-500">Four capabilities. One platform. Infinite intelligence.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-2">
-            {whyGroIntelPillars.map((pillar) => (
-              <div key={pillar.title} className="rounded-xl border border-white/5 bg-white/[0.02] p-6">
+            {whyGroIntelPillars.map((p, i) => (
+              <div key={p.title} className="rounded-xl border border-white/5 bg-white/[0.02] p-8 hover:border-white/10 transition-all group">
                 <div className="flex items-start justify-between mb-4">
-                  <h3 className="font-semibold text-white text-lg">{pillar.title}</h3>
-                  <span className="text-2xl font-bold text-blue-400">{pillar.metric}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{p.icon}</span>
+                    <h3 className="text-xl font-bold text-white">{p.title}</h3>
+                  </div>
+                  <span className="text-2xl font-bold text-blue-400">{p.metric}</span>
                 </div>
-                <p className="text-sm text-gray-500 leading-relaxed">{pillar.description}</p>
-                <p className="text-xs text-gray-600 mt-2">{pillar.metricLabel}</p>
+                <p className="text-sm text-gray-500 leading-relaxed">{p.description}</p>
+                <p className="text-xs text-gray-600 mt-3">{p.metricLabel}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ======== ENTERPRISE READY ======== */}
-      <section className="border-b border-white/5 py-16">
-        <div className="mx-auto max-w-5xl px-6 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.03] px-4 py-1.5 text-sm text-gray-500 mb-4">
-            <Shield className="h-3.5 w-3.5" />
-            Enterprise Ready
-          </div>
-          <h2 className="text-xl font-bold text-white">Built for Companies That Move Fast</h2>
-          <p className="mt-2 text-sm text-gray-500">Enterprise security. Global intelligence. Real-time insights.</p>
-          <div className="flex flex-wrap justify-center gap-2 mt-8">
+      {/* ======== 8. ENTERPRISE READY ======== */}
+      <section className="border-b border-white/5 py-20">
+        <div className="mx-auto max-w-5xl px-8 text-center">
+          <span className="text-xs font-mono text-blue-400">/enterprise</span>
+          <h2 className="mt-3 text-2xl font-bold text-white">Enterprise Ready</h2>
+          <p className="mt-2 text-sm text-gray-500">Built for companies that demand security, scale, and reliability.</p>
+          <div className="flex flex-wrap justify-center gap-3 mt-10">
             {enterpriseFeatures.map((f) => (
-              <span key={f} className="rounded-full border border-white/5 bg-white/[0.03] px-4 py-2 text-xs text-gray-400">
+              <div key={f} className="rounded-xl border border-white/5 bg-white/[0.02] px-5 py-3 text-sm text-gray-400 hover:border-white/10 hover:text-gray-200 transition-all">
                 {f}
-              </span>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ======== FOOTER ======== */}
-      <footer className="border-t border-white/5 py-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-8 md:grid-cols-5">
-            {/* Brand */}
-            <div className="md:col-span-2">
+      {/* ======== 9. FOOTER ======== */}
+      <footer className="py-20">
+        <div className="mx-auto max-w-7xl px-8">
+          <div className="grid gap-10 md:grid-cols-4">
+            <div className="md:col-span-1">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-                  <span className="text-[10px] font-bold text-white">GI</span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600">
+                  <span className="text-xs font-bold text-white">GI</span>
                 </div>
                 <span className="font-semibold text-white">GroIntel</span>
               </div>
-              <p className="mt-3 text-sm text-gray-500 max-w-xs leading-relaxed">
+              <p className="mt-4 text-xs text-gray-500 leading-relaxed max-w-xs">
                 The Operating System for Company Intelligence.
-                Analyze. Discover. Grow.
               </p>
             </div>
-            {/* Links */}
-            {[
-              { title: "Platform", links: ["Company MRI", "Signal Intelligence", "API", "Documentation"] },
-              { title: "Company", links: ["Enterprise", "Roadmap", "Status", "Contact"] },
-              { title: "Legal", links: ["Privacy", "Terms", "Security"] },
-            ].map((col) => (
+            {footerLinks.map((col) => (
               <div key={col.title}>
-                <h4 className="text-xs font-medium text-white mb-3 uppercase tracking-wider">{col.title}</h4>
-                <ul className="space-y-2">
+                <h4 className="text-xs font-medium text-white mb-4 uppercase tracking-wider">{col.title}</h4>
+                <ul className="space-y-2.5">
                   {col.links.map((link) => (
                     <li key={link}><a href="#" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">{link}</a></li>
                   ))}
@@ -386,7 +372,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <div className="mt-12 pt-6 border-t border-white/5 text-xs text-gray-600">
+          <div className="mt-16 pt-6 border-t border-white/5 text-xs text-gray-600">
             &copy; {new Date().getFullYear()} GroIntel. All rights reserved.
           </div>
         </div>

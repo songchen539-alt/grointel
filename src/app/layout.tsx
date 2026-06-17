@@ -4,8 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "GroIntel - AI Growth Intelligence Platform",
-  description: "Discover high-growth companies, analyze market signals, and match them with the right growth channels.",
+  title: "GroIntel — The Operating System for Company Intelligence",
+  description: "Analyze any company. Discover opportunities. Predict risks. Make better growth decisions with AI.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
