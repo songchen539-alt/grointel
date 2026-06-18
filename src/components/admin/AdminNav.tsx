@@ -1,10 +1,11 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 const navLinks = [
   { href: "/admin/dashboard", label: "Dashboard" },
   { href: "/admin/prospects", label: "Prospects" },
   { href: "/admin/growth-needs", label: "Growth Needs" },
   { href: "/admin/channels", label: "Channels" },
+  { href: "/admin/matches", label: "Matches" },
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/events", label: "Events" },
@@ -37,3 +38,4 @@ export default function AdminNav() {
     </nav>
   );
 }
+
