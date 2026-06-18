@@ -14,7 +14,9 @@ export default function Header() {
           <Link href="/" className="text-sm text-gray-400 transition-colors hover:text-white">Home</Link>
           <Link href="/analyze" className="text-sm text-gray-400 transition-colors hover:text-white">Analyze</Link>
           <Link href="/samples" className="text-sm text-gray-400 transition-colors hover:text-white">Sample Reports</Link>
-          <Link href="/growth-options" className="text-sm text-gray-400 transition-colors hover:text-white">Growth Options</Link>\n          <Link href="/channels/apply" className="text-sm text-gray-400 transition-colors hover:text-white">For Channels</Link>\n          <Link href="/contact" className="text-sm text-gray-400 transition-colors hover:text-white">Contact</Link>
+          <Link href="/growth-options" className="text-sm text-gray-400 transition-colors hover:text-white">Growth Options</Link>
+          <Link href="/channels/apply" className="text-sm text-gray-400 transition-colors hover:text-white">For Channels</Link>
+          <Link href="/contact" className="text-sm text-gray-400 transition-colors hover:text-white">Contact</Link>
         </nav>
         <Link
           href="/analyze"
@@ -26,4 +28,6 @@ export default function Header() {
     </header>
   );
 }
+
+
 
