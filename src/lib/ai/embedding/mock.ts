@@ -2,9 +2,9 @@
 // Deterministic embeddings for testing. Simple hash-based vector generation.
 
 import { EmbeddingProvider } from "./provider";
-import { AI_CONFIG } from "../config";
+import { MOCK_EMBEDDING_DIMENSION } from "../common/constants";
 
-const DIMENSION = AI_CONFIG.EMBEDDING_DIMENSION;
+const DIMENSION = MOCK_EMBEDDING_DIMENSION;
 
 export class MockEmbeddingProvider implements EmbeddingProvider {
   readonly name = "mock";

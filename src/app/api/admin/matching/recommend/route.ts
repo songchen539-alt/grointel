@@ -130,10 +130,15 @@ export async function POST(request: NextRequest) {
         reasons: r.reasons,
         matchReason: r.matchReason,
         recommendedSolutionType: r.recommendedSolutionType,
+        embeddingProvider: r.embeddingProvider,
+        embeddingModel: r.embeddingModel,
+        fallbackUsed: r.fallbackUsed,
       };
     });
 
-    return NextResponse.json({ success: true, growthNeed: rn, recommendations: top5, scoringMode: "hybrid" });
+    const { getProviderMetadata } = await import("@/lib/ai/embedding/factory");
+  const pm = getProviderMetadata();
+  return NextResponse.json({ success: true, growthNeed: rn, recommendations: top5, scoringMode: "hybrid", embeddingProvider: pm.provider, embeddingModel: pm.model, fallbackUsed: pm.fallbackUsed });
   } catch (err) {
     console.error("[AI Matching v3] Error:", err);
     return NextResponse.json({ success: false, error: "AI recommendation failed" }, { status: 500 });
