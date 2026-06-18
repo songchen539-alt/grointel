@@ -162,12 +162,16 @@ function CreateMatchForm() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-white">{rec.channelName}</span>
                       {rec.serviceName && <span className="text-[10px] text-gray-500">- {rec.serviceName}</span>}
-                      <span className={"text-xs font-bold ml-auto " + getConfidenceColor(rec.confidence)}>{rec.overallScore}</span>
+                      <span className="text-xs font-bold ml-auto text-blue-400">{rec.hybridScore ?? rec.overallScore}</span>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      <span className="text-[10px] text-gray-500">Score: {rec.overallScore}</span>
-                      <span className={"text-[10px] " + getConfidenceColor(rec.confidence)}>{rec.confidence}</span>
+                      <span className="text-[10px] text-gray-500">Hybrid: {rec.hybridScore ?? rec.overallScore}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300">Hybrid AI</span>
                       {rec.recommendedSolutionType && <span className="text-[10px] text-gray-500">| {rec.recommendedSolutionType}</span>}
+                    <div className="flex gap-2 mt-0.5">
+                      <span className="text-[9px] text-gray-600">Rule: {rec.ruleScore ?? "?"}</span>
+                      <span className="text-[9px] text-gray-600">Semantic: {rec.embeddingScore ?? "?"}</span>
+                    </div>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {Object.entries(rec.featureScores || {}).filter(([k]) => k !== "history").map(([k, v]: [string, any]) => (

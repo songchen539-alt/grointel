@@ -81,6 +81,7 @@ export default function RecommendationDetailPage() {
                 <div className="text-right">
                   <p className="text-xl font-bold text-blue-400">{rec.overallScore}</p>
                   <span className={"text-[10px] " + (rec.confidence === "High" ? "text-emerald-400" : rec.confidence === "Medium" ? "text-amber-400" : "text-gray-400")}>{rec.confidence}</span>
+              <span className="text-[10px] text-gray-500 ml-2">Formula: Rule 80% + Semantic 20%</span>
                 </div>
               </div>
 
@@ -96,7 +97,11 @@ export default function RecommendationDetailPage() {
 
               {/* Reasons */}
               <div className="space-y-1">
-                <p className="text-[10px] text-gray-500 uppercase">Reasons</p>
+                <div className="flex gap-4 mb-2">
+                <div><span className="text-[10px] text-gray-500">Rule Score:</span> <span className="text-sm font-bold text-emerald-400">{rec.ruleScore ?? "?"}</span></div>
+                <div><span className="text-[10px] text-gray-500">Semantic:</span> <span className="text-sm font-bold text-amber-400">{rec.embeddingScore ?? "?"}</span></div>
+              </div>
+              <p className="text-[10px] text-gray-500 uppercase">Reasons</p>
                 {(rec.reasons || []).map((r: any, i: number) => (
                   <p key={i} className="text-xs text-gray-400 flex items-start gap-1">
                     <span className="text-blue-400 mt-0.5">&#x2022;</span> {r.message}

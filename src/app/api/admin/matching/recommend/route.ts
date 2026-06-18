@@ -1,12 +1,33 @@
-// GroIntel Admin AI Matching Recommendation API
+// GroIntel Admin AI Matching Recommendation API v3 - Hybrid Scoring
 // POST /api/admin/matching/recommend
-// Uses AI Core to generate channel/service recommendations for a growth need.
+// Uses AI Core v3 hybrid scoring (Rule 80% + Embedding 20%)
 
 import { NextRequest, NextResponse } from "next/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const sbH = () => ({ "Content-Type": "application/json", "apikey": serviceKey, "Authorization": "Bearer " + serviceKey });
+
+interface RawNeed {
+  id: string; company_name?: string; website?: string; growth_goal?: string;
+  target_market?: string; target_customer?: string; current_challenge?: string;
+  budget_min?: number; budget_max?: number; currency?: string; timeline?: string;
+  preferred_channels?: string[];
+}
+
+interface RawChannel {
+  id: string; channel_name?: string; website?: string; category?: string; region?: string;
+  service_types?: string[]; target_industries?: string[]; target_client_stage?: string[];
+  pricing_model?: string; min_budget?: number; max_budget?: number; currency?: string;
+  growth_outcomes?: string; case_studies?: string;
+}
+
+interface RawService {
+  id: string; channel_id: string; service_name?: string; service_type?: string;
+  problem_solved?: string; growth_outcome?: string; deliverables?: string; timeline?: string;
+  pricing_model?: string; starting_price?: number; max_price?: number; currency?: string;
+  target_region?: string; target_industry?: string; success_metrics?: string; case_study?: string;
+}
 
 export async function POST(request: NextRequest) {
   if (!serviceKey || !supabaseUrl) return NextResponse.json({ success: false, error: "Not configured" }, { status: 500 });
@@ -20,38 +41,37 @@ export async function POST(request: NextRequest) {
     const needRes = await fetch(supabaseUrl + "/rest/v1/company_growth_needs?select=*&id=eq." + encodeURIComponent(body.growthNeedId), { headers: sbH() });
     const needRows = await needRes.json();
     if (!needRows || needRows.length === 0) return NextResponse.json({ success: false, error: "Growth need not found" }, { status: 404 });
-    const rawNeed = needRows[0];
+    const rn: RawNeed = needRows[0];
 
-    // 2. Fetch all active channels
+    // 2. Fetch channels
     const chRes = await fetch(supabaseUrl + "/rest/v1/growth_channels?select=*&status=in.(active,new)", { headers: sbH() });
-    const rawChannels = await chRes.json();
+    const rawChannels: RawChannel[] = await chRes.json();
     if (!rawChannels || rawChannels.length === 0) return NextResponse.json({ success: false, error: "No channels available" }, { status: 404 });
 
-    // 3. Fetch all services
+    // 3. Fetch services
     const svcRes = await fetch(supabaseUrl + "/rest/v1/channel_services?select=*", { headers: sbH() });
-    const rawServices = await svcRes.json();
-    const allServices = rawServices || [];
+    const rawServices: RawService[] = (await svcRes.json()) || [];
 
     // 4. Convert to AI Core types
     const growthNeed = {
-      id: rawNeed.id,
-      companyName: rawNeed.company_name || "",
-      website: rawNeed.website || "",
+      id: rn.id,
+      companyName: rn.company_name || "",
+      website: rn.website || "",
       industry: "",
-      region: rawNeed.target_market || "",
+      region: rn.target_market || "",
       stage: "",
-      growthGoal: rawNeed.growth_goal || "",
-      targetMarket: rawNeed.target_market || "",
-      targetCustomer: rawNeed.target_customer || "",
-      currentChallenge: rawNeed.current_challenge || "",
-      budgetMin: rawNeed.budget_min || 0,
-      budgetMax: rawNeed.budget_max || 0,
-      currency: rawNeed.currency || "USD",
-      timeline: rawNeed.timeline || "",
-      preferredChannels: rawNeed.preferred_channels || [],
+      growthGoal: rn.growth_goal || "",
+      targetMarket: rn.target_market || "",
+      targetCustomer: rn.target_customer || "",
+      currentChallenge: rn.current_challenge || "",
+      budgetMin: rn.budget_min || 0,
+      budgetMax: rn.budget_max || 0,
+      currency: rn.currency || "USD",
+      timeline: rn.timeline || "",
+      preferredChannels: rn.preferred_channels || [],
     };
 
-    const channels = (rawChannels || []).map((c: { id: string; channel_name?: string; website?: string; category?: string; region?: string; service_types?: string[]; target_industries?: string[]; target_client_stage?: string[]; pricing_model?: string; min_budget?: number; max_budget?: number; currency?: string; growth_outcomes?: string; case_studies?: string }) => ({
+    const channels = rawChannels.map((c: RawChannel) => ({
       id: c.id,
       channelName: c.channel_name || "",
       website: c.website || "",
@@ -68,7 +88,7 @@ export async function POST(request: NextRequest) {
       caseStudies: c.case_studies || "",
     }));
 
-    const services = (allServices || []).map((s: { id: string; channel_id: string; service_name?: string; service_type?: string; problem_solved?: string; growth_outcome?: string; deliverables?: string; timeline?: string; pricing_model?: string; starting_price?: number; max_price?: number; currency?: string; target_region?: string; target_industry?: string; success_metrics?: string; case_study?: string }) => ({
+    const services = (rawServices || []).map((s: RawService) => ({
       id: s.id,
       channelId: s.channel_id,
       serviceName: s.service_name || "",
@@ -87,9 +107,9 @@ export async function POST(request: NextRequest) {
       caseStudy: s.case_study || "",
     }));
 
-    // 5. Call AI Core
-    const { recommend } = await import("@/lib/ai/recommendation/recommendation");
-    const recs = recommend({ growthNeed, channels, services });
+    // 5. Call AI Core v3 hybrid pipeline
+    const { recommendHybrid } = await import("@/lib/ai/recommendation/hybrid");
+    const recs = await recommendHybrid(growthNeed, channels, services);
 
     // 6. Format top 5
     const top5 = recs.slice(0, 5).map((r) => {
@@ -101,19 +121,21 @@ export async function POST(request: NextRequest) {
         serviceId: r.serviceId,
         serviceName: sv?.serviceName || "",
         overallScore: r.overallScore,
+        ruleScore: r.ruleScore,
+        embeddingScore: r.embeddingScore,
+        hybridScore: r.hybridScore,
+        scoringMode: r.scoringMode,
         confidence: r.confidence,
         featureScores: r.featureScores,
         reasons: r.reasons,
         matchReason: r.matchReason,
         recommendedSolutionType: r.recommendedSolutionType,
-        channel: ch,
-        service: sv,
       };
     });
 
-    return NextResponse.json({ success: true, growthNeed: rawNeed, recommendations: top5 });
+    return NextResponse.json({ success: true, growthNeed: rn, recommendations: top5, scoringMode: "hybrid" });
   } catch (err) {
-    console.error("[AI Matching] Error:", err);
+    console.error("[AI Matching v3] Error:", err);
     return NextResponse.json({ success: false, error: "AI recommendation failed" }, { status: 500 });
   }
 }
