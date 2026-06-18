@@ -1,9 +1,10 @@
 import Link from "next/link";
 import LeadForm from "@/components/LeadForm";
+import ReportViewClient from "@/components/ReportViewClient";
 import { getReport } from "@/lib/reportStore";
 import { loadReportFromSupabase } from "@/lib/intelligence/supabaseLoader";
 import { convertToReportFormat } from "@/lib/intelligence/supabaseAdapter";
-import { Building2, BarChart3, TrendingUp, Shield, Target, Calendar, BrainCircuit, ArrowLeft, AlertTriangle, Globe, ArrowRight } from "lucide-react";
+import { Building2, BarChart3, TrendingUp, Shield, ArrowLeft, AlertTriangle, Globe, ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,6 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
     );
   }
 
-  // Try Supabase first
   let r;
   let dataSource = "local";
 
@@ -48,7 +48,6 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
     // Fallback to local
   }
 
-  // Fallback to local engine
   if (!r) {
     r = getReport(reportId);
   }
@@ -67,22 +66,9 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
   const { companySnapshot, growthScores, overallGrowthScore, topOpportunities, topRisks, thirtyDayPlan } = r;
   const companyName = companySnapshot.company;
 
-  const ctaSection = (
-    <section className="rounded-xl border border-white/5 bg-gradient-to-br from-blue-500/[0.04] to-purple-500/[0.04] p-8">
-      <h3 className="text-lg font-semibold text-white text-center">Want the full Company Intelligence report?</h3>
-      <p className="mt-2 text-sm text-gray-500 text-center max-w-md mx-auto">Get deeper signals, competitor tracking, market entry recommendations and a 30-day growth action plan.</p>
-      <div className="mt-6 max-w-md mx-auto">
-        <LeadForm reportId={reportId} companyName={companyName} />
-      </div>
-    </section>
-  );
-
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <Link href="/analyze" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 mb-8"><ArrowLeft className="h-3.5 w-3.5" /> Back to Analyze</Link>
-
-      {/* Top CTA */}
-      {ctaSection}
 
       <div className="my-10 flex flex-col md:flex-row items-start md:items-center gap-6">
         <div className="flex flex-col items-center">
@@ -125,8 +111,13 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
         <div className="grid gap-4 md:grid-cols-2 mt-4">{thirtyDayPlan.map((w) => (<div key={w.week} className="bg-white/[0.02] border border-white/5 rounded-xl p-4"><span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Week {w.week}</span><ul className="mt-2 space-y-1">{w.actions.slice(0,2).map((a,j) => (<li key={j} className="flex items-start gap-1.5 text-xs text-gray-400"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-blue-500/50" />{a}</li>))}</ul></div>))}</div>
       </section>
 
-      {/* Bottom CTA */}
-      {ctaSection}
+      {/* Lead Capture CTA */}
+      <div className="mb-8">
+        <LeadForm reportId={reportId} companyName={companyName} />
+      </div>
+
+      {/* Growth MRI Review CTA + tracking */}
+      <ReportViewClient reportId={reportId} companyName={companyName} />
 
       <div className="mt-8 text-center">
         <Link href="/analyze" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-300 transition-colors">

@@ -1,7 +1,3 @@
-// GroIntel Reports API - Generate
-// POST /api/reports/generate
-// Generates Company MRI report, persists to Supabase, returns reportId.
-
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeDomain } from "@/lib/intelligence/normalizeDomain";
 import { generateReport } from "@/lib/intelligence/reportGenerator";
@@ -14,65 +10,76 @@ function missingConfig(): boolean {
   return !serviceKey || !supabaseUrl;
 }
 
-async function upsertReport(mri: ReturnType<typeof generateReport>): Promise<string | null> {
+function sbHeaders(): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    "apikey": serviceKey,
+    "Authorization": "Bearer " + serviceKey,
+  };
+}
+
+async function upsertReport(mri: ReturnType<typeof generateReport>): Promise<boolean> {
   try {
     const row = convertToSupabaseRow(mri);
     const res = await fetch(supabaseUrl + "/rest/v1/company_mri_reports", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": serviceKey,
-        "Authorization": "Bearer " + serviceKey,
-        "Prefer": "resolution=merge-duplicates",
-      },
+      headers: { ...sbHeaders(), "Prefer": "resolution=merge-duplicates" },
       body: JSON.stringify([row]),
     });
-    if (!res.ok && res.status !== 409) {
-      return null;
-    }
-    return mri.reportId;
+    return res.ok || res.status === 409;
   } catch {
-    return null;
+    return false;
   }
 }
 
-async function insertEvent(reportId: string, domain: string): Promise<boolean> {
+async function insertEvent(reportId: string, domain: string): Promise<void> {
   try {
-    const res = await fetch(supabaseUrl + "/rest/v1/report_events", {
+    await fetch(supabaseUrl + "/rest/v1/report_events", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": serviceKey,
-        "Authorization": "Bearer " + serviceKey,
-        "Prefer": "return=minimal",
-      },
+      headers: { ...sbHeaders(), "Prefer": "return=minimal" },
       body: JSON.stringify([{
         report_id: reportId,
         event_type: "generated",
         metadata: { domain, source: "analyze_page", timestamp: new Date().toISOString() },
       }]),
     });
-    return res.ok;
   } catch {
-    return false;
+    // fail silently
+  }
+}
+
+async function saveLead(lead: { email?: string; companyName?: string; role?: string }, website: string): Promise<void> {
+  if (!lead.email) return;
+  try {
+    const name = lead.role || lead.companyName || "Website Analyzer Lead";
+    await fetch(supabaseUrl + "/rest/v1/leads", {
+      method: "POST",
+      headers: { ...sbHeaders(), "Prefer": "return=minimal" },
+      body: JSON.stringify([{
+        name,
+        email: lead.email,
+        company_website: website,
+        target_market: "GroIntel Analyze",
+        created_at: new Date().toISOString(),
+      }]),
+    });
+  } catch {
+    console.warn("[reports/generate] Failed to save lead");
   }
 }
 
 export async function POST(request: NextRequest) {
-  // Parse body
-  let body: { website?: string };
+  let body: { website?: string; lead?: { email?: string; companyName?: string; role?: string } };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
   }
 
-  // Validate website
   if (!body.website || typeof body.website !== "string" || !body.website.trim()) {
     return NextResponse.json({ success: false, error: "Website is required." }, { status: 400 });
   }
 
-  // Normalize domain
   let normalized;
   try {
     normalized = normalizeDomain(body.website);
@@ -84,14 +91,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Invalid domain." }, { status: 400 });
   }
 
-  // Generate report via engine
   const mri = generateReport(normalized.url);
 
-  // Persist to Supabase if configured
   if (!missingConfig()) {
-    const result = await upsertReport(mri);
-    if (!result) {
-      // Table might not exist yet
+    const saved = await upsertReport(mri);
+    if (!saved) {
       return NextResponse.json({
         success: true,
         reportId: mri.reportId,
@@ -100,6 +104,11 @@ export async function POST(request: NextRequest) {
       });
     }
     await insertEvent(mri.reportId, normalized.domain);
+
+    // Save lead if provided
+    if (body.lead && body.lead.email) {
+      await saveLead(body.lead, normalized.url);
+    }
   }
 
   return NextResponse.json({
