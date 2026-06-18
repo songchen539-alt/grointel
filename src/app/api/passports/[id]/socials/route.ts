@@ -7,8 +7,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   if (!k) return NextResponse.json({ success: false, error: "Not configured" }, { status: 500 });
   try {
-    const r = await fetch(u + "/rest/v1/growth_social_accounts?select=*&passport_id=eq." + encodeURIComponent(id) + "&order=created_at.desc", { headers: h(), cache: "no-store" });
-    if (!r.ok) return NextResponse.json({ success: false, error: "Query failed" }, { status: 500 });
+    const url = u + "/rest/v1/growth_social_accounts?select=*&passport_id=eq." + encodeURIComponent(id) + "&order=last_updated.desc";
+    const r = await fetch(url, { headers: h(), cache: "no-store" });
+    if (!r.ok) {
+      const body = await r.text();
+      return NextResponse.json({ success: false, error: "Query failed: " + r.status + " " + body.slice(0,200) }, { status: 500 });
+    }
     return NextResponse.json({ success: true, socials: await r.json() });
   } catch { return NextResponse.json({ success: false, error: "Server error" }, { status: 500 }); }
 }

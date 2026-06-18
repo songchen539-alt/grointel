@@ -7,7 +7,7 @@ import { generateExplanation } from "../recommendation/explain";
 import { scoreIndustry, scoreRegion, scoreBudget } from "../recommendation/ruleEngine";
 import { computeScore } from "../recommendation/scoring";
 import { recommend } from "../recommendation/recommendation";
-import { MockEmbeddingProvider } from "../embedding/embedding";
+import { MockEmbeddingProvider } from "../embedding/mock";
 import { cosineSimilarity } from "../embedding/vector";
 import { GrowthNeed, Channel, ChannelService, RecommendationRequest } from "../recommendation/types";
 

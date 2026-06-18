@@ -3,8 +3,8 @@
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://grointel.vercel.app";
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const api = async (url: string, opts: any = {}) => {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const api = async (url, opts = {}) => {
   const res = await fetch(BASE + url, {
     method: opts.method || "POST",
     headers: { "Content-Type": "application/json", ...opts.headers },
@@ -136,7 +136,7 @@ async function run() {
   for (const e of ENTITIES) {
     // Check if slug exists
     const existing = await api("/api/entities", { method: "GET" });
-    if (existing.entities?.find((x: any) => x.slug === e.slug)) {
+    if (existing.entities?.find((x) => x.slug === e.slug)) {
       console.log(`  SKIP: ${e.name} (already exists)`);
       skipped++;
       continue;
