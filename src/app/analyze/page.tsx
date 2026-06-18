@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Loader2, BrainCircuit, Building2, TrendingUp, Shield,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 export default function AnalyzePage() {
+  useEffect(() => { document.title = "Generate an AI Company MRI - GroIntel"; }, []);
   const router = useRouter();
   const [inputUrl, setInputUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -60,20 +61,20 @@ export default function AnalyzePage() {
     <div>
       <section className="border-b border-white/5 py-16 md:py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">Analyze Any Company</h1>
-          <p className="mt-3 text-base text-gray-400 max-w-xl mx-auto">Enter a company website to generate a Company MRI with opportunities, risks, signals and growth recommendations.</p>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">Generate an AI Company MRI</h1>
+          <p className="mt-3 text-base text-gray-400 max-w-xl mx-auto">Enter a company website and GroIntel will analyze public growth signals, market readiness, risks, opportunities, and recommended next actions.</p>
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div className="flex max-w-lg mx-auto gap-2">
               <div className="relative flex-1">
                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
-                <input type="text" placeholder="Enter company website..." value={inputUrl}
+                <input type="text" placeholder="https://example.com" value={inputUrl}
                   onChange={(e) => { setInputUrl(e.target.value); setError(""); }}
                   className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3.5 pl-10 pr-4 text-sm text-white placeholder-gray-600 outline-none transition-all focus:border-blue-500/50 focus:bg-white/[0.06]" />
               </div>
               <button type="submit" disabled={analyzing}
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3.5 text-sm font-medium text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-500 hover:to-purple-500 transition-all disabled:opacity-50">
                 {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                {analyzing ? "Analyzing..." : "Analyze Company"}
+                {analyzing ? "Analyzing..." : "Generate Company MRI"}
               </button>
             </div>
 
@@ -81,19 +82,19 @@ export default function AnalyzePage() {
             <div className="max-w-lg mx-auto grid grid-cols-1 md:grid-cols-3 gap-2">
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-600" />
-                <input type="email" placeholder="Work email (optional)" value={email}
+                <input type="email" placeholder="you@company.com" value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-white/5 bg-white/[0.02] py-2.5 pl-9 pr-3 text-xs text-white placeholder-gray-600 outline-none transition-all focus:border-blue-500/30" />
               </div>
               <div className="relative">
                 <Building2 className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-600" />
-                <input type="text" placeholder="Company (optional)" value={companyName}
+                <input type="text" placeholder="Your company" value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   className="w-full rounded-xl border border-white/5 bg-white/[0.02] py-2.5 pl-9 pr-3 text-xs text-white placeholder-gray-600 outline-none transition-all focus:border-blue-500/30" />
               </div>
               <div className="relative">
                 <Briefcase className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-600" />
-                <input type="text" placeholder="Your role (optional)" value={role}
+                <input type="text" placeholder="Founder, CEO, Growth Lead..." value={role}
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full rounded-xl border border-white/5 bg-white/[0.02] py-2.5 pl-9 pr-3 text-xs text-white placeholder-gray-600 outline-none transition-all focus:border-blue-500/30" />
               </div>
@@ -148,3 +149,4 @@ export default function AnalyzePage() {
     </div>
   );
 }
+

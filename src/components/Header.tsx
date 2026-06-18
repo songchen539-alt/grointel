@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 export default function Header() {
   return (
@@ -11,29 +11,18 @@ export default function Header() {
           <span className="text-lg font-semibold tracking-tight text-white">GroIntel</span>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
-          <Link href="/analyze" className="text-sm text-gray-400 transition-colors hover:text-white">
-            Report
-          </Link>
-          <Link href="/feed" className="text-sm text-gray-400 transition-colors hover:text-white">Feed</Link><Link href="/signals" className="text-sm text-gray-400 transition-colors hover:text-white">
-            Signals
-          </Link>
-          <Link href="/about" className="text-sm text-gray-400 transition-colors hover:text-white">
-            About
-          </Link>
-          <Link href="/contact" className="text-sm text-gray-400 transition-colors hover:text-white">
-            Contact
-          </Link>
+          <Link href="/" className="text-sm text-gray-400 transition-colors hover:text-white">Home</Link>
+          <Link href="/analyze" className="text-sm text-gray-400 transition-colors hover:text-white">Analyze</Link>
+          <Link href="/samples" className="text-sm text-gray-400 transition-colors hover:text-white">Sample Reports</Link>
+          <Link href="/contact" className="text-sm text-gray-400 transition-colors hover:text-white">Contact</Link>
         </nav>
         <Link
           href="/analyze"
           className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2 text-sm font-medium text-white transition-all hover:from-blue-500 hover:to-purple-500"
         >
-          Get Started
+          Analyze Your Company
         </Link>
       </div>
     </header>
   );
 }
-
-
-

@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, Check, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { submitLead } from "@/lib/supabase";
@@ -15,6 +15,7 @@ function readParams() {
 }
 
 export default function ContactPage() {
+  useEffect(() => { document.title = "Book a Growth MRI Review - GroIntel"; }, []);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -95,7 +96,7 @@ export default function ContactPage() {
     <div className="mx-auto max-w-2xl px-6 py-16">
       <h1 className="text-3xl font-bold text-white">Book a Growth MRI Review</h1>
       <p className="mt-2 text-sm text-gray-500">
-        Tell us more about your company and we will set up a personalized Growth MRI Review.
+        Share your company details and our team will review your growth signals, risks, opportunities, and next best actions.
       </p>
 
       {reportId && (
@@ -145,7 +146,7 @@ export default function ContactPage() {
             name="message"
             rows={3}
             className="mt-1.5 w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder-gray-600 outline-none transition-all focus:border-blue-500/50"
-            placeholder="Tell us about your growth challenges and goals..."
+            placeholder="Tell us what you want to understand - growth readiness, market expansion, competitor pressure, hiring momentum, or sales opportunities."
           />
         </div>
 
@@ -176,3 +177,4 @@ export default function ContactPage() {
     </div>
   );
 }
+
