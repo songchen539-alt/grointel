@@ -1,12 +1,9 @@
-// GroIntel AI Core - Embedding Provider Interface
-// Abstraction layer for embedding providers.
-// Implementations: OpenAI, Voyage, Cohere, Jina, Local
-// Current: Mock (returns deterministic vectors for testing)
+// GroIntel AI Core v2 - Embedding Provider Interface
+// All embedding providers implement this interface.
 
 export interface EmbeddingProvider {
-  name: string;
+  readonly name: string;
   generateEmbedding(text: string): Promise<number[]>;
-  similarity(a: number[], b: number[]): number;
+  generateEmbeddings(texts: string[]): Promise<number[][]>;
+  similarity(vectorA: number[], vectorB: number[]): number;
 }
-
-export type EmbeddingProviderType = "mock" | "openai" | "voyage" | "cohere" | "jina" | "local";

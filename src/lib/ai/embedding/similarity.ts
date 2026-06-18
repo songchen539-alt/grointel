@@ -2,7 +2,7 @@
 // Methods for computing similarity between entities.
 
 import { cosineSimilarity } from "./vector";
-import { MockEmbeddingProvider } from "./embedding";
+import { MockEmbeddingProvider } from "./mock";
 import { FeatureVector } from "../recommendation/types";
 
 const mockProvider = new MockEmbeddingProvider();
