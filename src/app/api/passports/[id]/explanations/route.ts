@@ -7,8 +7,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   if (!k) return NextResponse.json({ success: false, error: "Not configured" }, { status: 500 });
   try {
-    const r = await fetch(u + "/rest/v1/growth_capability_explanations?select=*&passport_id=eq." + encodeURIComponent(id) + "&order=generated_at.desc", { headers: h(), cache: "no-store" });
-    if (!r.ok) return NextResponse.json({ success: false, error: "Query failed: " + r.status }, { status: 500 });
+    const r = await fetch(u + "/rest/v1/growth_capability_explanations?select=*&passport_id=eq." + encodeURIComponent(id) + "&order=created_at.desc", { headers: h(), cache: "no-store" });
+    if (!r.ok) { const body = await r.text(); return NextResponse.json({ success: false, error: "Query failed: " + r.status + " " + body.slice(0,200) }, { status: 500 }); }
     return NextResponse.json({ success: true, explanations: await r.json() });
   } catch { return NextResponse.json({ success: false, error: "Server error" }, { status: 500 }); }
 }

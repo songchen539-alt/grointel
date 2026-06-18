@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "npx tsx src/lib/ai/__tests__/all.test.ts && npx tsx src/lib/ai/__tests__/gateway.test.ts && npx tsx src/lib/cie/__tests__/cie.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
