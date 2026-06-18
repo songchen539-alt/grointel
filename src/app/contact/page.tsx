@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Send, Check, ArrowRight, Loader2 } from "lucide-react";
@@ -6,12 +6,25 @@ import Link from "next/link";
 import { submitLead } from "@/lib/supabase";
 
 function readParams() {
-  if (typeof window === "undefined") return { source: "", reportId: "" };
+  if (typeof window === "undefined") return { source: "", reportId: "", prospectId: "" };
   const params = new URLSearchParams(window.location.search);
   return {
     source: params.get("source") || "",
     reportId: params.get("reportId") || "",
+    prospectId: params.get("prospectId") || "",
   };
+}
+
+async function updateProspectOnReply(prospectId: string) {
+  try {
+    await fetch("/api/admin/prospects/" + prospectId, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "replied", last_action_at: new Date().toISOString() }),
+    });
+  } catch {
+    console.warn("[contact] Failed to update prospect");
+  }
 }
 
 export default function ContactPage() {
@@ -25,7 +38,7 @@ export default function ContactPage() {
     setLoading(true);
     setError("");
 
-    const { source, reportId } = readParams();
+    const { source, reportId, prospectId } = readParams();
 
     const form = e.currentTarget;
     const data = new FormData(form);
@@ -52,6 +65,7 @@ export default function ContactPage() {
     setLoading(false);
 
     if (result.success) {
+      // Write contact_submitted event
       try {
         fetch("/api/reports/event", {
           method: "POST",
@@ -59,17 +73,23 @@ export default function ContactPage() {
           body: JSON.stringify({
             reportId: reportId || "unknown",
             eventType: "contact_submitted",
-            metadata: { source, reportId: reportId || "unknown", email, companyWebsite: website, timestamp: new Date().toISOString() }
+            metadata: { source, reportId: reportId || "unknown", email, companyWebsite: website, prospectId: prospectId || "", timestamp: new Date().toISOString() },
           }),
         });
       } catch {}
+
+      // Update prospect if associated
+      if (prospectId) {
+        updateProspectOnReply(prospectId);
+      }
+
       setSubmitted(true);
     } else {
       setError(result.error || "Something went wrong. Please try again.");
     }
   };
 
-  const { source, reportId } = typeof window === "undefined" ? { source: "", reportId: "" } : readParams();
+  const { source, reportId, prospectId } = typeof window === "undefined" ? { source: "", reportId: "", prospectId: "" } : readParams();
 
   if (submitted) {
     return (
@@ -177,4 +197,3 @@ export default function ContactPage() {
     </div>
   );
 }
-

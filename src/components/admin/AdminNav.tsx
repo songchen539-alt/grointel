@@ -1,10 +1,8 @@
-// GroIntel Admin Nav Component
-// Shared navigation across all /admin pages.
-
 import Link from "next/link";
 
 const navLinks = [
   { href: "/admin/dashboard", label: "Dashboard" },
+  { href: "/admin/prospects", label: "Prospects" },
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/events", label: "Events" },

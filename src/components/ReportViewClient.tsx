@@ -1,13 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar, ArrowRight } from "lucide-react";
 
-const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/rest\/v1\/?$/, "");
-const serviceKey = ""; // not available client side
-
-// We use the server API to write events instead of direct Supabase
 async function writeEvent(reportId: string, eventType: string, metadata: Record<string, unknown>) {
   try {
     await fetch("/api/reports/event", {
@@ -20,6 +16,18 @@ async function writeEvent(reportId: string, eventType: string, metadata: Record<
   }
 }
 
+async function updateProspect(prospectId: string, status: string) {
+  try {
+    await fetch("/api/admin/prospects/" + prospectId, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, last_action_at: new Date().toISOString() }),
+    });
+  } catch {
+    console.warn("[GroIntel] Failed to update prospect status");
+  }
+}
+
 interface ReportViewClientProps {
   reportId: string;
   companyName: string;
@@ -27,24 +35,51 @@ interface ReportViewClientProps {
 
 export default function ReportViewClient({ reportId, companyName }: ReportViewClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const prospectId = searchParams.get("prospectId") || "";
 
   // Fire report_viewed event on mount
   useEffect(() => {
-    writeEvent(reportId, "report_viewed", {
+    const metadata: Record<string, unknown> = {
       page: "/report/view",
       reportId,
       timestamp: new Date().toISOString(),
-    });
-  }, [reportId]);
+    };
+    if (prospectId) {
+      metadata.prospectId = prospectId;
+      metadata.source = "outbound";
+    }
+    writeEvent(reportId, "report_viewed", metadata);
+
+    // Update prospect if associated
+    if (prospectId) {
+      updateProspect(prospectId, "opened");
+    }
+  }, [reportId, prospectId]);
 
   const handleCTA = async () => {
-    await writeEvent(reportId, "cta_clicked", {
+    const metadata: Record<string, unknown> = {
       page: "/report/view",
       reportId,
       cta: "book_growth_mri_review",
       timestamp: new Date().toISOString(),
-    });
-    router.push("/contact?source=report_view&reportId=" + encodeURIComponent(reportId));
+    };
+    if (prospectId) {
+      metadata.prospectId = prospectId;
+      metadata.source = "outbound";
+    }
+    await writeEvent(reportId, "cta_clicked", metadata);
+
+    // Update prospect if associated
+    if (prospectId) {
+      updateProspect(prospectId, "clicked_cta");
+    }
+
+    let contactUrl = "/contact?source=report_view&reportId=" + encodeURIComponent(reportId);
+    if (prospectId) {
+      contactUrl = "/contact?source=outbound_report&reportId=" + encodeURIComponent(reportId) + "&prospectId=" + encodeURIComponent(prospectId);
+    }
+    router.push(contactUrl);
   };
 
   return (
