@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 function sbH() {
-  return { "apikey": serviceKey, "Authorization": "Bearer " + serviceKey };
+  return { "Content-Type": "application/json", "apikey": serviceKey, "Authorization": "Bearer " + serviceKey };
 }
 
 const allowedFields = new Set(["status", "service_name", "service_type", "problem_solved", "growth_outcome", "pricing_model", "starting_price", "max_price", "updated_at"]);
