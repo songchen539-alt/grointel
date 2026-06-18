@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       preferredChannels: rawNeed.preferred_channels || [],
     };
 
-    const channels = rawChannels.map((c: any) => ({
+    const channels = (rawChannels || []).map((c: { id: string; channel_name?: string; website?: string; category?: string; region?: string; service_types?: string[]; target_industries?: string[]; target_client_stage?: string[]; pricing_model?: string; min_budget?: number; max_budget?: number; currency?: string; growth_outcomes?: string; case_studies?: string }) => ({
       id: c.id,
       channelName: c.channel_name || "",
       website: c.website || "",
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       caseStudies: c.case_studies || "",
     }));
 
-    const services = allServices.map((s: any) => ({
+    const services = (allServices || []).map((s: { id: string; channel_id: string; service_name?: string; service_type?: string; problem_solved?: string; growth_outcome?: string; deliverables?: string; timeline?: string; pricing_model?: string; starting_price?: number; max_price?: number; currency?: string; target_region?: string; target_industry?: string; success_metrics?: string; case_study?: string }) => ({
       id: s.id,
       channelId: s.channel_id,
       serviceName: s.service_name || "",
@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
 
     // 6. Format top 5
     const top5 = recs.slice(0, 5).map((r) => {
-      const ch = channels.find((c: any) => c.id === r.channelId);
-      const sv = r.serviceId ? services.find((s: any) => s.id === r.serviceId) : null;
+      const ch = channels.find((c: { id: string }) => c.id === r.channelId);
+      const sv = r.serviceId ? services.find((s: { id: string }) => s.id === r.serviceId) : null;
       return {
         channelId: r.channelId,
         channelName: ch?.channelName || "",
