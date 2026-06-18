@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import LeadForm from "@/components/LeadForm";
 import ReportViewClient from "@/components/ReportViewClient";
 import { getReport } from "@/lib/reportStore";
@@ -117,7 +118,7 @@ export default async function ReportViewPage({ searchParams }: { searchParams: P
       </div>
 
       {/* Growth MRI Review CTA + tracking */}
-      <ReportViewClient reportId={reportId} companyName={companyName} />
+      <Suspense fallback={<div className="h-40" />}><ReportViewClient reportId={reportId} companyName={companyName} /></Suspense>
 
       <div className="mt-8 text-center">
         <Link href="/analyze" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-300 transition-colors">
