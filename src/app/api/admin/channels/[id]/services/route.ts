@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 function sbH() {
-  return { "apikey": serviceKey, "Authorization": "Bearer " + serviceKey };
+  return { "Content-Type": "application/json", "apikey": serviceKey, "Authorization": "Bearer " + serviceKey };
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       headers: { ...sbH(), "Prefer": "return=representation" },
       body: JSON.stringify([payload]),
     });
-    if (!res.ok) return NextResponse.json({ success: false, error: "Insert failed" }, { status: 500 });
+    if (!res.ok) { const body = await res.text(); return NextResponse.json({ success: false, error: "Insert failed: " + res.status + " " + body.slice(0, 200) }, { status: 500 }); }
     const rows = await res.json();
     return NextResponse.json({ success: true, service: rows[0] || rows });
   } catch {
