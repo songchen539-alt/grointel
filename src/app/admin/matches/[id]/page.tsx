@@ -5,12 +5,52 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, Loader2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Loader2, ExternalLink, Plus } from "lucide-react";
 import AdminNav from "@/components/admin/AdminNav";
 
 const STATUSES = ["draft", "proposed_to_channel", "channel_interested", "quoted", "proposed_to_company", "company_interested", "intro_made", "won", "lost"];
 
+function MatchQuotesSection({ matchId }: { matchId: string }) {
+  const [quotes, setQuotes] = useState<any[]>([]);
+  const [qloading, setQloading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/quotes").then((r) => r.json()).then((d) => {
+      if (d.success) setQuotes((d.quotes || []).filter((q: any) => q.match_id === matchId));
+      setQloading(false);
+    });
+  }, [matchId]);
+
+  return (
+    <div className="mt-6 rounded-xl border border-white/5 bg-white/[0.02] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-bold text-white">Quotes for This Match (" + quotes.length + ")</h2>
+        <Link href={"/admin/quotes/new?matchId=" + matchId} className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"><Plus className="h-3 w-3" /> Create Quote</Link>
+      </div>
+      {qloading ? (<p className="text-xs text-gray-500">Loading...</p>
+      ) : quotes.length === 0 ? (<p className="text-xs text-gray-500">No quotes yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {quotes.map((q: any) => (
+            <div key={q.id} className="flex items-center justify-between rounded-lg bg-white/[0.02] px-3 py-2">
+              <div>
+                <p className="text-xs text-white">{q.quote_title}</p>
+                <p className="text-[10px] text-gray-500">{q.currency || "USD"} {q.quote_amount ?? "-"} | {q.timeline || "No timeline"}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300">{q.status}</span>
+                <Link href={"/admin/quotes/" + q.id} className="text-[10px] text-blue-400"><ExternalLink className="h-3 w-3" /></Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MatchDetailPage() {
+
   const params = useParams();
   const id = params.id as string;
   const [match, setMatch] = useState<any>(null);
@@ -147,6 +187,9 @@ export default function MatchDetailPage() {
           </div>
         </div>
       </div>
+
+      <MatchQuotesSection matchId={id} />
+
     </div>
   );
 }

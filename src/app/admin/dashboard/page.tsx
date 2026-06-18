@@ -67,7 +67,7 @@ export default async function AdminDashboardPage() {
     );
   }
 
-  const [reportsCount, leadsCount, events, recentLeads, prospects, allProspects, growthNeedsCount, growthChannelsCount, channelServicesCount, matchesCount] = await Promise.all([
+  const [reportsCount, leadsCount, events, recentLeads, prospects, allProspects, growthNeedsCount, growthChannelsCount, channelServicesCount, matchesCount, quotesCount] = await Promise.all([
     safeCount("company_mri_reports"),
     safeCount("leads"),
     safeQuery<ReportEvent>("report_events", "event_type,report_id", { limit: 10000 }),
@@ -78,6 +78,7 @@ export default async function AdminDashboardPage() {
     safeCount("growth_channels"),
     safeCount("channel_services"),
     safeCount("growth_matches"),
+    safeCount("growth_quotes"),
   ]);
 
   let reportViews = 0;
@@ -95,6 +96,7 @@ export default async function AdminDashboardPage() {
   const totalGrowthChannels = growthChannelsCount ?? 0;
   const totalChannelServices = channelServicesCount ?? 0;
   const totalMatches = matchesCount ?? 0;
+  const totalQuotes = quotesCount ?? 0;
   const conversionRate = totalReports > 0
     ? ((totalLeads / totalReports) * 100).toFixed(1) + "%"
     : "0.0%";
@@ -146,7 +148,9 @@ export default async function AdminDashboardPage() {
           { label: "Growth Needs", value: totalGrowthNeeds, icon: BarChart3, color: "text-cyan-400", bg: "bg-cyan-500/[0.06]" },
           { label: "Growth Channels", value: totalGrowthChannels, icon: Globe, color: "text-indigo-400", bg: "bg-indigo-500/[0.06]" },
           { label: "Channel Services", value: totalChannelServices, icon: Target, color: "text-teal-400", bg: "bg-teal-500/[0.06]" },
+          { label: "Total Quotes", value: totalQuotes, icon: Activity, color: "text-orange-400", bg: "bg-orange-500/[0.06]" },
           { label: "Total Matches", value: totalMatches, icon: Activity, color: "text-orange-400", bg: "bg-orange-500/[0.06]" },
+          { label: "Total Quotes", value: totalQuotes, icon: Target, color: "text-teal-400", bg: "bg-teal-500/[0.06]" },
           { label: "Lead Conv. Rate", value: conversionRate, icon: TrendingUp, color: "text-rose-400", bg: "bg-rose-500/[0.06]" },
         ].map((kpi) => (
           <div key={kpi.label} className={"rounded-xl border border-white/5 " + kpi.bg + " p-4"}>

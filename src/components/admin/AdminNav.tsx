@@ -6,6 +6,7 @@ const navLinks = [
   { href: "/admin/growth-needs", label: "Growth Needs" },
   { href: "/admin/channels", label: "Channels" },
   { href: "/admin/matches", label: "Matches" },
+  { href: "/admin/quotes", label: "Quotes" },
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/events", label: "Events" },
@@ -38,4 +39,5 @@ export default function AdminNav() {
     </nav>
   );
 }
+
 
