@@ -51,6 +51,17 @@ export default function ContactPage() {
     setLoading(false);
 
     if (result.success) {
+      try {
+        fetch("/api/reports/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reportId: reportId || "unknown",
+            eventType: "contact_submitted",
+            metadata: { source, reportId: reportId || "unknown", email, companyWebsite: website, timestamp: new Date().toISOString() }
+          }),
+        });
+      } catch {}
       setSubmitted(true);
     } else {
       setError(result.error || "Something went wrong. Please try again.");
