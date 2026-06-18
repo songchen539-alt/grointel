@@ -71,7 +71,12 @@ export default function AdminQuotesPage() {
                     }`}>{q.status}</span>
                   </td>
                   <td className="px-4 py-3 text-[10px] text-gray-500">{q.created_at ? new Date(q.created_at).toLocaleDateString() : "-"}</td>
-                  <td className="px-4 py-3"><Link href={"/admin/quotes/" + q.id} className="text-xs text-blue-400 hover:text-blue-300">View <ExternalLink className="h-3 w-3 inline" /></Link></td>
+                  <td className="px-4 py-3"><div className="flex items-center gap-2">
+                      <Link href={"/admin/quotes/" + q.id} className="text-xs text-blue-400 hover:text-blue-300">View <ExternalLink className="h-3 w-3 inline" /></Link>
+                      {(q.status === "shared_with_company" || q.status === "accepted") && q.company_growth_need_id && (
+                        <Link href={"/growth-options/view?needId=" + q.company_growth_need_id} className="text-[10px] text-emerald-400 hover:text-emerald-300">Company View</Link>
+                      )}
+                    </div></td>
                 </tr>
               ))}
             </tbody>

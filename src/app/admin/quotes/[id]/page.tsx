@@ -91,6 +91,15 @@ export default function QuoteDetailPage() {
 
           <div className="mt-4">
             <p className="text-xs text-gray-500 mb-2">Update Status:</p>
+            {quote.status !== "shared_with_company" && quote.status !== "accepted" && (
+              <button onClick={async () => { setSaving("share"); await fetch("/api/admin/quotes/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "shared_with_company" }) }); await load(); setSaving(""); }} disabled={saving === "share"}
+                className="mt-2 inline-flex items-center gap-1 text-xs bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-1.5 rounded-lg text-white disabled:opacity-50">
+                {saving === "share" ? "Sharing..." : "Share With Company"}
+              </button>
+            )}
+            {quote.status === "shared_with_company" || quote.status === "accepted" ? (
+              <p className="mt-2 text-xs text-emerald-400">This quote is visible in the company curated options view.</p>
+            ) : null}
             <div className="flex flex-wrap gap-1.5">
               {STATUSES.map((s) => (
                 <button key={s} onClick={() => updateStatus(s)} disabled={saving === "status" || quote.status === s}
