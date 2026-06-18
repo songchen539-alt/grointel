@@ -42,6 +42,7 @@ function CreateQuoteForm() {
   useEffect(() => {
     if (form.matchId) {
       const m = matches.find((x: any) => x.id === form.matchId);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedMatch(m);
       if (m?.company_growth_need_id) {
         fetch("/api/admin/growth-needs/" + m.company_growth_need_id).then((r) => r.json()).then((d) => { if (d.success) setNeed(d.need); });

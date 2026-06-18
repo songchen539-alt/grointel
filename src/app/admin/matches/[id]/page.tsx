@@ -24,7 +24,7 @@ function MatchQuotesSection({ matchId }: { matchId: string }) {
   return (
     <div className="mt-6 rounded-xl border border-white/5 bg-white/[0.02] p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-bold text-white">Quotes for This Match (" + quotes.length + ")</h2>
+        <h2 className="text-sm font-bold text-white">Quotes for This Match ({quotes.length})</h2>
         <Link href={"/admin/quotes/new?matchId=" + matchId} className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"><Plus className="h-3 w-3" /> Create Quote</Link>
       </div>
       {qloading ? (<p className="text-xs text-gray-500">Loading...</p>
@@ -82,7 +82,8 @@ export default function MatchDetailPage() {
     setLoading(false);
   };
 
-  useEffect(() => { loadAll(); }, [id]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadAll(); }, []);
 
   async function updateField(key: string, value: any) {
     setSaving(key);

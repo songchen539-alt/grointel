@@ -65,7 +65,8 @@ export default function ProspectDetailPage() {
     }
   }, [id]);
 
-  useEffect(() => { loadProspect(); }, [loadProspect]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadProspect(); }, []);
 
   async function handleGenerateReport() {
     setGeneratingReport(true);

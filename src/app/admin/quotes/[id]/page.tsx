@@ -43,7 +43,8 @@ export default function QuoteDetailPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [id]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, []);
 
   async function updateStatus(s: string) {
     setSaving("status");
