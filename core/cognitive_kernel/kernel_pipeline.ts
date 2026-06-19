@@ -65,7 +65,18 @@ export async function processRealityEvent(kernel: CognitiveKernel, event: Realit
     logger.info("Pipeline", `Predictions generated: ${predictions.length}`);
   }
 
-  // 8. Update kernel state
+  // 8. Build graph
+  kernel.graphBuilder.buildFromPipeline({
+    observation, signals, entities: entityResult.entities,
+    contradictions: contradictionResult.contradictions,
+    fidelity, predictions,
+    memoryRecordCount: kernel.memory.getRecordCount(),
+  });
+
+  // 9. Update graph metrics
+  const graphMetrics = kernel.graphMetrics.collect(kernel.graph);
+
+  // 10. Update kernel state
   kernel.state.updateMemoryIndexSize(kernel.memory.getRecordCount());
   kernel.state.addEntity(observation.entity_id || "global");
   for (const sig of signals) {

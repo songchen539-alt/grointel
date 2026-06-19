@@ -267,6 +267,9 @@ export interface KernelState {
   learning_queue: string[];
   memory_index_size: number;
   reality_fidelity_score: RealityFidelityScore | null;
+  graph_metrics: Record<string, unknown> | null;
+  machine_learning_scores: Record<string, number>;
+  civilization_contribution_score: number;
   last_event_at: string;
   started_at: string;
 }

@@ -7,6 +7,10 @@ import { KernelRegistry } from "./kernel_registry";
 import { KernelMetricsCollector } from "./kernel_metrics";
 import { KERNEL_POLICY } from "./kernel_policy";
 import { KernelLogger } from "./kernel_logger";
+import { GraphEngine } from "./graph/graph_engine";
+import { GraphQuery } from "./graph/graph_query";
+import { GraphMetricsCollector } from "./graph/graph_metrics";
+import { GraphBuilder } from "./graph/graph_builder";
 
 let eventCounter = 0;
 
@@ -23,6 +27,10 @@ export class CognitiveKernel {
   public readonly metrics: KernelMetricsCollector;
   public readonly policy: typeof KERNEL_POLICY;
   public readonly logger: KernelLogger;
+  public readonly graph: GraphEngine;
+  public readonly graphQuery: GraphQuery;
+  public readonly graphMetrics: GraphMetricsCollector;
+  public readonly graphBuilder: GraphBuilder;
 
   private isRunning: boolean = false;
   private loopInterval: ReturnType<typeof setInterval> | null = null;
@@ -44,6 +52,10 @@ export class CognitiveKernel {
     this.registry = new KernelRegistry();
     this.metrics = new KernelMetricsCollector();
     this.policy = KERNEL_POLICY;
+    this.graph = new GraphEngine();
+    this.graphQuery = new GraphQuery(this.graph);
+    this.graphMetrics = new GraphMetricsCollector();
+    this.graphBuilder = new GraphBuilder(this.graph);
     this.logger = new KernelLogger();
 
     this.logger.info("Kernel", "Cognitive Kernel initialized", {

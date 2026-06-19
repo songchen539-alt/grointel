@@ -19,6 +19,9 @@ export class KernelStateManager {
       contradiction_map: {},
       learning_queue: [],
       memory_index_size: 0,
+      graph_metrics: null,
+      machine_learning_scores: {},
+      civilization_contribution_score: 0,
       reality_fidelity_score: null,
       last_event_at: new Date().toISOString(),
       started_at: new Date().toISOString(),
@@ -106,6 +109,10 @@ export class KernelStateManager {
 
   updateRealityFidelity(score: RealityFidelityScore): void {
     this.state.reality_fidelity_score = score;
+  }
+
+  updateGraphMetrics(metrics: Record<string, unknown>): void {
+    this.state.graph_metrics = metrics;
   }
 
   getSnapshot(): KernelState {
