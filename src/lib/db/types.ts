@@ -182,3 +182,55 @@ export interface DbErrorResponse {
 }
 
 export type DbResponse<T> = DbSuccessResponse<T> | DbErrorResponse;
+
+// ============================================================
+// growth_proposals
+// ============================================================
+export interface DbGrowthProposal {
+  id: string;
+  title: string;
+  business_entity_id: string;
+  capability_entity_id: string;
+  passport_id: string;
+  goal: string | null;
+  constraints: Record<string, unknown> | null;
+  strategy: Record<string, unknown> | null;
+  capability_stack: Record<string, unknown>[] | null;
+  execution_plan: Record<string, unknown> | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  currency: string | null;
+  timeline: string | null;
+  expected_outcome: string | null;
+  reasoning: Record<string, unknown> | null;
+  confidence_score: number | null;
+  status: string | null;
+  version: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+// ============================================================
+// growth_proposal_versions
+// ============================================================
+export interface DbGrowthProposalVersion {
+  id: string;
+  proposal_id: string;
+  version: number;
+  snapshot: Record<string, unknown>;
+  change_summary: string | null;
+  created_by: string | null;
+  created_at: string | null;
+}
+
+// ============================================================
+// growth_proposal_comments
+// ============================================================
+export interface DbGrowthProposalComment {
+  id: string;
+  proposal_id: string;
+  author_type: string | null;
+  author_name: string | null;
+  comment: string | null;
+  created_at: string | null;
+}
