@@ -48,6 +48,16 @@ export interface WorldState {
   global_reality_fidelity: number;
   global_prediction_accuracy: number;
   global_learning_velocity: number;
+  active_goals: number;
+  goal_progress: number;
+  attention_distribution: Record<string, number>;
+  ignored_events: number;
+  monitored_events: number;
+  processed_events: number;
+  escalated_events: number;
+  deep_analyzed_events: number;
+  domain_attention_scores: Record<string, number>;
+  top_attention_entities: string[];
   last_event_at: string | null;
   updated_at: string;
 }
