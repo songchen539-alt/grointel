@@ -3,6 +3,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DbGrowthProposal } from "@/lib/db/types";
 
+const VALID_STATUSES = ["draft", "under_review", "revised", "accepted", "rejected"];
+
 const u = process.env.NEXT_PUBLIC_SUPABASE_URL || "", k = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const h = () => ({ "Content-Type": "application/json", "apikey": k, "Authorization": "Bearer " + k });
 
@@ -22,8 +24,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
   if (!k) return NextResponse.json({ success: false, error: "Not configured" }, { status: 500 });
   let b; try { b = await request.json(); } catch { return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 }); }
+  // Validate status if provided
+  if (b.status && !VALID_STATUSES.includes(b.status)) {
+    return NextResponse.json({ success: false, error: "Invalid status. Must be: " + VALID_STATUSES.join(", ") }, { status: 400 });
+  }
   try {
-    const r = await fetch(u + "/rest/v1/growth_proposals?id=eq." + encodeURIComponent(id), { method: "PATCH", headers: { ...h(), "Prefer": "return=representation" }, body: JSON.stringify(b) });
+    const r = await fetch(u + "/rest/v1/growth_proposals?id=eq." + encodeURIComponent(id), { method: "PATCH", headers: { ...h(), "Prefer": "return=representation" }, body: JSON.stringify({ ...b, updated_at: new Date().toISOString() }) });
     if (!r.ok) return NextResponse.json({ success: false, error: "Update failed" }, { status: 500 });
     const rows: DbGrowthProposal[] = await r.json();
     return NextResponse.json({ success: true, proposal: rows[0] || rows });

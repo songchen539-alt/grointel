@@ -225,11 +225,46 @@ async function run() {
       console.log(`    Business: ${business.display_name}, Partner: ${capability.display_name}`);
       console.log(`    Budget: $${scenario.budget_min/1000}k-$${scenario.budget_max/1000}k, Confidence: ${scenario.confidence_score}%`);
       created++;
+
+      // Create initial version snapshot for this proposal
+      const versionBody = {
+        snapshot: { ...proposalBody },
+        change_summary: "Initial proposal creation",
+        created_by: "system",
+        version: 1,
+      };
+      const vresp = await api("/api/proposals/" + pid + "/versions", { method: "POST", body: versionBody });
+      if (vresp.success) {
+        console.log(`    Initial version saved`);
+      }
     } else {
       console.log(`  FAIL: ${scenario.title} - ${resp.error}`);
       failed++;
     }
     await sleep(300);
+  }
+
+  // If proposals already exist without versions, create missing initial versions
+  console.log("\nChecking for existing proposals without versions...");
+  const existingResp = await api("/api/proposals");
+  if (existingResp.success) {
+    for (const p of existingResp.proposals) {
+      const vresp = await api("/api/proposals/" + p.id + "/versions");
+      if (vresp.success && vresp.versions.length === 0) {
+        const snap = {
+          title: p.title, goal: p.goal,
+          constraint: p.constraints, strategy: p.strategy,
+          capability_stack: p.capability_stack, execution_plan: p.execution_plan,
+          budget_min: p.budget_min, budget_max: p.budget_max,
+          reasoning: p.reasoning, expected_outcome: p.expected_outcome,
+        };
+        await api("/api/proposals/" + p.id + "/versions", {
+          method: "POST",
+          body: { snapshot: snap, change_summary: "Initial version (backfill)", created_by: "system", version: 1 },
+        });
+        console.log(`  Backfilled version for: ${p.title.slice(0, 50)}`);
+      }
+    }
   }
 
   console.log(`\nCreated: ${created}, Failed: ${failed}, Total: ${created + failed}`);

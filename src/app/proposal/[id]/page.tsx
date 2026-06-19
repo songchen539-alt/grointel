@@ -116,11 +116,59 @@ export default function PublicProposalPage({ params }: { params: Promise<{ id: s
             </Section>
           )}
 
-          {proposal.reasoning && (
-            <Section title="AI Reasoning">
-              <JsonBlock data={proposal.reasoning} />
-            </Section>
-          )}
+          {/* Why this plan makes sense — AI Reasoning */}
+          <Section title="Why this plan makes sense">
+            {proposal.reasoning ? (
+              <div className="space-y-4">
+                {proposal.reasoning.rationale && (
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Summary</p>
+                    <p className="text-base text-white">{proposal.reasoning.rationale}</p>
+                  </div>
+                )}
+                {proposal.reasoning.key_factors && Array.isArray(proposal.reasoning.key_factors) && (
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Key Factors</p>
+                    <div className="flex flex-wrap gap-2">
+                      {proposal.reasoning.key_factors.map((f: string, i: number) => (
+                        <span key={i} className="rounded-full bg-green-900/20 border border-green-900/30 px-3 py-1 text-xs text-green-400">{f}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {proposal.reasoning.risks && Array.isArray(proposal.reasoning.risks) && (
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Risk Factors</p>
+                    <div className="flex flex-wrap gap-2">
+                      {proposal.reasoning.risks.map((r: string, i: number) => (
+                        <span key={i} className="rounded-full bg-red-900/20 border border-red-900/30 px-3 py-1 text-xs text-red-400">{r}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {proposal.reasoning.mitigations && Array.isArray(proposal.reasoning.mitigations) && (
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Mitigations</p>
+                    <ul className="list-disc list-inside text-sm text-gray-300 space-y-1">
+                      {proposal.reasoning.mitigations.map((m: string, i: number) => (
+                        <li key={i}>{m}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {proposal.confidence_score > 0 && (
+                  <div className="pt-2 border-t border-white/5">
+                    <span className="text-sm text-gray-400">AI Confidence Score: </span>
+                    <span className={"text-lg font-bold " + (proposal.confidence_score >= 70 ? "text-green-400" : proposal.confidence_score >= 50 ? "text-yellow-400" : "text-red-400")}>
+                      {proposal.confidence_score}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">This proposal is based on available business context, capability fit, budget, timeline, and expected outcome.</p>
+            )}
+          </Section>
         </div>
 
         <div className="mt-8 border-t border-white/5 pt-6 text-center">
