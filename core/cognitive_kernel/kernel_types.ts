@@ -270,6 +270,9 @@ export interface KernelState {
   graph_metrics: Record<string, unknown> | null;
   machine_learning_scores: Record<string, number>;
   civilization_contribution_score: number;
+  active_reasoning_traces: number;
+  active_risks: number;
+  active_opportunities: number;
   last_event_at: string;
   started_at: string;
 }

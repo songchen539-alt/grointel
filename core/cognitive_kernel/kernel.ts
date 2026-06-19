@@ -11,6 +11,7 @@ import { GraphEngine } from "./graph/graph_engine";
 import { GraphQuery } from "./graph/graph_query";
 import { GraphMetricsCollector } from "./graph/graph_metrics";
 import { GraphBuilder } from "./graph/graph_builder";
+import { GraphReasoner } from "./reasoning/graph_reasoner";
 
 let eventCounter = 0;
 
@@ -31,6 +32,7 @@ export class CognitiveKernel {
   public readonly graphQuery: GraphQuery;
   public readonly graphMetrics: GraphMetricsCollector;
   public readonly graphBuilder: GraphBuilder;
+  public readonly reasoner: GraphReasoner;
 
   private isRunning: boolean = false;
   private loopInterval: ReturnType<typeof setInterval> | null = null;
@@ -56,6 +58,7 @@ export class CognitiveKernel {
     this.graphQuery = new GraphQuery(this.graph);
     this.graphMetrics = new GraphMetricsCollector();
     this.graphBuilder = new GraphBuilder(this.graph);
+    this.reasoner = new GraphReasoner(this.graph);
     this.logger = new KernelLogger();
 
     this.logger.info("Kernel", "Cognitive Kernel initialized", {

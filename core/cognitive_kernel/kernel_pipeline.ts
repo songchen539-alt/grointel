@@ -73,10 +73,28 @@ export async function processRealityEvent(kernel: CognitiveKernel, event: Realit
     memoryRecordCount: kernel.memory.getRecordCount(),
   });
 
-  // 9. Update graph metrics
+  // 9. Reason about affected entities
+  for (const entity of entityResult.entities) {
+    const result = kernel.reasoner.reasonAboutEntity(entity.id);
+    if (result.risks.length > 0 || result.opportunities.length > 0) {
+      logger.info("Pipeline", `Reasoning for ${entity.name}: ${result.risks.length} risks, ${result.opportunities.length} opportunities`);
+      // Store reasoning outputs as graph nodes
+      for (const risk of result.risks) {
+        kernel.graph.addNode("Risk", `${risk.type}: ${risk.description.slice(0, 50)}`, null, risk.confidence, fidelity.overall, { risk_type: risk.type });
+        // Tracking via state
+      }
+      for (const opp of result.opportunities) {
+        kernel.graph.addNode("Opportunity", `${opp.type}: ${opp.description.slice(0, 50)}`, null, opp.confidence, fidelity.overall, { opp_type: opp.type });
+        // Tracking via state
+      }
+      // Tracking via state
+    }
+  }
+
+  // 10. Update graph metrics
   const graphMetrics = kernel.graphMetrics.collect(kernel.graph);
 
-  // 10. Update kernel state
+  // 11. Update kernel state
   kernel.state.updateMemoryIndexSize(kernel.memory.getRecordCount());
   kernel.state.addEntity(observation.entity_id || "global");
   for (const sig of signals) {
