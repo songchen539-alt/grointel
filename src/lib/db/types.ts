@@ -353,3 +353,46 @@ export interface DbBusinessIntelligenceProfile {
   created_at: string | null;
   updated_at: string | null;
 }
+
+export interface DbCapabilityScanProfile {
+  id: string;
+  entity_id: string | null;
+  passport_id: string | null;
+  profile_url: string;
+  normalized_domain: string | null;
+  display_name: string | null;
+  entity_type: string | null;
+  public_summary: string | null;
+  detected_capabilities: Record<string, unknown>[] | null;
+  detected_audiences: Record<string, unknown>[] | null;
+  detected_markets: Record<string, unknown>[] | null;
+  detected_channels: Record<string, unknown>[] | null;
+  public_evidence: Record<string, unknown>[] | null;
+  sources: (string | Record<string, unknown>)[] | null;
+  confidence: Record<string, number> | null;
+  scan_status: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface DbCapabilityKnowledgeProfile {
+  id: string;
+  entity_id: string | null;
+  passport_id: string | null;
+  scan_profile_id: string | null;
+  profile_url: string;
+  capability_identity: Record<string, unknown> | null;
+  capability_dna: Record<string, unknown> | null;
+  audience_dna: Record<string, unknown> | null;
+  evidence_summary: Record<string, unknown> | null;
+  strengths: (string | Record<string, unknown>)[] | null;
+  limitations: (string | Record<string, unknown>)[] | null;
+  preferred_collaborations: (string | Record<string, unknown>)[] | null;
+  pricing_signals: Record<string, unknown> | null;
+  availability_signals: Record<string, unknown> | null;
+  knowledge_confidence: Record<string, number> | null;
+  knowledge_status: string | null;
+  last_conversation_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
