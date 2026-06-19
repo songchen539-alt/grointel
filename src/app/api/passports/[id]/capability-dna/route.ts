@@ -1,5 +1,7 @@
 // GET /api/passports/[id]/capability-dna
 import { NextRequest, NextResponse } from "next/server";
+import { DbGrowthCapabilityDna } from "@/lib/db/types";
+
 const u = process.env.NEXT_PUBLIC_SUPABASE_URL || "", k = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const h = () => ({ "apikey": k, "Authorization": "Bearer " + k });
 
@@ -9,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const r = await fetch(u + "/rest/v1/growth_capability_dna?select=*&passport_id=eq." + encodeURIComponent(id) + "&order=created_at.desc&limit=1", { headers: h(), cache: "no-store" });
     if (!r.ok) { const body = await r.text(); return NextResponse.json({ success: false, error: "Query failed: " + r.status + " " + body.slice(0,200) }, { status: 500 }); }
-    const rows = await r.json();
+    const rows: DbGrowthCapabilityDna[] = await r.json();
     return NextResponse.json({ success: true, capabilityDna: rows[0] || null });
   } catch { return NextResponse.json({ success: false, error: "Server error" }, { status: 500 }); }
 }

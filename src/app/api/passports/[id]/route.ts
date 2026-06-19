@@ -1,23 +1,48 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// GroIntel Growth Passports Detail API
-// GET/PATCH /api/passports/[id]
+// GroIntel Growth Passport Detail API
+// GET /api/passports/[id] — returns passport with all sub-tables
+// PATCH /api/passports/[id] — partial update
 
 import { NextRequest, NextResponse } from "next/server";
+import { DbGrowthPassport, DbGrowthCapabilityDna, DbGrowthAudienceDna, DbGrowthEvidence, DbGrowthCapabilityExplanation, DbGrowthRelationship } from "@/lib/db/types";
 
-const u = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const k = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const u = process.env.NEXT_PUBLIC_SUPABASE_URL || "", k = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const h = () => ({ "Content-Type": "application/json", "apikey": k, "Authorization": "Bearer " + k });
-const af = new Set(["headline", "description", "mission", "primary_industry", "primary_region", "company_size", "team_size", "year_founded", "pricing_level", "availability", "overall_completion", "secondary_industries", "service_regions"]);
+
+async function fetchSubTable(table: string, passportId: string): Promise<Record<string, unknown>[]> {
+  const r = await fetch(u + "/rest/v1/" + table + "?select=*&passport_id=eq." + encodeURIComponent(passportId) + "&order=created_at.desc", { headers: { ...h() }, cache: "no-store" });
+  return r.ok ? r.json() : [];
+}
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!k) return NextResponse.json({ success: false, error: "Not configured" }, { status: 500 });
   try {
-    const r = await fetch(u + "/rest/v1/growth_passports?select=*,entity:entity_id(*),capabilities:growth_capabilities(*),audiences:growth_audiences(*),channels:growth_channels_supported(*),case_studies:growth_case_studies(*),socials:growth_social_accounts(*),metrics:growth_metrics(*)" + "&id=eq." + encodeURIComponent(id), { headers: h(), cache: "no-store" });
+    const r = await fetch(u + "/rest/v1/growth_passports?select=*,entity:entity_id(*)&id=eq." + encodeURIComponent(id), { headers: h(), cache: "no-store" });
     if (!r.ok) return NextResponse.json({ success: false, error: "Query failed" }, { status: 500 });
-    const rows = await r.json();
-    if (!rows?.length) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
-    return NextResponse.json({ success: true, passport: rows[0] });
+    const rows: DbGrowthPassport[] = await r.json();
+    if (!rows[0]) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+
+    const [capabilityDna, audienceDna, evidence, history, explanations, relationships] = await Promise.all([
+      fetchSubTable("growth_capability_dna", id).then((r) => (r[0] || null) as unknown as DbGrowthCapabilityDna | null),
+      fetchSubTable("growth_audience_dna", id).then((r) => (r[0] || null) as unknown as DbGrowthAudienceDna | null),
+      fetchSubTable("growth_evidence", id) as unknown as Promise<DbGrowthEvidence[]>,
+      fetchSubTable("growth_capability_history", id),
+      fetchSubTable("growth_capability_explanations", id) as unknown as Promise<DbGrowthCapabilityExplanation[]>,
+      fetchSubTable("growth_relationships", id) as unknown as Promise<DbGrowthRelationship[]>,
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      passport: {
+        ...rows[0],
+        capabilityDna,
+        audienceDna,
+        evidence,
+        history,
+        explanations,
+        relationships,
+      },
+    });
   } catch { return NextResponse.json({ success: false, error: "Server error" }, { status: 500 }); }
 }
 
@@ -25,12 +50,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
   if (!k) return NextResponse.json({ success: false, error: "Not configured" }, { status: 500 });
   let b; try { b = await request.json(); } catch { return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 }); }
-  const up: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  for (const key of Object.keys(b)) { if (af.has(key)) up[key] = b[key]; }
   try {
-    const r = await fetch(u + "/rest/v1/growth_passports?id=eq." + encodeURIComponent(id), { method: "PATCH", headers: { ...h(), "Prefer": "return=representation" }, body: JSON.stringify(up) });
+    const r = await fetch(u + "/rest/v1/growth_passports?id=eq." + encodeURIComponent(id), { method: "PATCH", headers: { ...h(), "Prefer": "return=representation" }, body: JSON.stringify(b) });
     if (!r.ok) return NextResponse.json({ success: false, error: "Update failed" }, { status: 500 });
-    const rows = await r.json();
+    const rows: DbGrowthPassport[] = await r.json();
     return NextResponse.json({ success: true, passport: rows[0] || rows });
   } catch { return NextResponse.json({ success: false, error: "Server error" }, { status: 500 }); }
 }
