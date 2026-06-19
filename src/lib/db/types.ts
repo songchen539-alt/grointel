@@ -396,3 +396,64 @@ export interface DbCapabilityKnowledgeProfile {
   created_at: string | null;
   updated_at: string | null;
 }
+
+// ============================================================
+// growth_goals
+// ============================================================
+export interface DbGrowthGoal {
+  id: string;
+  name: string;
+  slug: string | null;
+  category: string | null;
+  description: string | null;
+  typical_budget: string | null;
+  typical_timeline: string | null;
+  required_capabilities: string[] | null;
+  suggested_metrics: string[] | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string | null;
+}
+
+// ============================================================
+// growth_constraints
+// ============================================================
+export interface DbGrowthConstraint {
+  id: string;
+  name: string | null;
+  source_type: string | null;
+  source_id: string | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  timeline_text: string | null;
+  regions: string[] | null;
+  languages: string[] | null;
+  compliance_needs: string[] | null;
+  company_stage: string | null;
+  industry_focus: string[] | null;
+  urgency: string | null;
+  other_constraints: Record<string, unknown> | null;
+  confidence: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+// ============================================================
+// growth_strategies
+// ============================================================
+export interface DbGrowthStrategy {
+  id: string;
+  source_type: string | null;
+  source_id: string | null;
+  goal_ids: string[] | null;
+  constraint_id: string | null;
+  reasoning: string | null;
+  capability_stack: string[] | null;
+  priorities: Record<string, unknown>[] | null;
+  risk_factors: Record<string, unknown>[] | null;
+  confidence_score: number | null;
+  ai_model_version: string | null;
+  status: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
