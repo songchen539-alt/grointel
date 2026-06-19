@@ -189,9 +189,9 @@ export default function BusinessIntelligenceDetailPage({ params }: { params: Pro
         {/* CTAs */}
         <div className="mt-8 rounded-lg border border-white/5 bg-white/[0.02] p-6">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button disabled className="rounded-lg bg-white/10 px-6 py-3 text-sm text-gray-400 cursor-not-allowed w-full sm:w-auto text-center">
-              Continue with AI Conversation (coming soon)
-            </button>
+            <Link href={profile ? "/business-intelligence/" + profile.id + "/complete" : "#"} className="rounded-lg bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/15 transition-colors w-full sm:w-auto text-center">
+              Complete Business Understanding
+            </Link>
             <button disabled className="rounded-lg bg-white/10 px-6 py-3 text-sm text-gray-400 cursor-not-allowed w-full sm:w-auto text-center">
               Create Growth Proposal (coming soon)
             </button>

@@ -457,3 +457,45 @@ export interface DbGrowthStrategy {
   updated_at: string | null;
 }
 
+// ============================================================
+// knowledge_completion types
+// ============================================================
+export interface DbKnowledgeCompletionSession {
+  id: string;
+  profile_type: string;
+  profile_id: string;
+  current_step: number | null;
+  overall_confidence: number | null;
+  status: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface DbKnowledgeCompletionQuestion {
+  id: string;
+  session_id: string;
+  target_field: string;
+  question: string;
+  reason: string | null;
+  importance: number | null;
+  confidence_before: number | null;
+  confidence_after: number | null;
+  answer: string | null;
+  answered_at: string | null;
+  created_at: string | null;
+}
+
+export interface DbKnowledgeUpdate {
+  id: string;
+  session_id: string;
+  knowledge_profile_id: string;
+  updated_field: string;
+  previous_value: string | null;
+  new_value: string | null;
+  confidence_delta: number | null;
+  source: string | null;
+  created_at: string | null;
+}
+
