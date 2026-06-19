@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate first question
-    const firstQuestion = generateNextQuestion(knowledgeObj);
-    const overallConfidence = calculateOverallConfidence(knowledgeObj);
+    const firstQuestion = generateNextQuestion(knowledgeObj, b.profileType);
+    const overallConfidence = calculateOverallConfidence(knowledgeObj, b.profileType);
     const isComplete = !firstQuestion;
 
     // Create session
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     };
 
     const sr = await fetch(u + "/rest/v1/knowledge_completion_sessions", { method: "POST", headers: { ...h(), "Prefer": "return=representation" }, body: JSON.stringify([sessionBody]) });
-    if (!sr.ok) return NextResponse.json({ success: false, error: "Session create failed" }, { status: 500 });
+    if (!sr.ok) { const eb = await sr.text(); return NextResponse.json({ success: false, error: "Session create failed: " + sr.status + " " + eb.slice(0,200) }, { status: 500 }); }
     const sRows: DbKnowledgeCompletionSession[] = await sr.json();
     const session = sRows[0] || sRows;
 

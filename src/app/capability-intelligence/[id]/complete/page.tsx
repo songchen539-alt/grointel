@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Loader2, ArrowLeft, Lightbulb } from "lucide-react";
