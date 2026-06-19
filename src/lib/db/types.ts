@@ -117,6 +117,50 @@ export interface DbGrowthCapabilityHistory {
 }
 
 // ============================================================
+// business_intelligence_profiles
+// ============================================================
+export interface DbBusinessScanProfile {
+  id: string;
+  entity_id: string | null;
+  website: string;
+  normalized_domain: string | null;
+  company_name: string | null;
+  industry: string | null;
+  country: string | null;
+  region: string | null;
+  public_summary: string | null;
+  detected_products: Record<string, unknown>[] | null;
+  detected_markets: Record<string, unknown>[] | null;
+  detected_growth_channels: Record<string, unknown>[] | null;
+  public_signals: Record<string, unknown>[] | null;
+  sources: (string | Record<string, unknown>)[] | null;
+  confidence: Record<string, number> | null;
+  scan_status: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface DbBusinessKnowledgeProfile {
+  id: string;
+  entity_id: string | null;
+  scan_profile_id: string | null;
+  website: string;
+  business_identity: Record<string, unknown> | null;
+  business_model: Record<string, unknown> | null;
+  market: Record<string, unknown> | null;
+  goals: (string | Record<string, unknown>)[] | null;
+  constraints: Record<string, unknown> | null;
+  growth_stack: Record<string, unknown> | null;
+  history: (string | Record<string, unknown>)[] | null;
+  preferences: Record<string, unknown> | null;
+  knowledge_confidence: Record<string, number> | null;
+  knowledge_status: string | null;
+  last_conversation_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+// ============================================================
 // growth_evidence
 // ============================================================
 export interface DbGrowthEvidence {
@@ -150,6 +194,31 @@ export interface DbGrowthCapabilityExplanation {
   ai_model_version: string | null;
   generated_at: string | null;
   created_at: string | null;
+}
+
+// ============================================================
+// business_intelligence_profiles
+// ============================================================
+export interface DbBusinessIntelligenceProfile {
+  id: string;
+  entity_id: string | null;
+  website: string;
+  company_name: string | null;
+  industry: string | null;
+  country: string | null;
+  region: string | null;
+  business_model: Record<string, unknown> | null;
+  market: Record<string, unknown> | null;
+  growth_stack: Record<string, unknown> | null;
+  goals: (string | Record<string, unknown>)[] | null;
+  constraints: Record<string, unknown> | null;
+  history: (string | Record<string, unknown>)[] | null;
+  preferences: Record<string, unknown> | null;
+  confidence: Record<string, number> | null;
+  sources: Record<string, unknown>[] | null;
+  status: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 // ============================================================
@@ -224,6 +293,31 @@ export interface DbGrowthProposalVersion {
 }
 
 // ============================================================
+// business_intelligence_profiles
+// ============================================================
+export interface DbBusinessIntelligenceProfile {
+  id: string;
+  entity_id: string | null;
+  website: string;
+  company_name: string | null;
+  industry: string | null;
+  country: string | null;
+  region: string | null;
+  business_model: Record<string, unknown> | null;
+  market: Record<string, unknown> | null;
+  growth_stack: Record<string, unknown> | null;
+  goals: (string | Record<string, unknown>)[] | null;
+  constraints: Record<string, unknown> | null;
+  history: (string | Record<string, unknown>)[] | null;
+  preferences: Record<string, unknown> | null;
+  confidence: Record<string, number> | null;
+  sources: Record<string, unknown>[] | null;
+  status: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+// ============================================================
 // growth_proposal_comments
 // ============================================================
 export interface DbGrowthProposalComment {
@@ -233,4 +327,29 @@ export interface DbGrowthProposalComment {
   author_name: string | null;
   comment: string | null;
   created_at: string | null;
+}
+
+// ============================================================
+// business_intelligence_profiles
+// ============================================================
+export interface DbBusinessIntelligenceProfile {
+  id: string;
+  entity_id: string | null;
+  website: string;
+  company_name: string | null;
+  industry: string | null;
+  country: string | null;
+  region: string | null;
+  business_model: Record<string, unknown> | null;
+  market: Record<string, unknown> | null;
+  growth_stack: Record<string, unknown> | null;
+  goals: (string | Record<string, unknown>)[] | null;
+  constraints: Record<string, unknown> | null;
+  history: (string | Record<string, unknown>)[] | null;
+  preferences: Record<string, unknown> | null;
+  confidence: Record<string, number> | null;
+  sources: Record<string, unknown>[] | null;
+  status: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }

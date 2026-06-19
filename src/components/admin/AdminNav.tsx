@@ -11,6 +11,8 @@ const navLinks = [
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/events", label: "Events" },
+  { href: "/admin/proposals", label: "Proposals" },
+  { href: "/admin/business-intelligence", label: "BI" },
 ];
 
 export default function AdminNav() {
