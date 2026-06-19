@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Loader2, ExternalLink } from "lucide-react";
 import AdminNav from "@/components/admin/AdminNav";
 
-const STATUSES = ["all", "draft", "under_review", "revised", "accepted", "rejected"];
+const STATUSES = ["all", "draft", "under_review", "revised", "accepted", "rejected", "archived"];
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-gray-800 text-gray-400",
@@ -13,6 +13,7 @@ const STATUS_STYLES: Record<string, string> = {
   revised: "bg-blue-900/30 text-blue-400",
   accepted: "bg-green-900/30 text-green-400",
   rejected: "bg-red-900/30 text-red-400",
+  archived: "bg-gray-900/50 text-gray-600 line-through",
 };
 
 function confidenceLabel(score: number): { label: string; color: string } {
@@ -33,7 +34,9 @@ export default function AdminProposalsPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const filtered = filter === "all" ? proposals : proposals.filter((p: any) => p.status === filter);
+  const filtered = filter === "all"
+    ? proposals.filter((p: any) => p.status !== "archived")
+    : proposals.filter((p: any) => p.status === filter);
 
   if (loading) return (
     <div className="min-h-screen bg-black text-white">
@@ -69,6 +72,7 @@ export default function AdminProposalsPage() {
             >
               {s === "all" ? "All" : s.replace(/_/g, " ")}
               {s !== "all" && <span className="ml-1.5 text-gray-600">({proposals.filter((p: any) => p.status === s).length})</span>}
+              {s === "all" && <span className="ml-1.5 text-gray-600">({proposals.filter((p: any) => p.status !== "archived").length})</span>}
             </button>
           ))}
         </div>

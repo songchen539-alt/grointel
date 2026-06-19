@@ -197,6 +197,25 @@ async function run() {
       continue;
     }
 
+    // Check if proposal with this title already exists
+    const existingResp = await api("/api/proposals");
+    const existingProposals = existingResp.proposals || [];
+    const existing = existingProposals.find((p) => p.title === scenario.title);
+    if (existing) {
+      console.log(`  EXISTS: ${scenario.title.slice(0, 60)}`);
+      // Check for missing version
+      const vcheck = await api("/api/proposals/" + existing.id + "/versions");
+      if (vcheck.success && vcheck.versions.length === 0) {
+        const snap = { title: scenario.title, goal: scenario.goal, strategy: scenario.strategy, capability_stack: scenario.capability_stack, execution_plan: scenario.execution_plan, constraints: scenario.constraints, budget_min: scenario.budget_min, budget_max: scenario.budget_max, reasoning: scenario.reasoning, expected_outcome: scenario.expected_outcome };
+        await api("/api/proposals/" + existing.id + "/versions", { method: "POST", body: { snapshot: snap, change_summary: "Initial version (backfill)", created_by: "system", version: 1 } });
+        console.log(`    Backfilled missing version`);
+      } else {
+        console.log(`    Version exists (${vcheck.versions.length})
+`);
+      }
+      continue;
+    }
+
     // Create proposal
     const proposalBody = {
       title: scenario.title,
@@ -253,7 +272,7 @@ async function run() {
       if (vresp.success && vresp.versions.length === 0) {
         const snap = {
           title: p.title, goal: p.goal,
-          constraint: p.constraints, strategy: p.strategy,
+          constraints: p.constraints, strategy: p.strategy,
           capability_stack: p.capability_stack, execution_plan: p.execution_plan,
           budget_min: p.budget_min, budget_max: p.budget_max,
           reasoning: p.reasoning, expected_outcome: p.expected_outcome,

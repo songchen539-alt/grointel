@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DbGrowthProposal } from "@/lib/db/types";
 
-const VALID_STATUSES = ["draft", "under_review", "revised", "accepted", "rejected"];
+const VALID_STATUSES = ["draft", "under_review", "revised", "accepted", "rejected", "archived"];
 
 const u = process.env.NEXT_PUBLIC_SUPABASE_URL || "", k = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const h = () => ({ "Content-Type": "application/json", "apikey": k, "Authorization": "Bearer " + k });

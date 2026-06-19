@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Loader2, ArrowLeft, Save } from "lucide-react";
 import AdminNav from "@/components/admin/AdminNav";
 
-const STATUSES = ["draft", "under_review", "revised", "accepted", "rejected"];
+const STATUSES = ["draft", "under_review", "revised", "accepted", "rejected", "archived"];
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-gray-800 text-gray-400",
@@ -13,6 +13,7 @@ const STATUS_STYLES: Record<string, string> = {
   revised: "bg-blue-900/30 text-blue-400",
   accepted: "bg-green-900/30 text-green-400",
   rejected: "bg-red-900/30 text-red-400",
+  archived: "bg-gray-900/50 text-gray-600 line-through",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
