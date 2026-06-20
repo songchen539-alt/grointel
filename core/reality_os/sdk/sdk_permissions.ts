@@ -43,6 +43,9 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   createGrowthDecisionReport: "EXECUTE", queryGrowthDecisionReport: "READ", listGrowthDecisionReports: "READ",
   createCompanyMemory: "EXECUTE", getCompanyMemory: "READ", updateCompanyMemory: "EXECUTE",
   observeReality: "EXECUTE", simulateObservation: "EXECUTE",
+  startAlwaysOnRuntime: "EXECUTE", stopAlwaysOnRuntime: "EXECUTE",
+  getAlwaysOnRuntimeStatus: "READ", enqueueRuntimeJob: "EXECUTE",
+  tickAlwaysOnRuntime: "EXECUTE", simulateRuntimeReality: "EXECUTE",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

@@ -1,8 +1,10 @@
 import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory/company_memory_flow";
 import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observation/knowledge2_flow";
+import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/always_on_runtime";
 
 const flow = new CompanyMemoryFlow();
 const k2 = new Knowledge2Flow();
+const runtime = new AlwaysOnRuntime();
 
 export default async function GrowthWorkspacePage({ searchParams }: { searchParams: Promise<{ id?: string; action?: string; observe?: string; simulate?: string }> }) {
   const params = await searchParams;
@@ -21,6 +23,12 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
         if (parts.length >= 2) sigs[parts[0]] = parts[1];
       });
       k2.simulateAndUpdate(flow, params.id, sigs);
+    }
+    if (params.action === "start_runtime" && mem) { runtime.createRuntime("simulated"); runtime.start(); }
+    if (params.action === "stop_runtime" && mem) { runtime.stop(); }
+    if (params.action === "tick_runtime" && mem) {
+      runtime.enqueueObservationJob(params.id, ["observe_website","observe_linkedin","observe_news","observe_funding"]);
+      runtime.tick();
     }
     state = flow.getState(params.id);
     if (!state) error = "Memory not found";
@@ -74,6 +82,15 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
               <a href={"/growth-workspace?id="+state.memory.id+"&simulate=hiring_increased:+20,funding_raised:Series+B"} style={{ padding: "8px 16px", background:"#666", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Simulate Reality Change</a>
             </div>
             <p style={{ fontSize:"0.9rem", color:"#555" }}>Run Observation to detect hiring, funding, pricing, product, and other signals.</p>
+          </div>
+
+          <div style={{ padding: "20px", background: "#fff8f0", borderRadius: "12px", border: "1px solid #ffd9a8" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "8px" }}>Always-On Reality Runtime</h2>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=start_runtime"} style={{ padding: "8px 16px", background:"#cc6", color:"black", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Start Runtime</a>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=stop_runtime"} style={{ padding: "8px 16px", background:"#c66", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Stop Runtime</a>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=tick_runtime"} style={{ padding: "8px 16px", background:"#6c6", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Runtime Tick</a>
+            </div>
           </div>
 
           <div style={{ padding: "20px", background: "#f5f5f5", borderRadius: "12px" }}>

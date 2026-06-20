@@ -22,6 +22,7 @@ import { LivingWorldModel } from "../../../apps/grointel/knowledge/world_model/l
 import { GrowthDecisionFlow } from "../../../apps/grointel/product/growth_decision_flow";
 import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory/company_memory_flow";
 import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observation/knowledge2_flow";
+import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/always_on_runtime";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -87,6 +88,7 @@ export class RealityOSClient {
   public readonly growthDecision = new GrowthDecisionFlow();
   public readonly companyMemory = new CompanyMemoryFlow();
   public readonly knowledge2 = new Knowledge2Flow();
+  public readonly alwaysOn = new AlwaysOnRuntime();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -463,6 +465,30 @@ export class RealityOSClient {
   simulateObservation(ctx: SDKContext, companyMemoryId: string, signals: Record<string, string>): SDKResult {
     const result=this.knowledge2.simulateAndUpdate(this.companyMemory,companyMemoryId,signals);
     return this.call("simulateObservation",ctx,()=>({batch:result.batch,diff:result.diff})as unknown as Record<string,unknown>);
+  }
+  // OPS-1: Always-On Runtime methods
+  startAlwaysOnRuntime(ctx: SDKContext, mode?: string): SDKResult {
+    this.alwaysOn.createRuntime(mode as any || "simulated"); this.alwaysOn.start();
+    return this.call("startAlwaysOnRuntime",ctx,()=>this.alwaysOn.status() as unknown as Record<string,unknown>);
+  }
+  stopAlwaysOnRuntime(ctx: SDKContext): SDKResult {
+    this.alwaysOn.stop();
+    return this.call("stopAlwaysOnRuntime",ctx,()=>this.alwaysOn.status() as unknown as Record<string,unknown>);
+  }
+  getAlwaysOnRuntimeStatus(ctx: SDKContext): SDKResult {
+    return this.call("getAlwaysOnRuntimeStatus",ctx,()=>this.alwaysOn.status() as unknown as Record<string,unknown>);
+  }
+  enqueueRuntimeJob(ctx: SDKContext, companyMemoryId: string, capabilities: string[]): SDKResult {
+    const job=this.alwaysOn.enqueueObservationJob(companyMemoryId,capabilities as any);
+    return this.call("enqueueRuntimeJob",ctx,()=>job as unknown as Record<string,unknown>);
+  }
+  tickAlwaysOnRuntime(ctx: SDKContext): SDKResult {
+    const p=this.alwaysOn.tick();
+    return this.call("tickAlwaysOnRuntime",ctx,()=>({processed:p,status:this.alwaysOn.status()}));
+  }
+  simulateRuntimeReality(ctx: SDKContext, companyMemoryId: string, change: Record<string, string>): SDKResult {
+    const r=this.alwaysOn.simulator.simulateNetworkChange(companyMemoryId,change,this.alwaysOn.flow,this.alwaysOn.k2);
+    return this.call("simulateRuntimeReality",ctx,()=>({...r}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
