@@ -8,6 +8,7 @@ import { CapabilityRegistry } from "./capability_registry";
 import { SDKTrace } from "./sdk_trace";
 import { KnowledgeRuntime } from "../knowledge/knowledge_runtime";
 import { WisdomRuntime } from "../wisdom/wisdom_runtime";
+import { EvolutionRuntime } from "../evolution/evolution_runtime";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -59,6 +60,7 @@ export class RealityOSClient {
   private readonly state = new StateAdapter();
   public readonly knowledge = new KnowledgeRuntime();
   public readonly wisdom = new WisdomRuntime();
+  public readonly evolution = new EvolutionRuntime();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -157,5 +159,30 @@ export class RealityOSClient {
   }
   queryValues(ctx: SDKContext): SDKResult {
     return this.call("queryValues", ctx, () => ({ values: this.wisdom.values.getAll() }));
+  }
+
+  // ROS-6: Evolution methods
+  observeSystem(ctx: SDKContext): SDKResult { return this.call("observeSystem", ctx, () => this.evolution.observeSystem() as unknown as Record<string, unknown>); }
+  analyzeSystemHealth(ctx: SDKContext): SDKResult { return this.call("analyzeSystemHealth", ctx, () => this.evolution.analyzeHealth() as unknown as Record<string, unknown>); }
+  detectBottlenecks(ctx: SDKContext): SDKResult { return this.call("detectBottlenecks", ctx, () => ({ bottlenecks: this.evolution.detectBottlenecks() })); }
+  generateImprovementProposals(ctx: SDKContext): SDKResult { return this.call("generateImprovementProposals", ctx, () => ({ proposals: this.evolution.generateProposals() })); }
+  simulateUpgrade(ctx: SDKContext, proposalId: string): SDKResult {
+    const prop = this.evolution.getProposals().find(p => p.id === proposalId);
+    return this.call("simulateUpgrade", ctx, () => prop ? this.evolution.simulateUpgrade(prop) as unknown as Record<string, unknown> : { error: "proposal not found" });
+  }
+  judgeEvolution(ctx: SDKContext, proposalId: string): SDKResult {
+    const prop = this.evolution.getProposals().find(p => p.id === proposalId);
+    return this.call("judgeEvolution", ctx, () => prop ? this.evolution.judgeProposal(prop) as unknown as Record<string, unknown> : { error: "proposal not found" });
+  }
+  approveEvolution(ctx: SDKContext, approvalId: string, notes?: string): SDKResult {
+    const result = this.evolution.approveEvolution(approvalId, notes);
+    return this.call("approveEvolution", ctx, () => (result || { error: "approval not found" }) as unknown as Record<string, unknown>);
+  }
+  getEvolutionPlan(ctx: SDKContext, proposalId: string): SDKResult {
+    const plan = this.evolution.generatePlan(proposalId);
+    return this.call("getEvolutionPlan", ctx, () => (plan || { error: "plan not generated" }) as unknown as Record<string, unknown>);
+  }
+  getEvolutionHistory(ctx: SDKContext): SDKResult {
+    return this.call("getEvolutionHistory", ctx, () => ({ history: this.evolution.getHistory() }));
   }
 }

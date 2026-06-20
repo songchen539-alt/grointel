@@ -11,6 +11,10 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   queryRelationships: "READ", queryEvidence: "READ", queryKnowledgeHistory: "READ", validateKnowledge: "EXECUTE",
   getWorldState: "READ", getKernelState: "READ", getGraphSnapshot: "READ", getCapabilities: "READ",
   judge: "EXECUTE", evaluateWisdom: "EXECUTE", queryPrinciples: "READ", queryValues: "READ",
+  observeSystem: "READ", analyzeSystemHealth: "READ", detectBottlenecks: "READ",
+  generateImprovementProposals: "EXECUTE", simulateUpgrade: "EXECUTE",
+  judgeEvolution: "EXECUTE", approveEvolution: "APPROVE",
+  getEvolutionPlan: "READ", getEvolutionHistory: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {
