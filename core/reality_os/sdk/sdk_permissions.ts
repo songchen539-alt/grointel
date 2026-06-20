@@ -50,6 +50,7 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   runLifeIteration: "EXECUTE", runLifeBatch: "EXECUTE", getLifeStatus: "READ",
   startKernel: "EXECUTE", stopKernel: "EXECUTE", pauseKernel: "EXECUTE",
   resumeKernel: "EXECUTE", getKernelStatus: "READ",
+  discoverPublicSources: "READ", runExploration: "EXECUTE", getExplorationStatus: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

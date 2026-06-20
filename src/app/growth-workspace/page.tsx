@@ -4,6 +4,7 @@ import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/al
 import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_learning_loop";
 import { LivingKernel } from "../../../apps/grointel/genesis/living_kernel";
 import { GenesisFlow } from "../../../apps/grointel/genesis/genesis_flow";
+import { Genesis2Flow } from "../../../apps/grointel/genesis/public_exploration/genesis2_flow";
 
 
 const flow = new CompanyMemoryFlow();
@@ -36,6 +37,7 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
     if (params.action === "life_batch" && mem) { (new AutonomousLearningLoop()).runBatch(3); }
     if (params.action === "kernel_start" && mem) { const k=new LivingKernel(); k.startKernel(); }
     if (params.action === "kernel_stop" && mem) { const k=new LivingKernel(); k.stopKernel(); }
+    if (params.action === "explore" && mem) { new Genesis2Flow().explore(mem.company_website, "company"); }
     if (params.action === "kernel_full_cycle" && mem) { new GenesisFlow().runFullCycle([{id:mem.id,changes:1,confidence:70,hypotheses:1,freshness:50,volatility:30}]); }
     if (params.action === "tick_runtime" && mem) {
       runtime.enqueueObservationJob(params.id, ["observe_website","observe_linkedin","observe_news","observe_funding"]);
@@ -127,6 +129,13 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
               <a href={"/growth-workspace?id="+state.memory.id+"&action=kernel_start"} style={{ padding: "8px 16px", background:"#336", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Start Kernel</a>
               <a href={"/growth-workspace?id="+state.memory.id+"&action=kernel_stop"} style={{ padding: "8px 16px", background:"#633", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Stop Kernel</a>
               <a href={"/growth-workspace?id="+state.memory.id+"&action=kernel_full_cycle"} style={{ padding: "8px 16px", background:"#363", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Full Cycle</a>
+            </div>
+          </div>
+
+          <div style={{ padding: "20px", background: "#e0ffe0", borderRadius: "12px", border: "2px solid #66aa66" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "8px" }}>Public Exploration</h2>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=explore"} style={{ padding: "8px 16px", background:"#383", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Explore Company</a>
             </div>
           </div>
 

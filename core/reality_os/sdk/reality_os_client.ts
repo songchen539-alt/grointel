@@ -26,6 +26,7 @@ import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/al
 import { PersistentStoreFactory } from "../../../apps/grointel/persistence/persistent_store_factory";
 import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_learning_loop";
 import { LivingKernel } from "../../../apps/grointel/genesis/living_kernel";
+import { Genesis2Flow } from "../../../apps/grointel/genesis/public_exploration/genesis2_flow";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -534,6 +535,19 @@ export class RealityOSClient {
   getKernelStatus(ctx: SDKContext): SDKResult {
     const k=new LivingKernel();
     return this.call("getKernelStatus",ctx,()=>k.kernelStatus() as unknown as Record<string,unknown>);
+  }
+  // GENESIS-2: Exploration methods
+  discoverPublicSources(ctx: SDKContext, entityName: string): SDKResult {
+    const r=(new Genesis2Flow()).explore(entityName,"company");
+    return this.call("discoverPublicSources",ctx,()=>({discovery:r.discovery,plan:r.plan})as unknown as Record<string,unknown>);
+  }
+  runExploration(ctx: SDKContext, entityName: string): SDKResult {
+    const r=(new Genesis2Flow()).explore(entityName,"company");
+    return this.call("runExploration",ctx,()=>({discovery:r.discovery,signals:r.signals}));
+  }
+  getExplorationStatus(ctx: SDKContext): SDKResult {
+    const g=new Genesis2Flow();
+    return this.call("getExplorationStatus",ctx,()=>({source_count:g.catalog.getEnabled().length,reputation_count:g.reputation.getAll().length,memory_count:g.memory.getAll().length}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
