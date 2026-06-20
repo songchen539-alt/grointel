@@ -13,6 +13,7 @@ import { CivilizationRuntime } from "../../civilization/civilization_runtime";
 import { ContributionRuntime } from "../../civilization/contribution/contribution_runtime";
 import { ApplicationRuntime } from "../../applications/application_runtime";
 import { PerpetualRuntime } from "../../../apps/grointel/perpetual/perpetual_runtime";
+import { CompanyObserver } from "../../../apps/grointel/data/company/company_observer";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -69,6 +70,7 @@ export class RealityOSClient {
   public readonly contribution = new ContributionRuntime();
   public readonly apps = new ApplicationRuntime();
   public readonly perpetual = new PerpetualRuntime();
+  public readonly companyObserver = new CompanyObserver();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -278,6 +280,29 @@ export class RealityOSClient {
   }
   queryLivingState(ctx: SDKContext): SDKResult {
     return this.call("queryLivingState", ctx, () => ({ entities: this.perpetual.model.getAllEntities().length, relationships: this.perpetual.model.getAllRelationships().length }));
+  }
+  // DATA-1: Company methods
+  observeCompany(ctx: SDKContext, name: string, domain: string, industry: string, country: string): SDKResult {
+    const result = this.companyObserver.observeCompany("sdk_"+Date.now().toString(36), name, domain, industry, country, {}, 50);
+    return this.call("observeCompany", ctx, () => result.profile as unknown as Record<string, unknown>);
+  }
+  observeCompanyBatch(ctx: SDKContext, companies: Array<{id:string;name:string;domain:string;industry:string;country:string}>): SDKResult {
+    const count = this.companyObserver.observeBatch(companies.map(c=>({...c,confidence:50})));
+    return this.call("observeCompanyBatch", ctx, () => ({ observed: count }));
+  }
+  queryCompanyProfile(ctx: SDKContext, companyId: string): SDKResult {
+    const p = this.companyObserver.getProfile(companyId);
+    return this.call("queryCompanyProfile", ctx, () => (p || { error: "not found" }) as unknown as Record<string, unknown>);
+  }
+  queryCompanySignals(ctx: SDKContext, companyId: string): SDKResult {
+    return this.call("queryCompanySignals", ctx, () => ({ signals: this.companyObserver.signalExtractor.extract({id:"",company_id:companyId,source:"raw",raw_data:{},normalized_data:{},confidence:50,timestamp:"",evidence:[],detected_changes:[]}) }));
+  }
+  queryCompanyChanges(ctx: SDKContext, companyId: string): SDKResult {
+    return this.call("queryCompanyChanges", ctx, () => ({ changes: [] }));
+  }
+  queryCompanyHistory(ctx: SDKContext, companyId: string): SDKResult {
+    const p = this.companyObserver.getProfile(companyId);
+    return this.call("queryCompanyHistory", ctx, () => ({ history: p?.history || [] }));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);

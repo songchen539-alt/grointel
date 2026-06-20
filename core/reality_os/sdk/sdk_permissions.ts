@@ -24,6 +24,9 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   getLivingWorld: "READ", updateWorld: "WRITE", observeReality: "WRITE",
   recomputePredictions: "EXECUTE", recomputeRecommendations: "EXECUTE",
   queryEntityHistory: "READ", queryRelationshipHistory: "READ", queryLivingState: "READ",
+  observeCompany: "WRITE", observeCompanyBatch: "WRITE",
+  queryCompanyProfile: "READ", queryCompanySignals: "READ",
+  queryCompanyChanges: "READ", queryCompanyHistory: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {
