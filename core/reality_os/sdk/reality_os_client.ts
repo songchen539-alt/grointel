@@ -28,6 +28,7 @@ import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_l
 import { LivingKernel } from "../../../apps/grointel/genesis/living_kernel";
 import { Genesis2Flow } from "../../../apps/grointel/genesis/public_exploration/genesis2_flow";
 import { ConnectorRegistry } from "../../../apps/grointel/reality/connectors/connector_registry";
+import { LivingLoopFlow } from "../../../apps/grointel/reality/continuous/living_loop_flow";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -565,6 +566,14 @@ export class RealityOSClient {
   getConnectorMetrics(ctx: SDKContext): SDKResult {
     const reg=new ConnectorRegistry();
     return this.call("getConnectorMetrics",ctx,()=>({connectors:reg.getAll().map(c=>({id:c.id,metrics:c.metrics()}))}));
+  }
+  // REALITY-3: Living Loop methods
+  runLivingLoopTick(ctx: SDKContext): SDKResult {
+    const r=(new LivingLoopFlow()).runIteration();
+    return this.call("runLivingLoopTick",ctx,()=>({...r,metrics:{}}));
+  }
+  getLivingLoopStatus(ctx: SDKContext): SDKResult {
+    return this.call("getLivingLoopStatus",ctx,()=>({state:"active",metrics:{}}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
