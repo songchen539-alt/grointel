@@ -23,6 +23,7 @@ import { GrowthDecisionFlow } from "../../../apps/grointel/product/growth_decisi
 import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory/company_memory_flow";
 import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observation/knowledge2_flow";
 import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/always_on_runtime";
+import { PersistentStoreFactory } from "../../../apps/grointel/persistence/persistent_store_factory";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -489,6 +490,14 @@ export class RealityOSClient {
   simulateRuntimeReality(ctx: SDKContext, companyMemoryId: string, change: Record<string, string>): SDKResult {
     const r=this.alwaysOn.simulator.simulateNetworkChange(companyMemoryId,change,this.alwaysOn.flow,this.alwaysOn.k2);
     return this.call("simulateRuntimeReality",ctx,()=>({...r}));
+  }
+  // OPS-2: Persistence methods
+  getPersistenceStatus(ctx: SDKContext): SDKResult {
+    return this.call("getPersistenceStatus",ctx,()=>PersistentStoreFactory.getClient().getStatus() as unknown as Record<string,unknown>);
+  }
+  resumeAlwaysOnRuntime(ctx: SDKContext): SDKResult {
+    this.alwaysOn.createRuntime("simulated"); this.alwaysOn.start();
+    return this.call("resumeAlwaysOnRuntime",ctx,()=>this.alwaysOn.status() as unknown as Record<string,unknown>);
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);

@@ -46,6 +46,7 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   startAlwaysOnRuntime: "EXECUTE", stopAlwaysOnRuntime: "EXECUTE",
   getAlwaysOnRuntimeStatus: "READ", enqueueRuntimeJob: "EXECUTE",
   tickAlwaysOnRuntime: "EXECUTE", simulateRuntimeReality: "EXECUTE",
+  getPersistenceStatus: "READ", resumeAlwaysOnRuntime: "EXECUTE",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

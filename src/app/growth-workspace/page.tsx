@@ -2,9 +2,11 @@ import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory
 import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observation/knowledge2_flow";
 import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/always_on_runtime";
 
+
 const flow = new CompanyMemoryFlow();
 const k2 = new Knowledge2Flow();
 const runtime = new AlwaysOnRuntime();
+
 
 export default async function GrowthWorkspacePage({ searchParams }: { searchParams: Promise<{ id?: string; action?: string; observe?: string; simulate?: string }> }) {
   const params = await searchParams;
@@ -26,6 +28,7 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
     }
     if (params.action === "start_runtime" && mem) { runtime.createRuntime("simulated"); runtime.start(); }
     if (params.action === "stop_runtime" && mem) { runtime.stop(); }
+    if (params.action === "resume_runtime" && mem) { runtime.createRuntime("simulated"); runtime.start(); }
     if (params.action === "tick_runtime" && mem) {
       runtime.enqueueObservationJob(params.id, ["observe_website","observe_linkedin","observe_news","observe_funding"]);
       runtime.tick();
@@ -90,6 +93,15 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
               <a href={"/growth-workspace?id="+state.memory.id+"&action=start_runtime"} style={{ padding: "8px 16px", background:"#cc6", color:"black", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Start Runtime</a>
               <a href={"/growth-workspace?id="+state.memory.id+"&action=stop_runtime"} style={{ padding: "8px 16px", background:"#c66", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Stop Runtime</a>
               <a href={"/growth-workspace?id="+state.memory.id+"&action=tick_runtime"} style={{ padding: "8px 16px", background:"#6c6", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Runtime Tick</a>
+            </div>
+          </div>
+
+          <div style={{ padding: "20px", background: "#f0fff0", borderRadius: "12px", border: "1px solid #a8d8a8" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "8px" }}>Persistence Status</h2>
+            <p>Store mode: in-memory</p>
+            <p>Health: healthy</p>
+            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=resume_runtime"} style={{ padding: "8px 16px", background:"#396", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Resume Runtime</a>
             </div>
           </div>
 

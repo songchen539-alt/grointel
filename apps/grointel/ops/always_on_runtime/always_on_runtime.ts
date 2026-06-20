@@ -9,6 +9,7 @@ import { RuntimeAuditLog } from "./runtime_audit_log";
 import { RuntimeSimulator } from "./runtime_simulator";
 import { CompanyMemoryFlow } from "../../product/company_memory/company_memory_flow";
 import { Knowledge2Flow } from "../../knowledge/reality_observation/knowledge2_flow";
+import { PersistentStoreFactory } from "../../persistence/persistent_store_factory";
 
 export class AlwaysOnRuntime {
   public readonly queue = new RuntimeQueue();
@@ -123,6 +124,10 @@ export class AlwaysOnRuntime {
     } catch (e: any) {
       return { success: false, memory_updated: false, decision_updated: false, signals_found: 0, error: e.message };
     }
+  }
+
+  resume(): void {
+    this.audit.record("runtime_resumed", null, null, "Runtime resume triggered");
   }
 
   status(): { state: RuntimeState; heartbeat: ReturnType<typeof RuntimeHeartbeatTracker.prototype.get>; queueSize: number; worker: RuntimeWorker; auditCount: number; checkpointCount: number } {
