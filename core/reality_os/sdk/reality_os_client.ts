@@ -25,6 +25,7 @@ import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observa
 import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/always_on_runtime";
 import { PersistentStoreFactory } from "../../../apps/grointel/persistence/persistent_store_factory";
 import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_learning_loop";
+import { LivingKernel } from "../../../apps/grointel/genesis/living_kernel";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -512,6 +513,27 @@ export class RealityOSClient {
   getLifeStatus(ctx: SDKContext): SDKResult {
     const loop=new AutonomousLearningLoop();
     return this.call("getLifeStatus",ctx,()=>({metrics:loop.metrics.get(),active_hypotheses:loop.hypotheses.getActive().length}));
+  }
+  // GENESIS-1: Kernel methods
+  startKernel(ctx: SDKContext): SDKResult {
+    const k=new LivingKernel(); k.startKernel();
+    return this.call("startKernel",ctx,()=>({state:k.state})as unknown as Record<string,unknown>);
+  }
+  stopKernel(ctx: SDKContext): SDKResult {
+    const k=new LivingKernel(); k.stopKernel();
+    return this.call("stopKernel",ctx,()=>({state:k.state}));
+  }
+  pauseKernel(ctx: SDKContext): SDKResult {
+    const k=new LivingKernel(); k.pauseKernel();
+    return this.call("pauseKernel",ctx,()=>({state:k.state}));
+  }
+  resumeKernel(ctx: SDKContext): SDKResult {
+    const k=new LivingKernel(); k.resumeKernel();
+    return this.call("resumeKernel",ctx,()=>({state:k.state}));
+  }
+  getKernelStatus(ctx: SDKContext): SDKResult {
+    const k=new LivingKernel();
+    return this.call("getKernelStatus",ctx,()=>k.kernelStatus() as unknown as Record<string,unknown>);
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);

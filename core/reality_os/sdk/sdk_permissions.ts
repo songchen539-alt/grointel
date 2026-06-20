@@ -48,6 +48,8 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   tickAlwaysOnRuntime: "EXECUTE", simulateRuntimeReality: "EXECUTE",
   getPersistenceStatus: "READ", resumeAlwaysOnRuntime: "EXECUTE",
   runLifeIteration: "EXECUTE", runLifeBatch: "EXECUTE", getLifeStatus: "READ",
+  startKernel: "EXECUTE", stopKernel: "EXECUTE", pauseKernel: "EXECUTE",
+  resumeKernel: "EXECUTE", getKernelStatus: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

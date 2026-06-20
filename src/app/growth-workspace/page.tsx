@@ -2,6 +2,8 @@ import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory
 import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observation/knowledge2_flow";
 import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/always_on_runtime";
 import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_learning_loop";
+import { LivingKernel } from "../../../apps/grointel/genesis/living_kernel";
+import { GenesisFlow } from "../../../apps/grointel/genesis/genesis_flow";
 
 
 const flow = new CompanyMemoryFlow();
@@ -32,6 +34,9 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
     if (params.action === "resume_runtime" && mem) { runtime.createRuntime("simulated"); runtime.start(); }
     if (params.action === "life_iteration" && mem) { (new AutonomousLearningLoop()).runIteration(); }
     if (params.action === "life_batch" && mem) { (new AutonomousLearningLoop()).runBatch(3); }
+    if (params.action === "kernel_start" && mem) { const k=new LivingKernel(); k.startKernel(); }
+    if (params.action === "kernel_stop" && mem) { const k=new LivingKernel(); k.stopKernel(); }
+    if (params.action === "kernel_full_cycle" && mem) { new GenesisFlow().runFullCycle([{id:mem.id,changes:1,confidence:70,hypotheses:1,freshness:50,volatility:30}]); }
     if (params.action === "tick_runtime" && mem) {
       runtime.enqueueObservationJob(params.id, ["observe_website","observe_linkedin","observe_news","observe_funding"]);
       runtime.tick();
@@ -113,6 +118,15 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
             <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
               <a href={"/growth-workspace?id="+state.memory.id+"&action=life_iteration"} style={{ padding: "8px 16px", background:"#66c", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Run Life Iteration</a>
               <a href={"/growth-workspace?id="+state.memory.id+"&action=life_batch"} style={{ padding: "8px 16px", background:"#969", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Run Batch</a>
+            </div>
+          </div>
+
+          <div style={{ padding: "20px", background: "#e8f0ff", borderRadius: "12px", border: "2px solid #6688cc" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "8px" }}>Living Kernel</h2>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=kernel_start"} style={{ padding: "8px 16px", background:"#336", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Start Kernel</a>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=kernel_stop"} style={{ padding: "8px 16px", background:"#633", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Stop Kernel</a>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=kernel_full_cycle"} style={{ padding: "8px 16px", background:"#363", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Full Cycle</a>
             </div>
           </div>
 
