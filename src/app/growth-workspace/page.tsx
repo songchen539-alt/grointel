@@ -5,6 +5,7 @@ import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_l
 import { LivingKernel } from "../../../apps/grointel/genesis/living_kernel";
 import { GenesisFlow } from "../../../apps/grointel/genesis/genesis_flow";
 import { Genesis2Flow } from "../../../apps/grointel/genesis/public_exploration/genesis2_flow";
+import { ConnectorRegistry } from "../../../apps/grointel/reality/connectors/connector_registry";
 
 
 const flow = new CompanyMemoryFlow();
@@ -37,6 +38,7 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
     if (params.action === "life_batch" && mem) { (new AutonomousLearningLoop()).runBatch(3); }
     if (params.action === "kernel_start" && mem) { const k=new LivingKernel(); k.startKernel(); }
     if (params.action === "kernel_stop" && mem) { const k=new LivingKernel(); k.stopKernel(); }
+    if (params.action === "run_all_connectors" && mem) { new ConnectorRegistry().runAll(mem.company_website); }
     if (params.action === "explore" && mem) { new Genesis2Flow().explore(mem.company_website, "company"); }
     if (params.action === "kernel_full_cycle" && mem) { new GenesisFlow().runFullCycle([{id:mem.id,changes:1,confidence:70,hypotheses:1,freshness:50,volatility:30}]); }
     if (params.action === "tick_runtime" && mem) {
@@ -136,6 +138,14 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
             <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "8px" }}>Public Exploration</h2>
             <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
               <a href={"/growth-workspace?id="+state.memory.id+"&action=explore"} style={{ padding: "8px 16px", background:"#383", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Explore Company</a>
+            </div>
+          </div>
+
+          <div style={{ padding: "20px", background: "#fff0e0", borderRadius: "12px", border: "2px solid #cc8844" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "8px" }}>Live Reality</h2>
+            <p>5 connectors: Website · RSS · GitHub · Jobs · News</p>
+            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=run_all_connectors"} style={{ padding: "8px 16px", background:"#c84", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Run All Connectors</a>
             </div>
           </div>
 

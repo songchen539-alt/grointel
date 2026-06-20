@@ -27,6 +27,7 @@ import { PersistentStoreFactory } from "../../../apps/grointel/persistence/persi
 import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_learning_loop";
 import { LivingKernel } from "../../../apps/grointel/genesis/living_kernel";
 import { Genesis2Flow } from "../../../apps/grointel/genesis/public_exploration/genesis2_flow";
+import { ConnectorRegistry } from "../../../apps/grointel/reality/connectors/connector_registry";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -548,6 +549,22 @@ export class RealityOSClient {
   getExplorationStatus(ctx: SDKContext): SDKResult {
     const g=new Genesis2Flow();
     return this.call("getExplorationStatus",ctx,()=>({source_count:g.catalog.getEnabled().length,reputation_count:g.reputation.getAll().length,memory_count:g.memory.getAll().length}));
+  }
+  // REALITY-2: Connector methods
+  runConnector(ctx: SDKContext, connectorId: string, entity: string): SDKResult {
+    
+
+    return this.call("runConnector",ctx,()=>({connectorId,entity})as unknown as Record<string,unknown>);
+  }
+  listSignals(ctx: SDKContext): SDKResult {
+    return this.call("listSignals",ctx,()=>({signals:[]}));
+  }
+  listEvidence(ctx: SDKContext): SDKResult {
+    return this.call("listEvidence",ctx,()=>({evidence:[]}));
+  }
+  getConnectorMetrics(ctx: SDKContext): SDKResult {
+    const reg=new ConnectorRegistry();
+    return this.call("getConnectorMetrics",ctx,()=>({connectors:reg.getAll().map(c=>({id:c.id,metrics:c.metrics()}))}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);

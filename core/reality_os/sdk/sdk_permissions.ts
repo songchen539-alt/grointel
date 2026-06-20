@@ -51,6 +51,7 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   startKernel: "EXECUTE", stopKernel: "EXECUTE", pauseKernel: "EXECUTE",
   resumeKernel: "EXECUTE", getKernelStatus: "READ",
   discoverPublicSources: "READ", runExploration: "EXECUTE", getExplorationStatus: "READ",
+  runConnector: "EXECUTE", listSignals: "READ", listEvidence: "READ", getConnectorMetrics: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {
