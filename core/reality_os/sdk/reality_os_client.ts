@@ -20,6 +20,7 @@ import { PatternObserver } from "../../../apps/grointel/data/pattern/pattern_obs
 import { CausalityObserver } from "../../../apps/grointel/data/causality/causality_observer";
 import { LivingWorldModel } from "../../../apps/grointel/knowledge/world_model/living_world_model";
 import { GrowthDecisionFlow } from "../../../apps/grointel/product/growth_decision_flow";
+import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory/company_memory_flow";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -83,6 +84,7 @@ export class RealityOSClient {
   public readonly causalityObserver = new CausalityObserver();
   public readonly worldModel = new LivingWorldModel();
   public readonly growthDecision = new GrowthDecisionFlow();
+  public readonly companyMemory = new CompanyMemoryFlow();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -437,6 +439,19 @@ export class RealityOSClient {
   }
   listGrowthDecisionReports(ctx: SDKContext): SDKResult {
     return this.call("listGrowthDecisionReports",ctx,()=>({reports:[]}));
+  }
+  // PRODUCT-2: Company Memory methods
+  createCompanyMemory(ctx: SDKContext, req: Record<string, unknown>): SDKResult {
+    const result=this.companyMemory.createFromRequest(req as any);
+    return this.call("createCompanyMemory",ctx,()=>({memory:result.memory,report:result.report})as unknown as Record<string,unknown>);
+  }
+  getCompanyMemory(ctx: SDKContext, memoryId: string): SDKResult {
+    const state=this.companyMemory.getState(memoryId);
+    return this.call("getCompanyMemory",ctx,()=>(state||{error:"not found"})as unknown as Record<string,unknown>);
+  }
+  updateCompanyMemory(ctx: SDKContext, memoryId: string, req: Record<string, unknown>): SDKResult {
+    const result=this.companyMemory.update(memoryId,req as any);
+    return this.call("updateCompanyMemory",ctx,()=>(result||{error:"not found"})as unknown as Record<string,unknown>);
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);

@@ -1,6 +1,6 @@
 // GroIntel PRODUCT-1 — Growth Decision Types
 export interface GrowthDecisionRequest {
-  company_website: string; growth_goal: string; target_market: string;
+  company_website: string; company_name?: string; growth_goal: string; target_market: string;
   budget_range: string; timeline: string; constraints: string[];
 }
 
