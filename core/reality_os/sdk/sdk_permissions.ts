@@ -17,6 +17,8 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   getEvolutionPlan: "READ", getEvolutionHistory: "READ",
   registerNode: "EXECUTE", exchangeKnowledge: "WRITE", queryCivilization: "READ",
   submitConsensus: "EXECUTE", resolveConflict: "EXECUTE", queryReputation: "READ",
+  registerContribution: "EXECUTE", queryContribution: "READ", traceKnowledge: "READ",
+  queryInfluence: "READ", queryLineage: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

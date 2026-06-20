@@ -10,6 +10,7 @@ import { KnowledgeRuntime } from "../knowledge/knowledge_runtime";
 import { WisdomRuntime } from "../wisdom/wisdom_runtime";
 import { EvolutionRuntime } from "../evolution/evolution_runtime";
 import { CivilizationRuntime } from "../../civilization/civilization_runtime";
+import { ContributionRuntime } from "../../civilization/contribution/contribution_runtime";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -63,6 +64,7 @@ export class RealityOSClient {
   public readonly wisdom = new WisdomRuntime();
   public readonly evolution = new EvolutionRuntime();
   public readonly civilization = new CivilizationRuntime();
+  public readonly contribution = new ContributionRuntime();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -208,5 +210,24 @@ export class RealityOSClient {
   queryReputation(ctx: SDKContext, nodeId: string): SDKResult {
     const node = this.civilization.getNode(nodeId);
     return this.call("queryReputation", ctx, () => (node ? node.reputation : { error: "node not found" }) as unknown as Record<string, unknown>);
+  }
+
+  // CRS-2: Contribution methods
+  registerContribution(ctx: SDKContext, id: string, type: string, title: string, content: string): SDKResult {
+    return this.call("registerContribution", ctx, () => this.contribution.registerArtifact(id, type as any, title, content, { id: "system", name: "system", role: "creator", contributed_at: new Date().toISOString() }) as unknown as Record<string, unknown>);
+  }
+  queryContribution(ctx: SDKContext, artifactId: string): SDKResult {
+    const art = this.contribution.getArtifact(artifactId);
+    return this.call("queryContribution", ctx, () => (art || { error: "not found" }) as unknown as Record<string, unknown>);
+  }
+  traceKnowledge(ctx: SDKContext, artifactId: string): SDKResult {
+    return this.call("traceKnowledge", ctx, () => ({ attributions: this.contribution.getAttributions(artifactId), citations: this.contribution.getCitationChain(artifactId) }));
+  }
+  queryInfluence(ctx: SDKContext, artifactId: string): SDKResult {
+    return this.call("queryInfluence", ctx, () => this.contribution.computeInfluence(artifactId) as unknown as Record<string, unknown>);
+  }
+  queryLineage(ctx: SDKContext, artifactId: string): SDKResult {
+    const lin = this.contribution.getLineage(artifactId);
+    return this.call("queryLineage", ctx, () => (lin || { error: "not found" }) as unknown as Record<string, unknown>);
   }
 }
