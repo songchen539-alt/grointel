@@ -10,6 +10,7 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   queryKnowledge: "READ", queryFacts: "READ", queryEntity: "READ",
   queryRelationships: "READ", queryEvidence: "READ", queryKnowledgeHistory: "READ", validateKnowledge: "EXECUTE",
   getWorldState: "READ", getKernelState: "READ", getGraphSnapshot: "READ", getCapabilities: "READ",
+  judge: "EXECUTE", evaluateWisdom: "EXECUTE", queryPrinciples: "READ", queryValues: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

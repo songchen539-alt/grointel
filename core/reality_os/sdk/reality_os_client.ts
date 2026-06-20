@@ -7,6 +7,7 @@ import { SDKPermissionChecker } from "./sdk_permissions";
 import { CapabilityRegistry } from "./capability_registry";
 import { SDKTrace } from "./sdk_trace";
 import { KnowledgeRuntime } from "../knowledge/knowledge_runtime";
+import { WisdomRuntime } from "../wisdom/wisdom_runtime";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -57,6 +58,7 @@ export class RealityOSClient {
   private readonly workflow = new WorkflowAdapter();
   private readonly state = new StateAdapter();
   public readonly knowledge = new KnowledgeRuntime();
+  public readonly wisdom = new WisdomRuntime();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -139,5 +141,21 @@ export class RealityOSClient {
   }
   validateKnowledge(ctx: SDKContext, input: Record<string, unknown> = {}): SDKResult {
     return this.call("validateKnowledge", ctx, () => ({ validated: true, result: "validated" }));
+  }
+
+  // ROS-5: Wisdom methods
+  judge(ctx: SDKContext, decisionId: string, description: string): SDKResult {
+    const evaluation = this.wisdom.evaluate(decisionId, description);
+    return this.call("judge", ctx, () => evaluation as unknown as Record<string, unknown>);
+  }
+  evaluateWisdom(ctx: SDKContext, description: string): SDKResult {
+    const evaluation = this.wisdom.evaluate("wisdom_" + Date.now().toString(36), description);
+    return this.call("evaluateWisdom", ctx, () => ({ composite: evaluation.judgement.composite_score, verdict: evaluation.judgement.verdict, recommendation: evaluation.overall_recommendation }));
+  }
+  queryPrinciples(ctx: SDKContext): SDKResult {
+    return this.call("queryPrinciples", ctx, () => ({ principles: this.wisdom.principles.getAll() }));
+  }
+  queryValues(ctx: SDKContext): SDKResult {
+    return this.call("queryValues", ctx, () => ({ values: this.wisdom.values.getAll() }));
   }
 }

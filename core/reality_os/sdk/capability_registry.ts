@@ -30,6 +30,8 @@ export class CapabilityRegistry {
       { id: "graph.snapshot.read", name: "Read Graph Snapshot", description: "Read current graph snapshot", layer: "graph", input_schema: {}, output_schema: {}, required_permissions: LOW, risk_level: "low", available: true, version: 1 },
       { id: "knowledge.query", name: "Query Knowledge", description: "Query the knowledge runtime", layer: "knowledge", input_schema: {}, output_schema: {}, required_permissions: LOW, risk_level: "low", available: true, version: 1 },
       { id: "knowledge.validate", name: "Validate Knowledge", description: "Validate a knowledge fact", layer: "knowledge", input_schema: {}, output_schema: {}, required_permissions: "execute", risk_level: "medium", available: true, version: 1 },
+      { id: "wisdom.judge", name: "Judge Decision", description: "Evaluate a decision against wisdom principles", layer: "wisdom", input_schema: {}, output_schema: {}, required_permissions: "execute", risk_level: "medium", available: true, version: 1 },
+      { id: "wisdom.evaluate", name: "Evaluate Wisdom", description: "Full wisdom evaluation of a decision", layer: "wisdom", input_schema: {}, output_schema: {}, required_permissions: "execute", risk_level: "medium", available: true, version: 1 },
     ];
     for (const d of defs) this.caps.set(d.id, d);
   }
