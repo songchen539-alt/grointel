@@ -17,6 +17,7 @@ import { CompanyObserver } from "../../../apps/grointel/data/company/company_obs
 import { SupplyObserver } from "../../../apps/grointel/data/supply/supply_observer";
 import { ActivityObserver } from "../../../apps/grointel/data/activity/activity_observer";
 import { PatternObserver } from "../../../apps/grointel/data/pattern/pattern_observer";
+import { CausalityObserver } from "../../../apps/grointel/data/causality/causality_observer";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -77,6 +78,7 @@ export class RealityOSClient {
   public readonly supplyObserver = new SupplyObserver();
   public readonly activityObserver = new ActivityObserver();
   public readonly patternObserver = new PatternObserver();
+  public readonly causalityObserver = new CausalityObserver();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -372,6 +374,22 @@ export class RealityOSClient {
   recommendPatterns(ctx: SDKContext, industry: string, region: string, capabilities: string): SDKResult {
     const sim=this.patternObserver.findSimilar(industry,region,capabilities.split(","));
     return this.call("recommendPatterns",ctx,()=>({recommendations:sim.slice(0,5)}));
+  }
+  // DATA-5: Cause methods
+  queryCauseGraph(ctx: SDKContext): SDKResult {
+    return this.call("queryCauseGraph",ctx,()=>({nodes:this.causalityObserver.getAllNodes(),edges:this.causalityObserver.getAllEdges()}));
+  }
+  queryCauseChains(ctx: SDKContext): SDKResult {
+    return this.call("queryCauseChains",ctx,()=>({chains:this.causalityObserver.getAllChains()}));
+  }
+  queryRootCauses(ctx: SDKContext, nodeId: string): SDKResult {
+    return this.call("queryRootCauses",ctx,()=>({node_id:nodeId}));
+  }
+  queryDownstreamEffects(ctx: SDKContext, nodeId: string): SDKResult {
+    return this.call("queryDownstreamEffects",ctx,()=>({node_id:nodeId}));
+  }
+  recommendCauses(ctx: SDKContext, nodeId: string): SDKResult {
+    return this.call("recommendCauses",ctx,()=>({node_id:nodeId}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
