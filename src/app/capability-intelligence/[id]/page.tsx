@@ -48,11 +48,56 @@ function ConfidenceBadge({ name, score }: { name: string; score: number }) {
   );
 }
 
+function CompanyMatchResults({ matches }: { matches: any[] }) {
+  if (!matches || matches.length === 0) return null;
+  return (
+    <div className="mt-6 space-y-3">
+      <h2 className="text-lg font-semibold flex items-center gap-2">
+        <Target className="h-4 w-4 text-purple-400" /> Recommended Companies
+      </h2>
+      {matches.map((match) => (
+        <div key={match.businessProfileId} className="rounded-lg border border-white/5 bg-white/[0.02] p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-white">{match.companyName}</h3>
+              <p className="mt-1 text-xs text-gray-500">{match.industry || "Unknown industry"} · {match.targetMarket || "Global"}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-xl font-bold text-purple-400">{match.overallScore}</p>
+                <p className="text-[10px] uppercase tracking-wider text-gray-600">match</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-300">{match.confidence}</p>
+                <p className="text-[10px] uppercase tracking-wider text-gray-600">confidence</p>
+              </div>
+            </div>
+          </div>
+          {match.growthGoal && <p className="mt-3 text-sm text-gray-400">{match.growthGoal}</p>}
+          {match.matchReason && <p className="mt-2 text-sm text-gray-500">{match.matchReason}</p>}
+          {match.reasons?.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {match.reasons.slice(0, 4).map((reason: any, i: number) => (
+                <span key={i} className="rounded-full border border-white/5 bg-white/[0.03] px-2.5 py-1 text-[10px] text-gray-500">
+                  {reason.category}: {reason.message}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function CapabilityIntelligenceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [scanProfile, setScanProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [matchError, setMatchError] = useState("");
 
   useEffect(() => { params.then(p => setId(p.id)); }, [params]);
 
@@ -81,6 +126,28 @@ export default function CapabilityIntelligenceDetailPage({ params }: { params: P
 
   const scanConf = scanProfile?.confidence || {};
   const knowledgeConf = profile?.knowledge_confidence || {};
+
+  const findMatches = async () => {
+    if (!profile?.id) return;
+    setMatchLoading(true);
+    setMatchError("");
+    try {
+      const res = await fetch("/api/grointel/profile-match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ capabilityProfileId: profile.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMatches(data.candidates || []);
+      } else {
+        setMatchError(data.error || "Could not find matches");
+      }
+    } catch {
+      setMatchError("Network error");
+    }
+    setMatchLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -177,11 +244,13 @@ export default function CapabilityIntelligenceDetailPage({ params }: { params: P
         <div className="mt-8 rounded-lg border border-white/5 bg-white/[0.02] p-6">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href={"/capability-intelligence/" + (profile?.id || "") + "/complete"} className="rounded-lg bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/15 transition-colors w-full sm:w-auto text-center">Complete Capability Understanding</Link>
-            <button disabled className="rounded-lg bg-white/10 px-6 py-3 text-sm text-gray-400 cursor-not-allowed w-full sm:w-auto text-center">
-              View Recommended Opportunities (coming soon)
+            <button onClick={findMatches} disabled={matchLoading} className="rounded-lg bg-purple-500/15 px-6 py-3 text-sm text-purple-200 hover:bg-purple-500/20 transition-colors disabled:opacity-50 w-full sm:w-auto text-center">
+              {matchLoading ? "Finding Matches..." : "Find Recommended Companies"}
             </button>
           </div>
+          {matchError && <p className="mt-3 text-center text-sm text-red-400">{matchError}</p>}
         </div>
+        <CompanyMatchResults matches={matches} />
       </div>
     </div>
   );

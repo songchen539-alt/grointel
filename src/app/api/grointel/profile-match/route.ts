@@ -41,25 +41,94 @@ function buildCapabilityPath(ids: string[] | undefined): string {
   return `${select}&id=in.(${escaped})`;
 }
 
+function buildBusinessPath(ids: string[] | undefined): string {
+  const select = "/rest/v1/business_knowledge_profiles?select=*";
+  if (!ids || ids.length === 0) {
+    return `${select}&order=updated_at.desc&limit=25`;
+  }
+  const escaped = ids.map((id) => `"${id.replace(/"/g, "")}"`).join(",");
+  return `${select}&id=in.(${escaped})`;
+}
+
 export async function POST(request: NextRequest) {
   if (!supabaseUrl || !serviceKey) {
     return NextResponse.json({ success: false, error: "Not configured" }, { status: 500 });
   }
 
-  let body: { businessProfileId?: string; capabilityProfileIds?: string[] };
+  let body: {
+    businessProfileId?: string;
+    businessProfileIds?: string[];
+    capabilityProfileId?: string;
+    capabilityProfileIds?: string[];
+  };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body.businessProfileId) {
-    return NextResponse.json({ success: false, error: "businessProfileId required" }, { status: 400 });
+  if (!body.businessProfileId && !body.capabilityProfileId) {
+    return NextResponse.json({ success: false, error: "businessProfileId or capabilityProfileId required" }, { status: 400 });
   }
 
   try {
+    if (body.capabilityProfileId) {
+      const capabilityRows = await fetchRows<DbCapabilityKnowledgeProfile>(
+        `/rest/v1/capability_knowledge_profiles?select=*&id=eq.${encodeURIComponent(body.capabilityProfileId)}`,
+      );
+      const capabilityProfile = capabilityRows[0];
+      if (!capabilityProfile) {
+        return NextResponse.json({ success: false, error: "Capability profile not found" }, { status: 404 });
+      }
+
+      const businessRows = await fetchRows<DbBusinessKnowledgeProfile>(
+        buildBusinessPath(body.businessProfileIds),
+      );
+      if (businessRows.length === 0) {
+        return NextResponse.json({ success: false, error: "No business profiles available" }, { status: 404 });
+      }
+
+      const capability = capabilityKnowledgeToChannel(capabilityProfile);
+      const candidates = [];
+
+      for (const businessProfile of businessRows) {
+        const growthNeed = businessKnowledgeToGrowthNeed(businessProfile);
+        const [recommendation] = await recommendHybrid(growthNeed, [capability.channel], [capability.service]);
+        if (!recommendation) continue;
+        candidates.push({
+          businessProfileId: businessProfile.id,
+          companyName: growthNeed.companyName,
+          website: growthNeed.website,
+          industry: growthNeed.industry,
+          growthGoal: growthNeed.growthGoal,
+          targetMarket: growthNeed.targetMarket,
+          overallScore: recommendation.overallScore,
+          ruleScore: recommendation.ruleScore,
+          embeddingScore: recommendation.embeddingScore,
+          confidence: recommendation.confidence,
+          recommendedSolutionType: recommendation.recommendedSolutionType,
+          matchReason: recommendation.matchReason,
+          reasons: recommendation.reasons,
+        });
+      }
+
+      candidates.sort((a, b) => b.overallScore - a.overallScore);
+      return NextResponse.json({
+        success: true,
+        capabilityProfileId: capabilityProfile.id,
+        capability: capability.channel,
+        totalCandidates: candidates.length,
+        candidates: candidates.slice(0, 10),
+      });
+    }
+
+    const businessProfileId = body.businessProfileId;
+    if (!businessProfileId) {
+      return NextResponse.json({ success: false, error: "businessProfileId required" }, { status: 400 });
+    }
+
     const businessRows = await fetchRows<DbBusinessKnowledgeProfile>(
-      `/rest/v1/business_knowledge_profiles?select=*&id=eq.${encodeURIComponent(body.businessProfileId)}`,
+      `/rest/v1/business_knowledge_profiles?select=*&id=eq.${encodeURIComponent(businessProfileId)}`,
     );
     const businessProfile = businessRows[0];
     if (!businessProfile) {
@@ -112,4 +181,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-
