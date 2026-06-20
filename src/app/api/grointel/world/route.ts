@@ -1,22 +1,37 @@
-// WORLD-1 — API routes
 import { NextRequest, NextResponse } from "next/server";
-import { WorldBuildingFlow } from "../../../../../apps/grointel/world/world_building_flow";
+import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 
-const flow = new WorldBuildingFlow();
-
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const result = flow.runFullUpdate();
+    const runtime = getGroIntelWorldRuntime();
+    const { searchParams } = new URL(req.url);
+    const shouldObserve = searchParams.get("observe") === "1";
+    const limit = Number(searchParams.get("limit") || 3);
+    const current = runtime.snapshot();
+    const result = shouldObserve || current.tickCount === 0
+      ? await runtime.observeTargets(Number.isFinite(limit) ? limit : 3)
+      : current;
+
     return NextResponse.json({ success: true, ...result });
-  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const runtime = getGroIntelWorldRuntime();
     const body = await req.json();
-    const { type, domain, details, delta } = body;
-    if (!type || !domain) return NextResponse.json({ error: "type and domain required" }, { status: 400 });
-    const event = flow.recordEvent(type, domain, details || "", delta || 0);
-    return NextResponse.json({ success: true, event });
-  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
+    const action = body?.action || "observe";
+    const limit = Number(body?.limit || 3);
+
+    if (action === "observe" || action === "tick") {
+      const result = await runtime.observeTargets(Number.isFinite(limit) ? limit : 3);
+      return NextResponse.json({ success: true, ...result });
+    }
+
+    return NextResponse.json({ success: true, ...runtime.snapshot() });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }
