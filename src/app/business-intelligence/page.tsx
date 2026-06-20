@@ -23,8 +23,8 @@ export default function BusinessIntelligencePage() {
         body: JSON.stringify({ website: website.trim() }),
       });
       const d = await r.json();
-      if (d.success && d.profile) {
-        router.push("/business-intelligence/" + d.profile.id);
+      if (d.success && d.knowledgeProfile) {
+        router.push("/business-intelligence/" + d.knowledgeProfile.id);
       } else {
         setError(d.error || "Failed to create profile");
         setLoading(false);

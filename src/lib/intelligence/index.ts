@@ -5,3 +5,5 @@ export { extractConstraintsFromBusinessKnowledge } from "./constraintIntelligenc
 export type { ConstraintModel } from "./constraintIntelligence";
 export { generateStrategy } from "./strategyIntelligence";
 export type { StrategyResult } from "./strategyIntelligence";
+export { businessKnowledgeToGrowthNeed, capabilityKnowledgeToChannel } from "./profileAdapters";
+export type { AdaptedCapability } from "./profileAdapters";
