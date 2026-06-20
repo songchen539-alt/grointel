@@ -1,5 +1,6 @@
 import { Activity, Database, Globe2, Radar, Signal, Sparkles, Target, Wifi } from "lucide-react";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
+import { loadWorldMemorySummary } from "@/lib/grointel/worldMemory";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ function metricTone(value: number) {
 
 export default async function WorldPage() {
   const world = await getGroIntelWorldRuntime().observeTargets(3);
+  const memory = await loadWorldMemorySummary(8);
   const { score, topGaps, topPriorities, progress, targets, observations, signals, evidence, connectorHealth } = world;
   const observedTargetIds = new Set(observations.map((observation) => observation.target.id));
 
@@ -61,6 +63,27 @@ export default async function WorldPage() {
                 <div className="mt-1 text-2xl font-semibold">{signals.length}</div>
               </div>
             </div>
+          </div>
+          <div className="mt-6 rounded-lg border border-white/5 bg-white/[0.03] p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs text-gray-500">Persistent Memory</p>
+                <p className="mt-1 text-sm text-gray-300">
+                  {memory.configured
+                    ? memory.latestRun
+                      ? `Last saved run: ${formatTime(memory.latestRun.created_at)}`
+                      : "Memory tables are connected, waiting for first saved run"
+                    : "Supabase memory is not configured in this environment"}
+                </p>
+              </div>
+              <div className="flex gap-2 text-xs">
+                <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L1 {memory.recentEvidence.length + memory.recentSignals.length}</span>
+                <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L2 {memory.entityMemories.length}</span>
+                <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L3 {memory.decisionMemories.length}</span>
+                <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L4 {memory.evolutionMemories.length}</span>
+              </div>
+            </div>
+            {memory.error && <p className="mt-3 text-xs text-amber-300">{memory.error}</p>}
           </div>
         </div>
       </section>

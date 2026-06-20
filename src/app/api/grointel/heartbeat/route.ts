@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
+import { saveWorldMemory } from "@/lib/grointel/worldMemory";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export async function GET(req: NextRequest) {
     const runtime = getGroIntelWorldRuntime();
     const limit = Number(new URL(req.url).searchParams.get("limit") || 6);
     const world = await runtime.observeTargets(Number.isFinite(limit) ? limit : 6);
+    const memory = await saveWorldMemory(world, "heartbeat");
 
     return NextResponse.json({
       success: true,
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest) {
         evidence_count: world.evidence.length,
         intelligence_index: world.score.overall,
       },
+      memory,
       world,
     });
   } catch (e: any) {

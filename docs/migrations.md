@@ -23,4 +23,8 @@ Two migrations share the `011_` prefix. Both must be run:
 1. `011_growth_intelligence_engine.sql` — Goal library, constraints, strategies tables
 2. `011_knowledge_completion.sql` — Knowledge completion sessions, questions, updates
 
-Future migrations should use `012_`, `013_`, etc.
+Additional migrations:
+- `012_persistent_runtime_memory.sql` - persistent runtime memory and connector state.
+- `013_world_memory.sql` - four-layer world memory: raw reality, entity understanding, decision memory, and evolution memory.
+
+Future migrations should continue with `014_`, `015_`, etc.

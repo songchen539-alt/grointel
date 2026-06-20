@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
+import { loadWorldMemorySummary, saveWorldMemory } from "@/lib/grointel/worldMemory";
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,11 +9,14 @@ export async function GET(req: NextRequest) {
     const shouldObserve = searchParams.get("observe") === "1";
     const limit = Number(searchParams.get("limit") || 3);
     const current = runtime.snapshot();
-    const result = shouldObserve || current.tickCount === 0
+    const didObserve = shouldObserve || current.tickCount === 0;
+    const result = didObserve
       ? await runtime.observeTargets(Number.isFinite(limit) ? limit : 3)
       : current;
+    const memorySave = didObserve ? await saveWorldMemory(result, "world_api") : null;
+    const memory = await loadWorldMemorySummary(20);
 
-    return NextResponse.json({ success: true, ...result });
+    return NextResponse.json({ success: true, ...result, memory, memorySave });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
@@ -27,10 +31,11 @@ export async function POST(req: NextRequest) {
 
     if (action === "observe" || action === "tick") {
       const result = await runtime.observeTargets(Number.isFinite(limit) ? limit : 3);
-      return NextResponse.json({ success: true, ...result });
+      const memory = await saveWorldMemory(result, "world_api");
+      return NextResponse.json({ success: true, ...result, memory });
     }
 
-    return NextResponse.json({ success: true, ...runtime.snapshot() });
+    return NextResponse.json({ success: true, ...runtime.snapshot(), memory: await loadWorldMemorySummary(20) });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
