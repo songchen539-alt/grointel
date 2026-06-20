@@ -56,6 +56,7 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   getOperationsStatus: "READ", listWorkers: "READ", recoverRuntime: "EXECUTE",
   getReflection: "READ", getBlindSpots: "READ", getWisdom: "READ",
   listOptimizationProposals: "READ", applyOptimization: "EXECUTE",
+  getWorldDashboard: "READ", recordWorldEvent: "WRITE",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

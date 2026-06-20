@@ -31,6 +31,7 @@ import { ConnectorRegistry } from "../../../apps/grointel/reality/connectors/con
 import { LivingLoopFlow } from "../../../apps/grointel/reality/continuous/living_loop_flow";
 import { RuntimeSupervisor } from "../../../apps/grointel/operation/runtime_supervisor";
 import { EvolutionFlow } from "../../../apps/grointel/evolution/evolution_flow";
+import { WorldBuildingFlow } from "../../../apps/grointel/world/world_building_flow";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -606,6 +607,15 @@ export class RealityOSClient {
   }
   applyOptimization(ctx: SDKContext, proposalId: string): SDKResult {
     return this.call("applyOptimization",ctx,()=>({applied:proposalId}));
+  }
+  // WORLD-1: World Building methods
+  getWorldDashboard(ctx: SDKContext): SDKResult {
+    const r=(new WorldBuildingFlow()).runFullUpdate();
+    return this.call("getWorldDashboard",ctx,()=>({score:r.score,gaps:r.topGaps,priorities:r.topPriorities,progress:r.progress})as unknown as Record<string,unknown>);
+  }
+  recordWorldEvent(ctx: SDKContext, type: string, domain: string, details: string, delta: number): SDKResult {
+    const ev=(new WorldBuildingFlow()).recordEvent(type,domain,details,delta);
+    return this.call("recordWorldEvent",ctx,()=>ev as unknown as Record<string,unknown>);
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
