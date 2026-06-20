@@ -19,6 +19,8 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   submitConsensus: "EXECUTE", resolveConflict: "EXECUTE", queryReputation: "READ",
   registerContribution: "EXECUTE", queryContribution: "READ", traceKnowledge: "READ",
   queryInfluence: "READ", queryLineage: "READ",
+  registerApplication: "EXECUTE", activateApplication: "EXECUTE", pauseApplication: "EXECUTE",
+  queryApplication: "READ", listApplications: "READ", startApplicationSession: "EXECUTE",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

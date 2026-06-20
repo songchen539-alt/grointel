@@ -11,6 +11,7 @@ import { WisdomRuntime } from "../wisdom/wisdom_runtime";
 import { EvolutionRuntime } from "../evolution/evolution_runtime";
 import { CivilizationRuntime } from "../../civilization/civilization_runtime";
 import { ContributionRuntime } from "../../civilization/contribution/contribution_runtime";
+import { ApplicationRuntime } from "../../applications/application_runtime";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -65,6 +66,7 @@ export class RealityOSClient {
   public readonly evolution = new EvolutionRuntime();
   public readonly civilization = new CivilizationRuntime();
   public readonly contribution = new ContributionRuntime();
+  public readonly apps = new ApplicationRuntime();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -229,5 +231,27 @@ export class RealityOSClient {
   queryLineage(ctx: SDKContext, artifactId: string): SDKResult {
     const lin = this.contribution.getLineage(artifactId);
     return this.call("queryLineage", ctx, () => (lin || { error: "not found" }) as unknown as Record<string, unknown>);
+  }
+
+  // APP-1: Application methods
+  registerApplication(ctx: SDKContext, manifest: Record<string, unknown>): SDKResult {
+    return this.call("registerApplication", ctx, () => this.apps.registerApp(manifest as any) as unknown as Record<string, unknown>);
+  }
+  activateApplication(ctx: SDKContext, appId: string): SDKResult {
+    return this.call("activateApplication", ctx, () => (this.apps.activateApp(appId) || { error: "not found" }) as unknown as Record<string, unknown>);
+  }
+  pauseApplication(ctx: SDKContext, appId: string): SDKResult {
+    return this.call("pauseApplication", ctx, () => (this.apps.pauseApp(appId) || { error: "not found" }) as unknown as Record<string, unknown>);
+  }
+  queryApplication(ctx: SDKContext, appId: string): SDKResult {
+    const app = this.apps.getApp(appId);
+    return this.call("queryApplication", ctx, () => (app || { error: "not found" }) as unknown as Record<string, unknown>);
+  }
+  listApplications(ctx: SDKContext): SDKResult {
+    return this.call("listApplications", ctx, () => ({ apps: this.apps.listApps() }));
+  }
+  startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
+    const ctx2 = this.apps.startSession(appId);
+    return this.call("startApplicationSession", ctx, () => (ctx2 || { error: "cannot start session" }) as unknown as Record<string, unknown>);
   }
 }
