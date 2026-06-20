@@ -21,7 +21,7 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   queryInfluence: "READ", queryLineage: "READ",
   registerApplication: "EXECUTE", activateApplication: "EXECUTE", pauseApplication: "EXECUTE",
   queryApplication: "READ", listApplications: "READ", startApplicationSession: "EXECUTE",
-  getLivingWorld: "READ", updateWorld: "WRITE", observeReality: "WRITE",
+  getLivingWorld: "READ", updateWorld: "WRITE", observeEntityReality: "WRITE",
   recomputePredictions: "EXECUTE", recomputeRecommendations: "EXECUTE",
   queryEntityHistory: "READ", queryRelationshipHistory: "READ", queryLivingState: "READ",
   observeCompany: "WRITE", observeCompanyBatch: "WRITE",
@@ -42,6 +42,7 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   updateRealityTime: "WRITE", queryAffectedDecisions: "READ", queryAffectedRecommendations: "READ",
   createGrowthDecisionReport: "EXECUTE", queryGrowthDecisionReport: "READ", listGrowthDecisionReports: "READ",
   createCompanyMemory: "EXECUTE", getCompanyMemory: "READ", updateCompanyMemory: "EXECUTE",
+  observeReality: "EXECUTE", simulateObservation: "EXECUTE",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

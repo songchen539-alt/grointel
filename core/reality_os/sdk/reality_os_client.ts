@@ -21,6 +21,7 @@ import { CausalityObserver } from "../../../apps/grointel/data/causality/causali
 import { LivingWorldModel } from "../../../apps/grointel/knowledge/world_model/living_world_model";
 import { GrowthDecisionFlow } from "../../../apps/grointel/product/growth_decision_flow";
 import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory/company_memory_flow";
+import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observation/knowledge2_flow";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -85,6 +86,7 @@ export class RealityOSClient {
   public readonly worldModel = new LivingWorldModel();
   public readonly growthDecision = new GrowthDecisionFlow();
   public readonly companyMemory = new CompanyMemoryFlow();
+  public readonly knowledge2 = new Knowledge2Flow();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -275,7 +277,7 @@ export class RealityOSClient {
   updateWorld(ctx: SDKContext, canonicalName: string, entityType: string, attributes: Record<string, unknown>): SDKResult {
     return this.call("updateWorld", ctx, () => this.perpetual.observeEntity(canonicalName, entityType, attributes) as unknown as Record<string, unknown>);
   }
-  observeReality(ctx: SDKContext, entityId: string, observationType: string, data: Record<string, unknown>): SDKResult {
+  observeEntityReality(ctx: SDKContext, entityId: string, observationType: string, data: Record<string, unknown>): SDKResult {
     return this.call("observeReality", ctx, () => ({ observed: true, entity_id: entityId }) as unknown as Record<string, unknown>);
   }
   recomputePredictions(ctx: SDKContext, entityId: string): SDKResult {
@@ -452,6 +454,15 @@ export class RealityOSClient {
   updateCompanyMemory(ctx: SDKContext, memoryId: string, req: Record<string, unknown>): SDKResult {
     const result=this.companyMemory.update(memoryId,req as any);
     return this.call("updateCompanyMemory",ctx,()=>(result||{error:"not found"})as unknown as Record<string,unknown>);
+  }
+  // KNOWLEDGE-2: Observation methods
+  observeReality(ctx: SDKContext, companyMemoryId: string, companyWebsite?: string): SDKResult {
+    const result=this.knowledge2.observeAndUpdate(this.companyMemory,companyMemoryId,companyWebsite||"");
+    return this.call("observeReality",ctx,()=>({batch:result.batch,diff:result.diff})as unknown as Record<string,unknown>);
+  }
+  simulateObservation(ctx: SDKContext, companyMemoryId: string, signals: Record<string, string>): SDKResult {
+    const result=this.knowledge2.simulateAndUpdate(this.companyMemory,companyMemoryId,signals);
+    return this.call("simulateObservation",ctx,()=>({batch:result.batch,diff:result.diff})as unknown as Record<string,unknown>);
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
