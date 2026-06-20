@@ -3,7 +3,7 @@ export type PatternStatus = "candidate" | "validated" | "stable" | "deprecated" 
 
 export interface GrowthPattern {
   id: string; name: string; description: string; cluster: string; status: PatternStatus;
-  conditions: PatternCondition[]; expected_outcome: PatternOutcome;
+  conditions: PatternCondition; expected_outcome: PatternOutcome;
   confidence: number; evidence_count: number; sample_size: number; version: number;
   supporting_activity_ids: string[]; supporting_company_ids: string[];
   supporting_capabilities: string[]; limitations: string[]; recommended_contexts: string[];

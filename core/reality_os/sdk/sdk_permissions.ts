@@ -40,6 +40,7 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   queryLivingWorldModel: "READ", queryWorldEntity: "READ", queryWorldHistory: "READ",
   queryHypotheses: "READ", queryFutureStateSpace: "READ", queryFutureBranches: "READ",
   updateRealityTime: "WRITE", queryAffectedDecisions: "READ", queryAffectedRecommendations: "READ",
+  createGrowthDecisionReport: "EXECUTE", queryGrowthDecisionReport: "READ", listGrowthDecisionReports: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

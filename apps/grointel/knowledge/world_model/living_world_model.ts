@@ -28,8 +28,8 @@ export class LivingWorldModel {
 
   private counters = { e:0, r:0, a:0, o:0, c:0, p:0 };
 
-  private makeLiving(obj: { id: string; type?: string; name?: string; source_type?: string; target_type?: string; causal_type?: string; cluster?: string; category?: string; metric?: string; status?: LivingStatus; confidence?: number; evidence?: string[] }, now: string) {
-    return { created_at: now, updated_at: now, last_reality_event_at: now, version: 1, history: [{ timestamp: now, change: "Created", confidence: obj.confidence || 50 }], status: (obj.status || "active") as LivingStatus, evidence: obj.evidence || [], confidence: obj.confidence || 50 };
+  private makeLiving(obj: Record<string, unknown>, now: string) {
+    const ss = obj.status as string || "active"; return { created_at: now, updated_at: now, last_reality_event_at: now, version: 1, history: [{ timestamp: now, change: "Created", confidence: (obj.confidence as number) || 50 }], status: (ss === "active" || ss === "monitoring" || ss === "stale" || ss === "superseded" || ss === "archived" ? ss : "active") as LivingStatus, evidence: (obj.evidence as string[]) || [], confidence: (obj.confidence as number) || 50 };
   }
 
   addEntity(name: string, type: string, confidence = 50): LivingWorldEntity {

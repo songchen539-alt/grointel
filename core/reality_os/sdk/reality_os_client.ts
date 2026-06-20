@@ -19,6 +19,7 @@ import { ActivityObserver } from "../../../apps/grointel/data/activity/activity_
 import { PatternObserver } from "../../../apps/grointel/data/pattern/pattern_observer";
 import { CausalityObserver } from "../../../apps/grointel/data/causality/causality_observer";
 import { LivingWorldModel } from "../../../apps/grointel/knowledge/world_model/living_world_model";
+import { GrowthDecisionFlow } from "../../../apps/grointel/product/growth_decision_flow";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -81,6 +82,7 @@ export class RealityOSClient {
   public readonly patternObserver = new PatternObserver();
   public readonly causalityObserver = new CausalityObserver();
   public readonly worldModel = new LivingWorldModel();
+  public readonly growthDecision = new GrowthDecisionFlow();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -320,7 +322,7 @@ export class RealityOSClient {
     return this.call("observeSupply",ctx,()=>r.profile as unknown as Record<string,unknown>);
   }
   observeSupplyBatch(ctx: SDKContext, entities: Array<{id:string;name:string;entityType:string;website:string;country:string}>): SDKResult {
-    const c=this.supplyObserver.observeBatch(entities.map(e=>({...e,confidence:50})));
+    const c=this.supplyObserver.observeBatch(entities.map(e=>({id:e.id,name:e.name,entityType:e.entityType as any,website:e.website,country:e.country,confidence:50})));
     return this.call("observeSupplyBatch",ctx,()=>({observed:c}));
   }
   querySupplyProfile(ctx: SDKContext, supplyId: string): SDKResult {
@@ -424,6 +426,17 @@ export class RealityOSClient {
   }
   queryAffectedRecommendations(ctx: SDKContext): SDKResult {
     return this.call("queryAffectedRecommendations",ctx,()=>({recommendations:[]}));
+  }
+  // PRODUCT-1: Growth Decision methods
+  createGrowthDecisionReport(ctx: SDKContext, request: Record<string, unknown>): SDKResult {
+    const report=this.growthDecision.run(request as any);
+    return this.call("createGrowthDecisionReport",ctx,()=>report as unknown as Record<string,unknown>);
+  }
+  queryGrowthDecisionReport(ctx: SDKContext, reportId: string): SDKResult {
+    return this.call("queryGrowthDecisionReport",ctx,()=>({report_id:reportId}));
+  }
+  listGrowthDecisionReports(ctx: SDKContext): SDKResult {
+    return this.call("listGrowthDecisionReports",ctx,()=>({reports:[]}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
