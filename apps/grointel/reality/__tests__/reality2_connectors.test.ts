@@ -1,5 +1,5 @@
 // GroIntel REALITY-2 — Connector Tests (300+)
-import { WebsiteConnector } from "../connectors/website_connector";
+import { RealWebsiteConnector } from "../connectors/website_connector";
 import { RssConnector } from "../connectors/rss_connector";
 import { GitHubConnector } from "../connectors/github_connector";
 import { JobsConnector } from "../connectors/jobs_connector";
@@ -17,14 +17,14 @@ async function run() {
   console.log("\n=== REALITY-2: Connectors (300+ tests) ===\n");
 
   console.log("--- Website Connector ---");
-  test("website connector id", () => { const c=new WebsiteConnector(); assert(c.id==="connector.website"); });
-  test("website discover urls", async () => { const c=new WebsiteConnector(); const urls=await c.discover("grointel.io"); assert(urls.length>=3); assert(urls.some(u=>u.includes("blog"))); });
-  test("website fetch", async () => { const c=new WebsiteConnector(); const r=await c.fetch("https://grointel.io"); assert(r.status===200); });
-  test("website extract signals", () => { const c=new WebsiteConnector(); const s=c.extractSignals({url:"https://grointel.io",status:200},"grointel.io"); assert(s.length>=2); });
-  test("website extract evidence", () => { const c=new WebsiteConnector(); const e=c.extractEvidence({url:"https://grointel.io"},"https://grointel.io","grointel.io"); assert(e.length>=1); });
-  test("website run", async () => { const c=new WebsiteConnector(); const r=await c.run("grointel.io"); assert(r.signals.length>=1); assert(r.evidence.length>=1); });
-  test("website health", () => { const c=new WebsiteConnector(); const h=c.health(); assert(h.connector_id==="connector.website"); });
-  test("website metrics", () => { const c=new WebsiteConnector(); const m=c.metrics(); assert(typeof m.total_observations==="number"); });
+  test("website connector id", () => { const c=new RealWebsiteConnector(); assert(c.id==="connector.website"); });
+  test("website discover urls", async () => { const c=new RealWebsiteConnector(); const urls=await c.discover("grointel.io"); assert(urls.length>=3); assert(urls.some(u=>u.includes("blog"))); });
+  test("website fetch", async () => { const c=new RealWebsiteConnector(); const r=await c.fetch("https://grointel.io"); assert(r.status===200); });
+  test("website extract signals", () => { const c=new RealWebsiteConnector(); const s=c.extractSignals({url:"https://grointel.io",status:200},"grointel.io"); assert(s.length>=2); });
+  test("website extract evidence", () => { const c=new RealWebsiteConnector(); const e=c.extractEvidence({url:"https://grointel.io"},"https://grointel.io","grointel.io"); assert(e.length>=1); });
+  test("website run", async () => { const c=new RealWebsiteConnector(); const r=await c.run("grointel.io"); assert(r.signals.length>=1); assert(r.evidence.length>=1); });
+  test("website health", () => { const c=new RealWebsiteConnector(); const h=c.health(); assert(h.connector_id==="connector.website"); });
+  test("website metrics", () => { const c=new RealWebsiteConnector(); const m=c.metrics(); assert(typeof m.total_observations==="number"); });
 
   console.log("\n--- RSS Connector ---");
   test("rss connector id", () => { const c=new RssConnector(); assert(c.id==="connector.rss"); });
@@ -54,7 +54,7 @@ async function run() {
   test("registry runAll", async () => { const r=new ConnectorRegistry(); const res=await r.runAll("grointel.io"); assert(res.signals.length>=0); assert(res.evidence.length>=0); });
 
   console.log("\n--- Signal/Evidence Standards ---");
-  test("signal has all required fields", async () => { const c=new WebsiteConnector(); const r=await c.run("test.io"); for(const s of r.signals) { assert(s.id.length>0); assert(s.source.length>0); assert(s.url.length>0); assert(s.timestamp.length>0); assert(typeof s.confidence==="number"); } });
+  test("signal has all required fields", async () => { const c=new RealWebsiteConnector(); const r=await c.run("test.io"); for(const s of r.signals) { assert(s.id.length>0); assert(s.source.length>0); assert(s.url.length>0); assert(s.timestamp.length>0); assert(typeof s.confidence==="number"); } });
   test("evidence has all required fields", async () => { const c=new NewsConnector(); const r=await c.run("test.io"); for(const e of r.evidence) { assert(e.id.length>0); assert(e.source.length>0); assert(e.url.length>0); assert(e.observed_at.length>0); assert(typeof e.confidence==="number"); } });
 
   console.log("\n--- SDK ---");
@@ -64,7 +64,7 @@ async function run() {
   test("getConnectorMetrics exists", () => assert(typeof new RealityOSClient().getConnectorMetrics==="function"));
 
   console.log("\n--- Bulk ---");
-  for(let i=0;i<220;i++) { const idx=i; test("bulk_"+idx,async()=>{ const c=new WebsiteConnector(); const r=await c.run("bulk"+idx+".io"); assert(r.signals.length>0); }); }
+  for(let i=0;i<220;i++) { const idx=i; test("bulk_"+idx,async()=>{ const c=new RealWebsiteConnector(); const r=await c.run("bulk"+idx+".io"); assert(r.signals.length>0); }); }
 
   console.log("--- Extra ---");
   for(let i=0;i<60;i++) { const idx=i; test("extra_"+idx,async()=>{ const c=new GitHubConnector(); const r=await c.run("org"+idx); assert(r.health.connector_id==="connector.github"); }); }
