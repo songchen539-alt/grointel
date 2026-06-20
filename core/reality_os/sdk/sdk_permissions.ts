@@ -37,6 +37,9 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   queryPatternEvidence: "READ", queryPatternHistory: "READ", recommendPatterns: "READ",
   queryCauseGraph: "READ", queryCauseChains: "READ",
   queryRootCauses: "READ", queryDownstreamEffects: "READ", recommendCauses: "READ",
+  queryLivingWorldModel: "READ", queryWorldEntity: "READ", queryWorldHistory: "READ",
+  queryHypotheses: "READ", queryFutureStateSpace: "READ", queryFutureBranches: "READ",
+  updateRealityTime: "WRITE", queryAffectedDecisions: "READ", queryAffectedRecommendations: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

@@ -18,6 +18,7 @@ import { SupplyObserver } from "../../../apps/grointel/data/supply/supply_observ
 import { ActivityObserver } from "../../../apps/grointel/data/activity/activity_observer";
 import { PatternObserver } from "../../../apps/grointel/data/pattern/pattern_observer";
 import { CausalityObserver } from "../../../apps/grointel/data/causality/causality_observer";
+import { LivingWorldModel } from "../../../apps/grointel/knowledge/world_model/living_world_model";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -79,6 +80,7 @@ export class RealityOSClient {
   public readonly activityObserver = new ActivityObserver();
   public readonly patternObserver = new PatternObserver();
   public readonly causalityObserver = new CausalityObserver();
+  public readonly worldModel = new LivingWorldModel();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -390,6 +392,38 @@ export class RealityOSClient {
   }
   recommendCauses(ctx: SDKContext, nodeId: string): SDKResult {
     return this.call("recommendCauses",ctx,()=>({node_id:nodeId}));
+  }
+  // KNOWLEDGE-1: World Model methods
+  queryLivingWorldModel(ctx: SDKContext): SDKResult {
+    return this.call("queryLivingWorldModel",ctx,()=>({entities:this.worldModel.getAllEntities().length,activities:this.worldModel.getAllActivities().length}));
+  }
+  queryWorldEntity(ctx: SDKContext, entityId: string): SDKResult {
+    const e=this.worldModel.getEntity(entityId);
+    return this.call("queryWorldEntity",ctx,()=>(e||{error:"not found"})as unknown as Record<string,unknown>);
+  }
+  queryWorldHistory(ctx: SDKContext, entityId: string): SDKResult {
+    const e=this.worldModel.getEntity(entityId);
+    return this.call("queryWorldHistory",ctx,()=>({history:e?.history||[]}));
+  }
+  queryHypotheses(ctx: SDKContext): SDKResult {
+    return this.call("queryHypotheses",ctx,()=>({hypotheses:this.worldModel.hypotheses.getActive()}));
+  }
+  queryFutureStateSpace(ctx: SDKContext): SDKResult {
+    return this.call("queryFutureStateSpace",ctx,()=>({spaces:this.worldModel.futureSpace.getAll()}));
+  }
+  queryFutureBranches(ctx: SDKContext, spaceId: string): SDKResult {
+    const s=this.worldModel.futureSpace.getSpace(spaceId);
+    return this.call("queryFutureBranches",ctx,()=>({branches:s?.branches||[]}));
+  }
+  updateRealityTime(ctx: SDKContext, eventType: string): SDKResult {
+    this.worldModel.time.emit(eventType,{timestamp:new Date().toISOString()});
+    return this.call("updateRealityTime",ctx,()=>({emitted:eventType}));
+  }
+  queryAffectedDecisions(ctx: SDKContext): SDKResult {
+    return this.call("queryAffectedDecisions",ctx,()=>({decisions:[]}));
+  }
+  queryAffectedRecommendations(ctx: SDKContext): SDKResult {
+    return this.call("queryAffectedRecommendations",ctx,()=>({recommendations:[]}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
