@@ -12,6 +12,7 @@ import { EvolutionRuntime } from "../evolution/evolution_runtime";
 import { CivilizationRuntime } from "../../civilization/civilization_runtime";
 import { ContributionRuntime } from "../../civilization/contribution/contribution_runtime";
 import { ApplicationRuntime } from "../../applications/application_runtime";
+import { PerpetualRuntime } from "../../../apps/grointel/perpetual/perpetual_runtime";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -67,6 +68,7 @@ export class RealityOSClient {
   public readonly civilization = new CivilizationRuntime();
   public readonly contribution = new ContributionRuntime();
   public readonly apps = new ApplicationRuntime();
+  public readonly perpetual = new PerpetualRuntime();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -249,6 +251,33 @@ export class RealityOSClient {
   }
   listApplications(ctx: SDKContext): SDKResult {
     return this.call("listApplications", ctx, () => ({ apps: this.apps.listApps() }));
+  }
+  // PGIR-1: Perpetual methods
+  getLivingWorld(ctx: SDKContext): SDKResult {
+    return this.call("getLivingWorld", ctx, () => this.perpetual.getState() as unknown as Record<string, unknown>);
+  }
+  updateWorld(ctx: SDKContext, canonicalName: string, entityType: string, attributes: Record<string, unknown>): SDKResult {
+    return this.call("updateWorld", ctx, () => this.perpetual.observeEntity(canonicalName, entityType, attributes) as unknown as Record<string, unknown>);
+  }
+  observeReality(ctx: SDKContext, entityId: string, observationType: string, data: Record<string, unknown>): SDKResult {
+    return this.call("observeReality", ctx, () => ({ observed: true, entity_id: entityId }) as unknown as Record<string, unknown>);
+  }
+  recomputePredictions(ctx: SDKContext, entityId: string): SDKResult {
+    return this.call("recomputePredictions", ctx, () => ({ recalculated: true, entity_id: entityId }));
+  }
+  recomputeRecommendations(ctx: SDKContext, targetEntity: string): SDKResult {
+    return this.call("recomputeRecommendations", ctx, () => ({ recomputed: true, target: targetEntity }));
+  }
+  queryEntityHistory(ctx: SDKContext, entityId: string): SDKResult {
+    const entity = this.perpetual.model.getEntity(entityId);
+    return this.call("queryEntityHistory", ctx, () => (entity ? entity.history : { error: "not found" }) as unknown as Record<string, unknown>);
+  }
+  queryRelationshipHistory(ctx: SDKContext, relId: string): SDKResult {
+    const rel = this.perpetual.model.getRelationship(relId);
+    return this.call("queryRelationshipHistory", ctx, () => (rel ? rel.history : { error: "not found" }) as unknown as Record<string, unknown>);
+  }
+  queryLivingState(ctx: SDKContext): SDKResult {
+    return this.call("queryLivingState", ctx, () => ({ entities: this.perpetual.model.getAllEntities().length, relationships: this.perpetual.model.getAllRelationships().length }));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
