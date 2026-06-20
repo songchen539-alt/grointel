@@ -33,6 +33,8 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   querySupplyHistory: "READ",
   observeActivity: "WRITE", queryActivities: "READ",
   queryActivityTimeline: "READ", queryActivityOutcome: "READ", queryActivityMetrics: "READ",
+  queryPatterns: "READ", querySimilarPatterns: "READ",
+  queryPatternEvidence: "READ", queryPatternHistory: "READ", recommendPatterns: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

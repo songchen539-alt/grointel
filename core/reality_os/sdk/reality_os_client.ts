@@ -16,6 +16,7 @@ import { PerpetualRuntime } from "../../../apps/grointel/perpetual/perpetual_run
 import { CompanyObserver } from "../../../apps/grointel/data/company/company_observer";
 import { SupplyObserver } from "../../../apps/grointel/data/supply/supply_observer";
 import { ActivityObserver } from "../../../apps/grointel/data/activity/activity_observer";
+import { PatternObserver } from "../../../apps/grointel/data/pattern/pattern_observer";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -75,6 +76,7 @@ export class RealityOSClient {
   public readonly companyObserver = new CompanyObserver();
   public readonly supplyObserver = new SupplyObserver();
   public readonly activityObserver = new ActivityObserver();
+  public readonly patternObserver = new PatternObserver();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -351,6 +353,25 @@ export class RealityOSClient {
   }
   queryActivityMetrics(ctx: SDKContext, activityId: string): SDKResult {
     return this.call("queryActivityMetrics",ctx,()=>({activity_id:activityId}));
+  }
+  // DATA-4: Pattern methods
+  queryPatterns(ctx: SDKContext): SDKResult {
+    return this.call("queryPatterns",ctx,()=>({patterns:this.patternObserver.getAllPatterns()}));
+  }
+  querySimilarPatterns(ctx: SDKContext, industry: string, region: string, capabilities: string): SDKResult {
+    const sim=this.patternObserver.findSimilar(industry,region,capabilities.split(","));
+    return this.call("querySimilarPatterns",ctx,()=>({similar:sim}));
+  }
+  queryPatternEvidence(ctx: SDKContext, patternId: string): SDKResult {
+    return this.call("queryPatternEvidence",ctx,()=>({pattern_id:patternId}));
+  }
+  queryPatternHistory(ctx: SDKContext, patternId: string): SDKResult {
+    const p=this.patternObserver.getPattern(patternId);
+    return this.call("queryPatternHistory",ctx,()=>({history:p?.history||[]}));
+  }
+  recommendPatterns(ctx: SDKContext, industry: string, region: string, capabilities: string): SDKResult {
+    const sim=this.patternObserver.findSimilar(industry,region,capabilities.split(","));
+    return this.call("recommendPatterns",ctx,()=>({recommendations:sim.slice(0,5)}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
