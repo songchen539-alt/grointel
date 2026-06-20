@@ -12,17 +12,17 @@ export default function Header() {
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           <Link href="/" className="text-sm text-gray-400 transition-colors hover:text-white">Home</Link>
-          <Link href="/analyze" className="text-sm text-gray-400 transition-colors hover:text-white">Analyze</Link>
-          <Link href="/samples" className="text-sm text-gray-400 transition-colors hover:text-white">Sample Reports</Link>
-          <Link href="/growth-options" className="text-sm text-gray-400 transition-colors hover:text-white">Growth Options</Link>
-          <Link href="/channels/apply" className="text-sm text-gray-400 transition-colors hover:text-white">For Channels</Link>
+          <Link href="/business-intelligence" className="text-sm text-gray-400 transition-colors hover:text-white">For Companies</Link>
+          <Link href="/capability-intelligence" className="text-sm text-gray-400 transition-colors hover:text-white">For KOLs</Link>
+          <Link href="/world" className="text-sm text-gray-400 transition-colors hover:text-white">World</Link>
+          <Link href="/channels/apply" className="text-sm text-gray-400 transition-colors hover:text-white">Partners</Link>
           <Link href="/contact" className="text-sm text-gray-400 transition-colors hover:text-white">Contact</Link>
         </nav>
         <Link
-          href="/analyze"
-          className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2 text-sm font-medium text-white transition-all hover:from-blue-500 hover:to-purple-500"
+          href="/business-intelligence"
+          className="rounded-full bg-white px-5 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-200"
         >
-          Analyze Your Company
+          Start
         </Link>
       </div>
     </header>

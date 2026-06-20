@@ -3,8 +3,8 @@ import "./globals.css";
 import Header from "@/components/Header";
 
 export const metadata: Metadata = {
-  title: "GroIntel | The Operating System for Company Intelligence",
-  description: "Analyze any company. Discover opportunities. Predict risks. Make better growth decisions with AI.",
+  title: "GroIntel | Company and KOL Growth Matching Intelligence",
+  description: "Understand companies and KOLs from one identity signal, complete missing context, and match both sides for growth.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

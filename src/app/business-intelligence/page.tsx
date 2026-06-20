@@ -2,7 +2,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Globe } from "lucide-react";
+import { ArrowRight, Building2, Loader2, Search, Target, UserCheck } from "lucide-react";
+
+const examples = ["stripe.com", "openai.com", "clay.com", "perplexity.ai"];
+
+const outcomes = [
+  "Company identity and business model",
+  "Growth goals, risks, and constraints",
+  "Missing questions that improve precision",
+  "Recommended KOLs and growth partners",
+];
 
 export default function BusinessIntelligencePage() {
   const [website, setWebsite] = useState("");
@@ -37,55 +46,84 @@ export default function BusinessIntelligencePage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-2xl px-6 py-24 md:py-32 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-4 py-1.5 text-xs text-gray-500 mb-6">
-          <Globe className="h-3.5 w-3.5 text-blue-400" />
-          Business Intelligence
-        </div>
-
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-          Let GroIntel understand your business
-        </h1>
-        <p className="text-gray-500 text-lg mb-10 max-w-lg mx-auto">
-          Enter any company website. We will generate structured Business Intelligence including business model, market, growth stack, and more.
-        </p>
-
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              placeholder="e.g. stripe.com"
-              className="flex-1 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-white/20"
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={loading || !website.trim()}
-              className="rounded-lg bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/15 transition-colors disabled:opacity-50 font-medium"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
-            </button>
+      <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-[0.95fr_1.05fr] md:items-center md:py-24">
+        <div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-500/10">
+            <Building2 className="h-5 w-5 text-blue-300" />
           </div>
-          {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
-        </form>
+          <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-5xl">
+            Let GroIntel understand your company first.
+          </h1>
+          <p className="mt-5 text-base leading-7 text-gray-400">
+            Enter a website or company identity. GroIntel builds the first business passport, finds what it still needs to know, then recommends KOLs and growth partners that can actually move the company forward.
+          </p>
 
-        <div className="mt-16 text-left">
-          <h3 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">Sample companies</h3>
-          <div className="flex flex-wrap gap-2">
-            {["stripe.com", "openai.com", "clay.com", "perplexity.ai"].map((s) => (
+          <form onSubmit={handleSubmit} className="mt-8">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                type="text"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="Company website, e.g. stripe.com"
+                className="min-h-12 flex-1 rounded-lg border border-white/10 bg-white/[0.03] px-4 text-sm text-white placeholder-gray-600 outline-none transition-colors focus:border-blue-300/40"
+                disabled={loading}
+              />
               <button
-                key={s}
-                onClick={() => { setWebsite(s); }}
-                className="rounded-full border border-white/5 bg-white/[0.02] px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:border-white/10 transition-colors"
+                type="submit"
+                disabled={loading || !website.trim()}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-white px-5 text-sm font-medium text-black transition-colors hover:bg-gray-200 disabled:opacity-50"
               >
-                {s}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Build Passport"}
+                {!loading && <ArrowRight className="h-4 w-4" />}
+              </button>
+            </div>
+            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+          </form>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            {examples.map((example) => (
+              <button
+                key={example}
+                onClick={() => setWebsite(example)}
+                className="rounded-full border border-white/5 bg-white/[0.02] px-3 py-1.5 text-xs text-gray-500 transition-colors hover:border-white/10 hover:text-white"
+              >
+                {example}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          <div className="rounded-lg border border-white/10 bg-white/[0.025] p-6">
+            <div className="flex items-center gap-3">
+              <Search className="h-5 w-5 text-blue-300" />
+              <h2 className="text-lg font-semibold">What GroIntel creates</h2>
+            </div>
+            <div className="mt-6 grid gap-3">
+              {outcomes.map((outcome, index) => (
+                <div key={outcome} className="flex items-center gap-3 rounded-lg border border-white/5 bg-black/30 px-4 py-3">
+                  <span className="text-xs text-gray-600">0{index + 1}</span>
+                  <span className="text-sm text-gray-300">{outcome}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-blue-500/15 bg-blue-500/[0.06] p-5">
+              <Target className="h-5 w-5 text-blue-300" />
+              <h3 className="mt-4 text-sm font-semibold text-white">Growth diagnosis</h3>
+              <p className="mt-2 text-sm leading-6 text-gray-500">Goals, market, constraints, trust gaps, and next actions.</p>
+            </div>
+            <div className="rounded-lg border border-purple-500/15 bg-purple-500/[0.06] p-5">
+              <UserCheck className="h-5 w-5 text-purple-300" />
+              <h3 className="mt-4 text-sm font-semibold text-white">Partner matching</h3>
+              <p className="mt-2 text-sm leading-6 text-gray-500">KOLs, creators, agencies, communities, and channel partners.</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
