@@ -9,6 +9,7 @@ import { SDKTrace } from "./sdk_trace";
 import { KnowledgeRuntime } from "../knowledge/knowledge_runtime";
 import { WisdomRuntime } from "../wisdom/wisdom_runtime";
 import { EvolutionRuntime } from "../evolution/evolution_runtime";
+import { CivilizationRuntime } from "../../civilization/civilization_runtime";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -61,6 +62,7 @@ export class RealityOSClient {
   public readonly knowledge = new KnowledgeRuntime();
   public readonly wisdom = new WisdomRuntime();
   public readonly evolution = new EvolutionRuntime();
+  public readonly civilization = new CivilizationRuntime();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -184,5 +186,27 @@ export class RealityOSClient {
   }
   getEvolutionHistory(ctx: SDKContext): SDKResult {
     return this.call("getEvolutionHistory", ctx, () => ({ history: this.evolution.getHistory() }));
+  }
+
+  // CRS-1: Civilization methods
+  registerNode(ctx: SDKContext, name: string, capabilities: string[], domains: string[]): SDKResult {
+    return this.call("registerNode", ctx, () => this.civilization.registerNode(name, capabilities, domains) as unknown as Record<string, unknown>);
+  }
+  exchangeKnowledge(ctx: SDKContext, fromNode: string, content: string, exchangeType: string): SDKResult {
+    return this.call("exchangeKnowledge", ctx, () => this.civilization.exchangeKnowledge(fromNode, null, exchangeType, content) as unknown as Record<string, unknown>);
+  }
+  queryCivilization(ctx: SDKContext): SDKResult {
+    return this.call("queryCivilization", ctx, () => ({ nodes: this.civilization.getAllNodes(), memory: this.civilization.memory.getMemory() }));
+  }
+  submitConsensus(ctx: SDKContext, topic: string, mode: string): SDKResult {
+    return this.call("submitConsensus", ctx, () => this.civilization.createConsensus(topic, mode) as unknown as Record<string, unknown>);
+  }
+  resolveConflict(ctx: SDKContext, conflictId: string, resolution: string): SDKResult {
+    const result = this.civilization.resolveConflict(conflictId, resolution);
+    return this.call("resolveConflict", ctx, () => (result || { error: "conflict not found" }) as unknown as Record<string, unknown>);
+  }
+  queryReputation(ctx: SDKContext, nodeId: string): SDKResult {
+    const node = this.civilization.getNode(nodeId);
+    return this.call("queryReputation", ctx, () => (node ? node.reputation : { error: "node not found" }) as unknown as Record<string, unknown>);
   }
 }

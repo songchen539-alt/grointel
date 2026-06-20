@@ -15,6 +15,8 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   generateImprovementProposals: "EXECUTE", simulateUpgrade: "EXECUTE",
   judgeEvolution: "EXECUTE", approveEvolution: "APPROVE",
   getEvolutionPlan: "READ", getEvolutionHistory: "READ",
+  registerNode: "EXECUTE", exchangeKnowledge: "WRITE", queryCivilization: "READ",
+  submitConsensus: "EXECUTE", resolveConflict: "EXECUTE", queryReputation: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {
