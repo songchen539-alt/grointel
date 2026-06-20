@@ -1,6 +1,7 @@
 import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory/company_memory_flow";
 import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observation/knowledge2_flow";
 import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/always_on_runtime";
+import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_learning_loop";
 
 
 const flow = new CompanyMemoryFlow();
@@ -29,6 +30,8 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
     if (params.action === "start_runtime" && mem) { runtime.createRuntime("simulated"); runtime.start(); }
     if (params.action === "stop_runtime" && mem) { runtime.stop(); }
     if (params.action === "resume_runtime" && mem) { runtime.createRuntime("simulated"); runtime.start(); }
+    if (params.action === "life_iteration" && mem) { (new AutonomousLearningLoop()).runIteration(); }
+    if (params.action === "life_batch" && mem) { (new AutonomousLearningLoop()).runBatch(3); }
     if (params.action === "tick_runtime" && mem) {
       runtime.enqueueObservationJob(params.id, ["observe_website","observe_linkedin","observe_news","observe_funding"]);
       runtime.tick();
@@ -102,6 +105,14 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
             <p>Health: healthy</p>
             <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
               <a href={"/growth-workspace?id="+state.memory.id+"&action=resume_runtime"} style={{ padding: "8px 16px", background:"#396", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Resume Runtime</a>
+            </div>
+          </div>
+
+          <div style={{ padding: "20px", background: "#f0f0ff", borderRadius: "12px", border: "1px solid #c8c8ff" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "8px" }}>Autonomous Intelligence</h2>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=life_iteration"} style={{ padding: "8px 16px", background:"#66c", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Run Life Iteration</a>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=life_batch"} style={{ padding: "8px 16px", background:"#969", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Run Batch</a>
             </div>
           </div>
 

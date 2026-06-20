@@ -24,6 +24,7 @@ import { CompanyMemoryFlow } from "../../../apps/grointel/product/company_memory
 import { Knowledge2Flow } from "../../../apps/grointel/knowledge/reality_observation/knowledge2_flow";
 import { AlwaysOnRuntime } from "../../../apps/grointel/ops/always_on_runtime/always_on_runtime";
 import { PersistentStoreFactory } from "../../../apps/grointel/persistence/persistent_store_factory";
+import { AutonomousLearningLoop } from "../../../apps/grointel/life/autonomous_learning_loop";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -498,6 +499,19 @@ export class RealityOSClient {
   resumeAlwaysOnRuntime(ctx: SDKContext): SDKResult {
     this.alwaysOn.createRuntime("simulated"); this.alwaysOn.start();
     return this.call("resumeAlwaysOnRuntime",ctx,()=>this.alwaysOn.status() as unknown as Record<string,unknown>);
+  }
+  // LIFE-1: Life methods
+  runLifeIteration(ctx: SDKContext): SDKResult {
+    const r=(new AutonomousLearningLoop()).runIteration();
+    return this.call("runLifeIteration",ctx,()=>({...r})as unknown as Record<string,unknown>);
+  }
+  runLifeBatch(ctx: SDKContext, count?: number): SDKResult {
+    const r=(new AutonomousLearningLoop()).runBatch(count||3);
+    return this.call("runLifeBatch",ctx,()=>({...r}));
+  }
+  getLifeStatus(ctx: SDKContext): SDKResult {
+    const loop=new AutonomousLearningLoop();
+    return this.call("getLifeStatus",ctx,()=>({metrics:loop.metrics.get(),active_hypotheses:loop.hypotheses.getActive().length}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
