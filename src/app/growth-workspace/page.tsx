@@ -7,6 +7,7 @@ import { GenesisFlow } from "../../../apps/grointel/genesis/genesis_flow";
 import { Genesis2Flow } from "../../../apps/grointel/genesis/public_exploration/genesis2_flow";
 import { ConnectorRegistry } from "../../../apps/grointel/reality/connectors/connector_registry";
 import { LivingLoopFlow } from "../../../apps/grointel/reality/continuous/living_loop_flow";
+import { RuntimeSupervisor } from "../../../apps/grointel/operation/runtime_supervisor";
 
 
 const flow = new CompanyMemoryFlow();
@@ -39,6 +40,7 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
     if (params.action === "life_batch" && mem) { (new AutonomousLearningLoop()).runBatch(3); }
     if (params.action === "kernel_start" && mem) { const k=new LivingKernel(); k.startKernel(); }
     if (params.action === "kernel_stop" && mem) { const k=new LivingKernel(); k.stopKernel(); }
+    if (params.action === "infra_tick" && mem) { new RuntimeSupervisor().tick(); }
     if (params.action === "loop_tick" && mem) { const loop=new LivingLoopFlow(); loop.runIteration([{id:mem.id,name:mem.company_name||mem.company_website,freshness:50,knowledge_uncertainty:30,confidence:70,hypothesis_count:0,emerging_industry:false,rapid_change:false,high_impact:false}]); }
     if (params.action === "run_all_connectors" && mem) { new ConnectorRegistry().runAll(mem.company_website); }
     if (params.action === "explore" && mem) { new Genesis2Flow().explore(mem.company_website, "company"); }
@@ -143,7 +145,15 @@ export default async function GrowthWorkspacePage({ searchParams }: { searchPara
             </div>
           </div>
 
-          <div style={{ padding: "20px", background: "#e0f0ff", borderRadius: "12px", border: "2px solid #4488cc", marginBottom: "20px" }}>
+          <div style={{ padding: "20px", background: "#f0e8ff", borderRadius: "12px", border: "2px solid #8855cc" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "8px" }}>Living Infrastructure</h2>
+            <p>Workers: Reality · Knowledge · Decision · Life</p>
+            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+              <a href={"/growth-workspace?id="+state.memory.id+"&action=infra_tick"} style={{ padding: "8px 16px", background:"#85c", color:"white", borderRadius:"6px", textDecoration:"none", fontSize:"0.9rem" }}>Infra Tick</a>
+            </div>
+          </div>
+
+          <div style={{ padding: "20px", background: "#e0f0ff", borderRadius: "12px", border: "2px solid #4488cc", marginBottom: "20px" }}>            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "8px", color: "#226" }}>Living Reality Monitor</h2>
             <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "8px", color: "#226" }}>Living Reality Monitor</h2>
             <p>Continuous Living Mode — Reality Time</p>
             <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>

@@ -29,6 +29,7 @@ import { LivingKernel } from "../../../apps/grointel/genesis/living_kernel";
 import { Genesis2Flow } from "../../../apps/grointel/genesis/public_exploration/genesis2_flow";
 import { ConnectorRegistry } from "../../../apps/grointel/reality/connectors/connector_registry";
 import { LivingLoopFlow } from "../../../apps/grointel/reality/continuous/living_loop_flow";
+import { RuntimeSupervisor } from "../../../apps/grointel/operation/runtime_supervisor";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -574,6 +575,19 @@ export class RealityOSClient {
   }
   getLivingLoopStatus(ctx: SDKContext): SDKResult {
     return this.call("getLivingLoopStatus",ctx,()=>({state:"active",metrics:{}}));
+  }
+  // OPERATION-1: Infrastructure methods
+  getOperationsStatus(ctx: SDKContext): SDKResult {
+    const s=new RuntimeSupervisor();
+    return this.call("getOperationsStatus",ctx,()=>s.dashboard() as unknown as Record<string,unknown>);
+  }
+  listWorkers(ctx: SDKContext): SDKResult {
+    const s=new RuntimeSupervisor();
+    return this.call("listWorkers",ctx,()=>({workers:s.getWorkers()}));
+  }
+  recoverRuntime(ctx: SDKContext): SDKResult {
+    const s=new RuntimeSupervisor(); s.recover();
+    return this.call("recoverRuntime",ctx,()=>({recovered:true}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
