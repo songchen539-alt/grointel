@@ -28,6 +28,8 @@ export class CapabilityRegistry {
       { id: "state.world.read", name: "Read World State", description: "Read current world state", layer: "state", input_schema: {}, output_schema: {}, required_permissions: LOW, risk_level: "low", available: true, version: 1 },
       { id: "state.kernel.read", name: "Read Kernel State", description: "Read current kernel state", layer: "state", input_schema: {}, output_schema: {}, required_permissions: LOW, risk_level: "low", available: true, version: 1 },
       { id: "graph.snapshot.read", name: "Read Graph Snapshot", description: "Read current graph snapshot", layer: "graph", input_schema: {}, output_schema: {}, required_permissions: LOW, risk_level: "low", available: true, version: 1 },
+      { id: "knowledge.query", name: "Query Knowledge", description: "Query the knowledge runtime", layer: "knowledge", input_schema: {}, output_schema: {}, required_permissions: LOW, risk_level: "low", available: true, version: 1 },
+      { id: "knowledge.validate", name: "Validate Knowledge", description: "Validate a knowledge fact", layer: "knowledge", input_schema: {}, output_schema: {}, required_permissions: "execute", risk_level: "medium", available: true, version: 1 },
     ];
     for (const d of defs) this.caps.set(d.id, d);
   }

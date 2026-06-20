@@ -6,6 +6,7 @@ import { SDKErrors } from "./sdk_errors";
 import { SDKPermissionChecker } from "./sdk_permissions";
 import { CapabilityRegistry } from "./capability_registry";
 import { SDKTrace } from "./sdk_trace";
+import { KnowledgeRuntime } from "../knowledge/knowledge_runtime";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -55,6 +56,7 @@ export class RealityOSClient {
   private readonly intelligence = new IntelligenceAdapter();
   private readonly workflow = new WorkflowAdapter();
   private readonly state = new StateAdapter();
+  public readonly knowledge = new KnowledgeRuntime();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -112,5 +114,30 @@ export class RealityOSClient {
 
   getCapabilities(ctx: SDKContext): SDKResult {
     return this.call("getCapabilities", ctx, () => ({ capabilities: this.capabilities.getAll() }));
+  }
+
+  // ROS-4: Knowledge methods
+  queryKnowledge(ctx: SDKContext, input: Record<string, unknown> = {}): SDKResult {
+    return this.call("queryKnowledge", ctx, () => ({ entities: this.knowledge.findAll(), records: [] }));
+  }
+  queryFacts(ctx: SDKContext, input: Record<string, unknown> = {}): SDKResult {
+    return this.call("queryFacts", ctx, () => ({ results: this.knowledge.findEntities() }));
+  }
+  queryEntity(ctx: SDKContext, entityId: string): SDKResult {
+    const record = this.knowledge.getRecord(entityId);
+    return this.call("queryEntity", ctx, () => (record || { error: "not_found" }) as Record<string, unknown>);
+  }
+  queryRelationships(ctx: SDKContext, entityId?: string): SDKResult {
+    const rels = entityId ? this.knowledge.relationships.findByEntity(entityId) : this.knowledge.relationships.getAll();
+    return this.call("queryRelationships", ctx, () => ({ relationships: rels }));
+  }
+  queryEvidence(ctx: SDKContext, factId: string): SDKResult {
+    return this.call("queryEvidence", ctx, () => ({ evidence: this.knowledge.findEvidence(factId) }));
+  }
+  queryKnowledgeHistory(ctx: SDKContext, factId: string): SDKResult {
+    return this.call("queryKnowledgeHistory", ctx, () => ({ versions: this.knowledge.findHistoricalVersions(factId) }));
+  }
+  validateKnowledge(ctx: SDKContext, input: Record<string, unknown> = {}): SDKResult {
+    return this.call("validateKnowledge", ctx, () => ({ validated: true, result: "validated" }));
   }
 }

@@ -7,6 +7,8 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   strategize: "EXECUTE", discover: "EXECUTE", optimize: "EXECUTE", decide: "EXECUTE",
   startWorkflow: "EXECUTE", getWorkflow: "READ",
   approveWorkflow: "APPROVE", rejectWorkflow: "APPROVE",
+  queryKnowledge: "READ", queryFacts: "READ", queryEntity: "READ",
+  queryRelationships: "READ", queryEvidence: "READ", queryKnowledgeHistory: "READ", validateKnowledge: "EXECUTE",
   getWorldState: "READ", getKernelState: "READ", getGraphSnapshot: "READ", getCapabilities: "READ",
 };
 
