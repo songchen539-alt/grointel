@@ -15,6 +15,7 @@ import { ApplicationRuntime } from "../../applications/application_runtime";
 import { PerpetualRuntime } from "../../../apps/grointel/perpetual/perpetual_runtime";
 import { CompanyObserver } from "../../../apps/grointel/data/company/company_observer";
 import { SupplyObserver } from "../../../apps/grointel/data/supply/supply_observer";
+import { ActivityObserver } from "../../../apps/grointel/data/activity/activity_observer";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -73,6 +74,7 @@ export class RealityOSClient {
   public readonly perpetual = new PerpetualRuntime();
   public readonly companyObserver = new CompanyObserver();
   public readonly supplyObserver = new SupplyObserver();
+  public readonly activityObserver = new ActivityObserver();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -331,6 +333,24 @@ export class RealityOSClient {
   querySupplyHistory(ctx: SDKContext, supplyId: string): SDKResult {
     const p=this.supplyObserver.getProfile(supplyId);
     return this.call("querySupplyHistory",ctx,()=>({history:p?.history||[]}));
+  }
+  // DATA-3: Activity methods
+  observeActivity(ctx: SDKContext, category: string, name: string, objective: string, ownerId: string): SDKResult {
+    const a=this.activityObserver.observe(category as any,name,objective,ownerId,["web"],"US","tech");
+    return this.call("observeActivity",ctx,()=>a as unknown as Record<string,unknown>);
+  }
+  queryActivities(ctx: SDKContext): SDKResult {
+    return this.call("queryActivities",ctx,()=>({activities:this.activityObserver.getAll()}));
+  }
+  queryActivityTimeline(ctx: SDKContext, activityId: string): SDKResult {
+    const a=this.activityObserver.getActivity(activityId);
+    return this.call("queryActivityTimeline",ctx,()=>({started_at:a?.started_at,status:a?.status}));
+  }
+  queryActivityOutcome(ctx: SDKContext, activityId: string): SDKResult {
+    return this.call("queryActivityOutcome",ctx,()=>({activity_id:activityId}));
+  }
+  queryActivityMetrics(ctx: SDKContext, activityId: string): SDKResult {
+    return this.call("queryActivityMetrics",ctx,()=>({activity_id:activityId}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);

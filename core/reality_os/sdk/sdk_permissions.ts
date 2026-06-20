@@ -31,6 +31,8 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   querySupplyProfile: "READ", querySupplySignals: "READ",
   querySupplyChanges: "READ", querySupplyCapabilities: "READ",
   querySupplyHistory: "READ",
+  observeActivity: "WRITE", queryActivities: "READ",
+  queryActivityTimeline: "READ", queryActivityOutcome: "READ", queryActivityMetrics: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {
