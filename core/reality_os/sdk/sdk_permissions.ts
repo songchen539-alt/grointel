@@ -54,6 +54,8 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   runConnector: "EXECUTE", listSignals: "READ", listEvidence: "READ", getConnectorMetrics: "READ",
   runLivingLoopTick: "EXECUTE", getLivingLoopStatus: "READ",
   getOperationsStatus: "READ", listWorkers: "READ", recoverRuntime: "EXECUTE",
+  getReflection: "READ", getBlindSpots: "READ", getWisdom: "READ",
+  listOptimizationProposals: "READ", applyOptimization: "EXECUTE",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {
