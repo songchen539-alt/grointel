@@ -27,6 +27,10 @@ const METHOD_CLASS: Record<string, MethodClass> = {
   observeCompany: "WRITE", observeCompanyBatch: "WRITE",
   queryCompanyProfile: "READ", queryCompanySignals: "READ",
   queryCompanyChanges: "READ", queryCompanyHistory: "READ",
+  observeSupply: "WRITE", observeSupplyBatch: "WRITE",
+  querySupplyProfile: "READ", querySupplySignals: "READ",
+  querySupplyChanges: "READ", querySupplyCapabilities: "READ",
+  querySupplyHistory: "READ",
 };
 
 const CLASS_TO_PERMISSION: Record<MethodClass, PermissionLevel> = {

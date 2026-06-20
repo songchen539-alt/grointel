@@ -14,6 +14,7 @@ import { ContributionRuntime } from "../../civilization/contribution/contributio
 import { ApplicationRuntime } from "../../applications/application_runtime";
 import { PerpetualRuntime } from "../../../apps/grointel/perpetual/perpetual_runtime";
 import { CompanyObserver } from "../../../apps/grointel/data/company/company_observer";
+import { SupplyObserver } from "../../../apps/grointel/data/supply/supply_observer";
 
 // Internal layer adapters — wrap existing modules
 class RealityAdapter {
@@ -71,6 +72,7 @@ export class RealityOSClient {
   public readonly apps = new ApplicationRuntime();
   public readonly perpetual = new PerpetualRuntime();
   public readonly companyObserver = new CompanyObserver();
+  public readonly supplyObserver = new SupplyObserver();
   private readonly graph = new GraphAdapter();
 
   private call(method: string, ctx: SDKContext, executor: () => Record<string, unknown>, inputSummary = ""): SDKResult<Record<string, unknown>> {
@@ -303,6 +305,32 @@ export class RealityOSClient {
   queryCompanyHistory(ctx: SDKContext, companyId: string): SDKResult {
     const p = this.companyObserver.getProfile(companyId);
     return this.call("queryCompanyHistory", ctx, () => ({ history: p?.history || [] }));
+  }
+  // DATA-2: Supply methods
+  observeSupply(ctx: SDKContext, name: string, entityType: string, website: string, country: string): SDKResult {
+    const r=this.supplyObserver.observeSupply("sdk_"+Date.now().toString(36),name,entityType as any,website,country,{},50);
+    return this.call("observeSupply",ctx,()=>r.profile as unknown as Record<string,unknown>);
+  }
+  observeSupplyBatch(ctx: SDKContext, entities: Array<{id:string;name:string;entityType:string;website:string;country:string}>): SDKResult {
+    const c=this.supplyObserver.observeBatch(entities.map(e=>({...e,confidence:50})));
+    return this.call("observeSupplyBatch",ctx,()=>({observed:c}));
+  }
+  querySupplyProfile(ctx: SDKContext, supplyId: string): SDKResult {
+    const p=this.supplyObserver.getProfile(supplyId);
+    return this.call("querySupplyProfile",ctx,()=>(p||{error:"not found"})as unknown as Record<string,unknown>);
+  }
+  querySupplySignals(ctx: SDKContext, supplyId: string): SDKResult {
+    return this.call("querySupplySignals",ctx,()=>({signals:[]}));
+  }
+  querySupplyChanges(ctx: SDKContext, supplyId: string): SDKResult {
+    return this.call("querySupplyChanges",ctx,()=>({changes:[]}));
+  }
+  querySupplyCapabilities(ctx: SDKContext, supplyId: string): SDKResult {
+    return this.call("querySupplyCapabilities",ctx,()=>({capabilities:[]}));
+  }
+  querySupplyHistory(ctx: SDKContext, supplyId: string): SDKResult {
+    const p=this.supplyObserver.getProfile(supplyId);
+    return this.call("querySupplyHistory",ctx,()=>({history:p?.history||[]}));
   }
   startApplicationSession(ctx: SDKContext, appId: string): SDKResult {
     const ctx2 = this.apps.startSession(appId);
