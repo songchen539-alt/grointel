@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         event: { target: result.event.target?.name || "none", signals: result.event.signals },
         heartbeat: result.heartbeat,
         wu_index: runtime.wuIndex,
-        workers: runtime.getWorkers().map(w => w.getState()),
+        workers: runtime.getWorkers(),
       });
     }
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
@@ -29,7 +29,7 @@ export async function GET() {
       success: true,
       heartbeat: runtime.heartbeatState,
       wu_index: runtime.wuIndex,
-      workers: runtime.getWorkers().map(w => w.getState()),
+      workers: runtime.getWorkers(),
       events: runtime.getRecentEvents(30),
       targets: runtime.engine.targets.getAll().map(t => ({
         name: t.name, attention: t.attention_score, snapshots: t.snapshot_count, last_observed: t.last_observed_at

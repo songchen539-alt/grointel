@@ -1,11 +1,11 @@
 // AWAKENING-3 — Reality Heartbeat
-import { RealityHeartbeat, RealityEventBus } from "./reality_time_types";
-import { RealityEventBus as EventBus } from "./reality_event_bus";
+import { RealityHeartbeat } from "./reality_time_types";
+import { RealityEventBus } from "./reality_event_bus";
 
 export class RealityHeartbeatGenerator {
   private heartbeatCount = 0;
 
-  generate(bus: EventBus, activeWorkers: number, attentionDist: Record<string, number>, wu: { composite: number }): RealityHeartbeat {
+  generate(bus: RealityEventBus, activeWorkers: number, attentionDist: Record<string, number>, wu: { composite: number }): RealityHeartbeat {
     this.heartbeatCount++;
     const recent = bus.getRecent(100);
     const eventsLastMinute = recent.filter(e => Date.now() - new Date(e.timestamp).getTime() < 60000).length;
