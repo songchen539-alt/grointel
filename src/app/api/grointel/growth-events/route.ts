@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerClient } from "@/lib/supabase/server";
 import { loadGrowthEvents, seedGrowthEvents } from "@/lib/grointel/worldMemory";
 import { WEB3_GROWTH_EVENTS, type Web3GrowthEvent } from "@/lib/grointel/web3World";
 
@@ -45,39 +44,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "project, partner, and growthGoal are required" }, { status: 400 });
     }
 
-    const supabase = getServerClient();
-    if (!supabase) {
-      return NextResponse.json({ success: true, configured: false, saved: false, event, error: "Supabase is not configured" });
-    }
-
-    const db = supabase as any;
-    const { error } = await db.from("world_growth_events").upsert({
-      id: event.id,
-      industry: "web3",
-      project: event.project,
-      project_identity: event.projectIdentity,
-      partner: event.partner,
-      partner_identity: event.partnerIdentity,
-      partner_type: event.partnerType,
-      chain_or_sector: event.chainOrSector,
-      event_date: event.eventDate,
-      outcome: event.outcome,
-      growth_goal: event.growthGoal,
-      collaboration_format: event.collaborationFormat,
-      observed_result: event.observedResult,
-      why_it_worked_or_failed: event.whyItWorkedOrFailed,
-      reusable_pattern: event.reusablePattern,
-      risks: event.risks,
-      evidence_urls: event.evidenceUrls,
-      confidence: event.outcome === "success" ? 78 : event.outcome === "failure" ? 74 : 68,
-      raw: event,
-      updated_at: new Date().toISOString(),
-    });
-
-    if (error) {
-      return NextResponse.json({ success: true, configured: true, saved: false, event, error: error.message });
-    }
-    return NextResponse.json({ success: true, configured: true, saved: true, event });
+    const result = await seedGrowthEvents([event]);
+    return NextResponse.json({ success: true, ...result, event });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ success: false, error: message }, { status: 500 });

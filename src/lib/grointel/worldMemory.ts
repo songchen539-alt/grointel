@@ -60,6 +60,86 @@ function buildEntityProfile(world: RealityWorldSnapshot, targetId: string) {
   };
 }
 
+async function saveLegacyWorldMemory(db: any, world: RealityWorldSnapshot, source: string): Promise<boolean> {
+  try {
+    const observations = world.observations.slice(0, 10);
+    for (const observation of observations) {
+      const firstEvidence = observation.evidence[0];
+      await db.from("world_raw_observations").insert({
+        url: firstEvidence?.url || observation.target.identity,
+        title: `${observation.target.name} ${source} observation`,
+        raw_text: JSON.stringify({
+          target: observation.target,
+          signals: observation.signals.slice(0, 12),
+          evidence: observation.evidence.slice(0, 12),
+        }),
+        observed_at: observation.observed_at,
+        content_hash: `${observation.id}_${observation.observed_at}`,
+        language: "en",
+        status: "observed",
+      });
+
+      await db.from("world_events").insert({
+        event_type: "grointel_reality_observation",
+        event_title: `${observation.target.name} observed by GroIntel`,
+        event_summary: `Observed ${observation.signal_count} signals and ${observation.evidence_count} evidence items for ${observation.target.identity}.`,
+        event_date: observation.observed_at,
+        detected_at: observation.observed_at,
+        source_url: firstEvidence?.url || observation.target.identity,
+        source_name: "GroIntel heartbeat",
+        confidence: Math.min(95, Math.max(30, observation.evidence_count * 8)),
+        importance: Math.min(100, observation.signal_count + observation.evidence_count),
+        evidence_url: firstEvidence?.url || observation.target.identity,
+        evidence_title: firstEvidence?.evidence_summary || observation.target.name,
+        evidence_source_name: firstEvidence?.source || "GroIntel",
+        evidence_item_type: "reality_observation",
+        extraction_method: "grointel_world_runtime",
+      });
+    }
+
+    for (const signal of world.signals.slice(0, 20)) {
+      await db.from("world_growth_signals").insert({
+        signal_type: signal.category || signal.type,
+        signal_strength: signal.confidence,
+        signal_reason: signal.summary,
+        inferred_growth_needs: [signal.type, signal.category].filter(Boolean),
+        likely_buyers: [],
+        urgency: signal.confidence >= 70 ? "medium" : "low",
+        confidence: signal.confidence,
+      });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function saveLegacyGrowthEvents(db: any, events: Web3GrowthEvent[]): Promise<boolean> {
+  try {
+    for (const event of events.slice(0, 20)) {
+      await db.from("world_events").insert({
+        event_type: `web3_growth_${event.outcome}`,
+        event_title: `${event.project} x ${event.partner}`,
+        event_summary: event.observedResult,
+        event_date: event.eventDate,
+        detected_at: new Date().toISOString(),
+        source_url: event.evidenceUrls[0] || event.projectIdentity,
+        source_name: "GroIntel Web3 growth event memory",
+        confidence: event.outcome === "success" ? 78 : event.outcome === "failure" ? 74 : 68,
+        importance: event.outcome === "success" ? 80 : event.outcome === "failure" ? 85 : 70,
+        evidence_url: event.evidenceUrls[0] || event.projectIdentity,
+        evidence_title: event.reusablePattern,
+        evidence_source_name: "GroIntel Web3 memory",
+        evidence_item_type: "growth_event",
+        extraction_method: "curated_event_seed",
+      });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function saveWorldMemory(world: RealityWorldSnapshot, source = "heartbeat"): Promise<WorldMemorySaveResult> {
   const supabase = getServerClient();
   if (!supabase) return { configured: false, saved: false, runId: null, error: "Supabase is not configured" };
@@ -208,6 +288,10 @@ export async function saveWorldMemory(world: RealityWorldSnapshot, source = "hea
 
     return { configured: true, saved: true, runId, error: null };
   } catch (error: any) {
+    const legacySaved = await saveLegacyWorldMemory(db, world, source);
+    if (legacySaved) {
+      return { configured: true, saved: true, runId: null, error: `Saved to legacy world tables because primary world memory is unavailable: ${error.message}` };
+    }
     return { configured: true, saved: false, runId: null, error: error.message || "Failed to save world memory" };
   }
 }
@@ -243,6 +327,10 @@ export async function seedGrowthEvents(events: Web3GrowthEvent[] = WEB3_GROWTH_E
     if (error) throw error;
     return { configured: true, saved: true, runId: null, error: null };
   } catch (error: any) {
+    const legacySaved = await saveLegacyGrowthEvents(db, events);
+    if (legacySaved) {
+      return { configured: true, saved: true, runId: null, error: `Saved to legacy world_events because world_growth_events is unavailable: ${error.message}` };
+    }
     return { configured: true, saved: false, runId: null, error: error.message || "Failed to seed growth events" };
   }
 }
