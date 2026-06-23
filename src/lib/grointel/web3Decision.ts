@@ -12,6 +12,7 @@ export interface Web3GrowthDemand {
 
 export interface Web3GrowthDecision {
   recommendedSupply: string[];
+  recommendedPartnerProfiles: string[];
   collaborationPatterns: string[];
   avoidPatterns: string[];
   matchedEvents: Array<Web3GrowthEvent & { relevance: number; reason: string }>;
@@ -81,6 +82,7 @@ export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEve
   const successful = matchedEvents.filter((event) => event.outcome === "success" || event.outcome === "mixed");
   const risky = matchedEvents.filter((event) => event.outcome === "failure" || event.outcome === "risk");
   const recommendedSupply = [...new Set(successful.map(supplyFromEvent))];
+  const recommendedPartnerProfiles = [...new Set(successful.map((event) => `${event.partner} (${event.partnerType}, ${event.chainOrSector})`))];
   const collaborationPatterns = [...new Set(successful.map((event) => event.reusablePattern))];
   const avoidPatterns = [...new Set(risky.map((event) => event.reusablePattern))];
   const risks = [...new Set(matchedEvents.flatMap((event) => event.risks))].slice(0, 8);
@@ -88,6 +90,9 @@ export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEve
 
   return {
     recommendedSupply: recommendedSupply.length > 0 ? recommendedSupply : ["Crypto-native KOL network", "Web3 media and community partner"],
+    recommendedPartnerProfiles: recommendedPartnerProfiles.length > 0
+      ? recommendedPartnerProfiles
+      : ["Crypto-native KOL with product-native audience", "Web3 media partner with measurable distribution", "Quest platform with anti-Sybil controls"],
     collaborationPatterns,
     avoidPatterns,
     matchedEvents,

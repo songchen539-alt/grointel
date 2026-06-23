@@ -23,6 +23,7 @@ const decision = decideWeb3Growth({
 
 console.log("=== Web3 Growth Decision Tests ===");
 assert(decision.recommendedSupply.length > 0, "should recommend growth supply");
+assert(decision.recommendedPartnerProfiles.length > 0, "should recommend partner profiles");
 assert(decision.matchedEvents.length > 0, "should match historical events");
 assert(decision.matchedEvents[0].relevance > 0, "should score relevance");
 assert(decision.nextActions.length >= 3, "should produce next actions");

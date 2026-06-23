@@ -10,6 +10,7 @@ type DecisionResponse = {
   memory?: { configured: boolean; eventCount: number; error: string | null };
   decision?: {
     recommendedSupply: string[];
+    recommendedPartnerProfiles: string[];
     collaborationPatterns: string[];
     avoidPatterns: string[];
     risks: string[];
@@ -232,6 +233,13 @@ export default function Web3GrowthPage() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {result.decision.recommendedSupply.map((item) => (
                     <span key={item} className="rounded-lg border border-white/5 bg-black/30 px-3 py-2 text-sm text-gray-200">{item}</span>
+                  ))}
+                </div>
+                <div className="mt-5 grid gap-2">
+                  {result.decision.recommendedPartnerProfiles.map((item) => (
+                    <div key={item} className="rounded-lg border border-sky-400/10 bg-sky-400/[0.04] px-3 py-2 text-sm text-sky-100">
+                      {item}
+                    </div>
                   ))}
                 </div>
               </div>
