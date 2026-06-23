@@ -61,6 +61,22 @@ supabase/migrations/013_world_memory.sql
 
 in the Supabase SQL editor or migration system. Until this migration is applied, GroIntel continues to operate from in-memory runtime plus built-in Web3 seed events, but long-term world memory writes return `saved=false`.
 
+Update: production already has legacy world storage tables:
+
+- `world_raw_observations`
+- `world_events`
+- `world_growth_signals`
+- `world_entities`
+- `world_contexts`
+- `world_relationships`
+
+GroIntel now falls back to these legacy tables when the primary `013_world_memory.sql` tables are missing. Production smoke tests confirm:
+
+- growth event intake returns `saved=true` via `world_events`
+- heartbeat returns `memory.saved=true` via legacy world tables
+
+The primary 4-layer schema is still the preferred long-term structure, but the system no longer depends on it to start accumulating memory.
+
 ## Verification
 
 Local verification used:
@@ -76,4 +92,3 @@ Production smoke checks used:
 - `POST https://grointel.vercel.app/api/grointel/web3-decision`
 - `GET https://grointel.vercel.app/world`
 - `GET https://grointel.vercel.app/api/grointel/world-memory-status`
-
