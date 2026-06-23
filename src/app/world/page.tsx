@@ -284,7 +284,7 @@ export default async function WorldPage() {
                 <h2 className="text-sm font-semibold text-white">Agent Reach Social Source Mesh</h2>
               </div>
               <p className="mt-3 text-sm leading-6 text-gray-400">
-                GroIntel now routes public reality checks through Agent Reach, using Exa and installed upstream tools to scan Reddit, Twitter/X, YouTube, Bilibili, XiaoHongShu, LinkedIn, and GitHub surfaces for social proof, product chatter, hiring motion, and community signals.
+                GroIntel can route public reality checks through Agent Reach when upstream tools are installed, using Exa and local source paths for Reddit, Twitter/X, YouTube, Bilibili, XiaoHongShu, LinkedIn, and GitHub. The doctor shows which channels are currently reachable.
               </p>
               <a href="/agent-reach" className="mt-4 inline-flex rounded-md border border-emerald-400/20 px-3 py-2 text-xs font-medium text-emerald-200 transition-colors hover:bg-emerald-400/10">
                 Open source doctor
