@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx src/lib/ai/__tests__/all.test.ts && npx tsx src/lib/ai/__tests__/gateway.test.ts && npx tsx src/lib/cie/__tests__/cie.test.ts"
+    "test": "npx tsx src/lib/ai/__tests__/all.test.ts && npx tsx src/lib/ai/__tests__/gateway.test.ts && npx tsx src/lib/cie/__tests__/cie.test.ts && npx tsx src/lib/grointel/__tests__/web3Decision.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
