@@ -30,7 +30,9 @@ type DecisionResponse = {
 
 export default function Web3GrowthPage() {
   const [loading, setLoading] = useState(false);
+  const [savingEvent, setSavingEvent] = useState(false);
   const [error, setError] = useState("");
+  const [eventMessage, setEventMessage] = useState("");
   const [result, setResult] = useState<DecisionResponse | null>(null);
   const [form, setForm] = useState({
     projectName: "Example Web3 Project",
@@ -40,6 +42,21 @@ export default function Web3GrowthPage() {
     growthGoal: "Acquire real users through KOL and community partnerships",
     targetAudience: "crypto-native users and builders",
     riskTolerance: "medium",
+  });
+  const [eventForm, setEventForm] = useState({
+    project: "",
+    projectIdentity: "",
+    partner: "",
+    partnerIdentity: "",
+    partnerType: "kol",
+    chainOrSector: "Web3",
+    outcome: "success",
+    growthGoal: "",
+    collaborationFormat: "",
+    observedResult: "",
+    reusablePattern: "",
+    risks: "",
+    evidenceUrls: "",
   });
 
   async function submit(event: React.FormEvent) {
@@ -62,6 +79,32 @@ export default function Web3GrowthPage() {
     }
   }
 
+  async function saveEvent(event: React.FormEvent) {
+    event.preventDefault();
+    setSavingEvent(true);
+    setEventMessage("");
+    try {
+      const payload = {
+        ...eventForm,
+        risks: eventForm.risks.split("\n").map((item) => item.trim()).filter(Boolean),
+        evidenceUrls: eventForm.evidenceUrls.split("\n").map((item) => item.trim()).filter(Boolean),
+        whyItWorkedOrFailed: [eventForm.reusablePattern].filter(Boolean),
+      };
+      const response = await fetch("/api/grointel/growth-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || "Save failed");
+      setEventMessage(json.saved ? "Growth event saved into memory." : `Event accepted, memory not saved yet: ${json.error || "storage not ready"}`);
+    } catch (err) {
+      setEventMessage(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSavingEvent(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <section className="border-b border-white/5">
@@ -78,42 +121,95 @@ export default function Web3GrowthPage() {
       </section>
 
       <div className="mx-auto grid max-w-7xl gap-6 px-6 py-8 lg:grid-cols-[0.9fr_1.4fr]">
-        <form onSubmit={submit} className="space-y-4 rounded-lg border border-white/5 bg-white/[0.03] p-5">
-          {[
-            ["projectName", "Project"],
-            ["website", "Website"],
-            ["sector", "Sector"],
-            ["stage", "Stage"],
-            ["growthGoal", "Growth Goal"],
-            ["targetAudience", "Target Audience"],
-          ].map(([key, label]) => (
-            <label key={key} className="block">
-              <span className="text-xs text-gray-500">{label}</span>
-              <input
-                value={form[key as keyof typeof form]}
-                onChange={(event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))}
-                className="mt-1.5 w-full rounded-lg border border-white/10 bg-black px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-sky-400/40"
-              />
+        <div className="space-y-4">
+          <form onSubmit={submit} className="space-y-4 rounded-lg border border-white/5 bg-white/[0.03] p-5">
+            {[
+              ["projectName", "Project"],
+              ["website", "Website"],
+              ["sector", "Sector"],
+              ["stage", "Stage"],
+              ["growthGoal", "Growth Goal"],
+              ["targetAudience", "Target Audience"],
+            ].map(([key, label]) => (
+              <label key={key} className="block">
+                <span className="text-xs text-gray-500">{label}</span>
+                <input
+                  value={form[key as keyof typeof form]}
+                  onChange={(event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))}
+                  className="mt-1.5 w-full rounded-lg border border-white/10 bg-black px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-sky-400/40"
+                />
+              </label>
+            ))}
+            <label className="block">
+              <span className="text-xs text-gray-500">Risk Tolerance</span>
+              <select
+                value={form.riskTolerance}
+                onChange={(event) => setForm((prev) => ({ ...prev, riskTolerance: event.target.value }))}
+                className="mt-1.5 w-full rounded-lg border border-white/10 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-sky-400/40"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
             </label>
-          ))}
-          <label className="block">
-            <span className="text-xs text-gray-500">Risk Tolerance</span>
-            <select
-              value={form.riskTolerance}
-              onChange={(event) => setForm((prev) => ({ ...prev, riskTolerance: event.target.value }))}
-              className="mt-1.5 w-full rounded-lg border border-white/10 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-sky-400/40"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </label>
-          {error && <p className="text-sm text-red-300">{error}</p>}
-          <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 px-4 py-3 text-sm font-medium text-black transition-colors hover:bg-sky-400 disabled:opacity-60" disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-            Generate Decision
-          </button>
-        </form>
+            {error && <p className="text-sm text-red-300">{error}</p>}
+            <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 px-4 py-3 text-sm font-medium text-black transition-colors hover:bg-sky-400 disabled:opacity-60" disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+              Generate Decision
+            </button>
+          </form>
+
+          <form onSubmit={saveEvent} className="space-y-3 rounded-lg border border-white/5 bg-white/[0.03] p-5">
+            <h2 className="text-sm font-semibold">Add Growth Event Memory</h2>
+            {[
+              ["project", "Project"],
+              ["partner", "KOL / Partner"],
+              ["growthGoal", "Growth Goal"],
+              ["collaborationFormat", "Collaboration Format"],
+              ["observedResult", "Observed Result"],
+              ["reusablePattern", "Why it worked / failed"],
+            ].map(([key, label]) => (
+              <label key={key} className="block">
+                <span className="text-xs text-gray-500">{label}</span>
+                <input
+                  value={eventForm[key as keyof typeof eventForm]}
+                  onChange={(event) => setEventForm((prev) => ({ ...prev, [key]: event.target.value }))}
+                  className="mt-1.5 w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white outline-none focus:border-sky-400/40"
+                />
+              </label>
+            ))}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs text-gray-500">Outcome</span>
+                <select value={eventForm.outcome} onChange={(event) => setEventForm((prev) => ({ ...prev, outcome: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white outline-none">
+                  <option value="success">success</option>
+                  <option value="failure">failure</option>
+                  <option value="mixed">mixed</option>
+                  <option value="risk">risk</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs text-gray-500">Partner Type</span>
+                <select value={eventForm.partnerType} onChange={(event) => setEventForm((prev) => ({ ...prev, partnerType: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white outline-none">
+                  <option value="kol">kol</option>
+                  <option value="community">community</option>
+                  <option value="media">media</option>
+                  <option value="platform">platform</option>
+                  <option value="celebrity">celebrity</option>
+                </select>
+              </label>
+            </div>
+            <label className="block">
+              <span className="text-xs text-gray-500">Evidence URLs, one per line</span>
+              <textarea value={eventForm.evidenceUrls} onChange={(event) => setEventForm((prev) => ({ ...prev, evidenceUrls: event.target.value }))} className="mt-1.5 min-h-20 w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white outline-none focus:border-sky-400/40" />
+            </label>
+            {eventMessage && <p className="text-xs text-amber-200">{eventMessage}</p>}
+            <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm text-white transition-colors hover:bg-white/[0.05] disabled:opacity-60" disabled={savingEvent}>
+              {savingEvent ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Save Event Memory
+            </button>
+          </form>
+        </div>
 
         <section className="space-y-4">
           {!result?.decision && (

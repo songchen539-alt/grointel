@@ -74,7 +74,9 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     });
 
-    if (error) throw error;
+    if (error) {
+      return NextResponse.json({ success: true, configured: true, saved: false, event, error: error.message });
+    }
     return NextResponse.json({ success: true, configured: true, saved: true, event });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
