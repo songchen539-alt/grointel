@@ -19,6 +19,15 @@ export async function GET() {
     "business_scan_profiles",
     "capability_knowledge_profiles",
     "capability_scan_profiles",
+    "world_targets",
+    "world_heartbeat_runs",
+    "world_observations",
+    "world_signals",
+    "world_evidence",
+    "world_entity_memories",
+    "world_decision_memories",
+    "world_evolution_memories",
+    "world_growth_events",
   ];
 
   const results: Record<string, any> = {};

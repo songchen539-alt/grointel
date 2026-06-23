@@ -1,5 +1,6 @@
 import { getServerClient } from "@/lib/supabase/server";
 import type { RealityWorldSnapshot } from "./worldRuntime";
+import { WEB3_GROWTH_EVENTS, type Web3GrowthEvent } from "./web3World";
 
 export interface WorldMemorySaveResult {
   configured: boolean;
@@ -17,6 +18,7 @@ export interface WorldMemorySummary {
   entityMemories: Record<string, any>[];
   decisionMemories: Record<string, any>[];
   evolutionMemories: Record<string, any>[];
+  growthEvents: Record<string, any>[];
   error: string | null;
 }
 
@@ -210,6 +212,59 @@ export async function saveWorldMemory(world: RealityWorldSnapshot, source = "hea
   }
 }
 
+export async function seedGrowthEvents(events: Web3GrowthEvent[] = WEB3_GROWTH_EVENTS): Promise<WorldMemorySaveResult> {
+  const supabase = getServerClient();
+  if (!supabase) return { configured: false, saved: false, runId: null, error: "Supabase is not configured" };
+  const db = supabase as any;
+
+  try {
+    const { error } = await db.from("world_growth_events").upsert(events.map((event) => ({
+      id: event.id,
+      industry: "web3",
+      project: event.project,
+      project_identity: event.projectIdentity,
+      partner: event.partner,
+      partner_identity: event.partnerIdentity,
+      partner_type: event.partnerType,
+      chain_or_sector: event.chainOrSector,
+      event_date: event.eventDate,
+      outcome: event.outcome,
+      growth_goal: event.growthGoal,
+      collaboration_format: event.collaborationFormat,
+      observed_result: event.observedResult,
+      why_it_worked_or_failed: event.whyItWorkedOrFailed,
+      reusable_pattern: event.reusablePattern,
+      risks: event.risks,
+      evidence_urls: event.evidenceUrls,
+      confidence: event.outcome === "success" ? 78 : event.outcome === "failure" ? 74 : 68,
+      raw: event,
+      updated_at: new Date().toISOString(),
+    })));
+    if (error) throw error;
+    return { configured: true, saved: true, runId: null, error: null };
+  } catch (error: any) {
+    return { configured: true, saved: false, runId: null, error: error.message || "Failed to seed growth events" };
+  }
+}
+
+export async function loadGrowthEvents(limit = 50): Promise<{ configured: boolean; events: Record<string, any>[]; error: string | null }> {
+  const supabase = getServerClient();
+  if (!supabase) return { configured: false, events: WEB3_GROWTH_EVENTS, error: "Supabase is not configured" };
+  const db = supabase as any;
+
+  try {
+    const { data, error } = await db
+      .from("world_growth_events")
+      .select("*")
+      .order("event_date", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return { configured: true, events: data?.length ? data : WEB3_GROWTH_EVENTS, error: null };
+  } catch (error: any) {
+    return { configured: true, events: WEB3_GROWTH_EVENTS, error: error.message || "Failed to load growth events" };
+  }
+}
+
 export async function loadWorldMemorySummary(limit = 20): Promise<WorldMemorySummary> {
   const supabase = getServerClient();
   if (!supabase) {
@@ -222,13 +277,14 @@ export async function loadWorldMemorySummary(limit = 20): Promise<WorldMemorySum
       entityMemories: [],
       decisionMemories: [],
       evolutionMemories: [],
+      growthEvents: WEB3_GROWTH_EVENTS,
       error: "Supabase is not configured",
     };
   }
   const db = supabase as any;
 
   try {
-    const [runResult, observationResult, signalResult, evidenceResult, entityResult, decisionResult, evolutionResult] = await Promise.all([
+    const [runResult, observationResult, signalResult, evidenceResult, entityResult, decisionResult, evolutionResult, growthEventResult] = await Promise.all([
       db.from("world_heartbeat_runs").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle(),
       db.from("world_observations").select("*").order("observed_at", { ascending: false }).limit(limit),
       db.from("world_signals").select("*").order("observed_at", { ascending: false }).limit(limit),
@@ -236,9 +292,10 @@ export async function loadWorldMemorySummary(limit = 20): Promise<WorldMemorySum
       db.from("world_entity_memories").select("*").order("updated_at", { ascending: false }).limit(limit),
       db.from("world_decision_memories").select("*").order("created_at", { ascending: false }).limit(limit),
       db.from("world_evolution_memories").select("*").order("created_at", { ascending: false }).limit(limit),
+      db.from("world_growth_events").select("*").order("event_date", { ascending: false }).limit(limit),
     ]);
 
-    const error = runResult.error || observationResult.error || signalResult.error || evidenceResult.error || entityResult.error || decisionResult.error || evolutionResult.error;
+    const error = runResult.error || observationResult.error || signalResult.error || evidenceResult.error || entityResult.error || decisionResult.error || evolutionResult.error || growthEventResult.error;
     if (error) throw error;
 
     return {
@@ -250,6 +307,7 @@ export async function loadWorldMemorySummary(limit = 20): Promise<WorldMemorySum
       entityMemories: entityResult.data || [],
       decisionMemories: decisionResult.data || [],
       evolutionMemories: evolutionResult.data || [],
+      growthEvents: growthEventResult.data?.length ? growthEventResult.data : WEB3_GROWTH_EVENTS,
       error: null,
     };
   } catch (error: any) {
@@ -262,6 +320,7 @@ export async function loadWorldMemorySummary(limit = 20): Promise<WorldMemorySum
       entityMemories: [],
       decisionMemories: [],
       evolutionMemories: [],
+      growthEvents: WEB3_GROWTH_EVENTS,
       error: error.message || "Failed to load world memory",
     };
   }

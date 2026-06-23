@@ -5,4 +5,5 @@ export { RssConnector } from "./rss_connector";
 export { GitHubConnector } from "./github_connector";
 export { JobsConnector } from "./jobs_connector";
 export { NewsConnector } from "./news_connector";
+export { AgentReachConnector } from "./agent_reach_connector";
 export { ConnectorRegistry } from "./connector_registry";

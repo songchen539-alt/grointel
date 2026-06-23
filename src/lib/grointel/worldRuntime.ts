@@ -1,6 +1,8 @@
 import { ConnectorRegistry } from "../../../apps/grointel/reality/connectors/connector_registry";
+import { AgentReachConnector } from "../../../apps/grointel/reality/connectors/agent_reach_connector";
 import type { ConnectorEvidence, ConnectorSignal } from "../../../apps/grointel/reality/reality_types";
 import { WorldBuildingFlow } from "../../../apps/grointel/world/world_building_flow";
+import { WEB3_TARGETS } from "./web3World";
 
 export type RealityTargetKind = "company" | "kol" | "partner";
 
@@ -37,7 +39,7 @@ export interface RealityWorldSnapshot {
   tickCount: number;
 }
 
-const SEED_TARGETS: RealityTarget[] = [
+const GENERAL_TARGETS: RealityTarget[] = [
   { id: "company.openai", name: "OpenAI", identity: "openai.com", kind: "company", domain: "AI / frontier model company" },
   { id: "company.stripe", name: "Stripe", identity: "stripe.com", kind: "company", domain: "Fintech / payments infrastructure" },
   { id: "company.clay", name: "Clay", identity: "clay.com", kind: "company", domain: "B2B GTM data platform" },
@@ -45,6 +47,8 @@ const SEED_TARGETS: RealityTarget[] = [
   { id: "kol.mkbhd", name: "MKBHD", identity: "youtube.com/@mkbhd", kind: "kol", domain: "Tech creator / consumer technology audience" },
   { id: "kol.lennysnewsletter", name: "Lenny's Newsletter", identity: "lennysnewsletter.com", kind: "kol", domain: "Product and growth operator audience" },
 ];
+
+const SEED_TARGETS: RealityTarget[] = [...WEB3_TARGETS, ...GENERAL_TARGETS];
 
 class GroIntelWorldRuntime {
   private readonly flow = new WorldBuildingFlow();
@@ -59,6 +63,7 @@ class GroIntelWorldRuntime {
   private observing = false;
 
   snapshot(): RealityWorldSnapshot {
+    this.ensureAgentReachConnector();
     this.updateMetrics();
     const update = this.flow.runFullUpdate();
     return {
@@ -80,6 +85,7 @@ class GroIntelWorldRuntime {
   }
 
   async observeTargets(limit = 3): Promise<RealityWorldSnapshot> {
+    this.ensureAgentReachConnector();
     if (this.observing) return this.snapshot();
     this.observing = true;
     try {
@@ -102,6 +108,7 @@ class GroIntelWorldRuntime {
   }
 
   private async observeTarget(target: RealityTarget): Promise<void> {
+    this.ensureAgentReachConnector();
     const result = await this.registry.runAll(target.identity);
     const observedAt = new Date().toISOString();
     const observation: RealityObservation = {
@@ -180,6 +187,12 @@ class GroIntelWorldRuntime {
       );
     }
   }
+
+  private ensureAgentReachConnector(): void {
+    if (!this.registry.get("connector.agent_reach")) {
+      this.registry.register(new AgentReachConnector());
+    }
+  }
 }
 
 const globalWorld = globalThis as typeof globalThis & {
@@ -192,4 +205,3 @@ export function getGroIntelWorldRuntime(): GroIntelWorldRuntime {
   }
   return globalWorld.__grointelWorldRuntime;
 }
-

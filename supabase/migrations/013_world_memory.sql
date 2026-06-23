@@ -137,3 +137,33 @@ create table if not exists world_evolution_memories (
 );
 create index if not exists idx_world_evolution_memories_created on world_evolution_memories(created_at desc);
 alter table world_evolution_memories enable row level security;
+
+-- Web3 growth event memory. Historical company/KOL/channel collaborations teach the matching model.
+create table if not exists world_growth_events (
+  id text primary key,
+  industry text not null default 'web3',
+  project text not null,
+  project_identity text not null,
+  partner text not null,
+  partner_identity text not null,
+  partner_type text not null,
+  chain_or_sector text,
+  event_date text,
+  outcome text not null,
+  growth_goal text,
+  collaboration_format text,
+  observed_result text,
+  why_it_worked_or_failed jsonb not null default '[]',
+  reusable_pattern text,
+  risks jsonb not null default '[]',
+  evidence_urls jsonb not null default '[]',
+  confidence integer not null default 70,
+  raw jsonb not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_world_growth_events_industry on world_growth_events(industry);
+create index if not exists idx_world_growth_events_project on world_growth_events(project_identity);
+create index if not exists idx_world_growth_events_partner on world_growth_events(partner_identity);
+create index if not exists idx_world_growth_events_outcome on world_growth_events(outcome);
+alter table world_growth_events enable row level security;

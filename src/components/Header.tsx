@@ -12,6 +12,7 @@ export default function Header() {
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           <Link href="/" className="text-sm text-gray-400 transition-colors hover:text-white">Home</Link>
+          <Link href="/web3-growth" className="text-sm text-gray-400 transition-colors hover:text-white">Web3 Growth</Link>
           <Link href="/business-intelligence" className="text-sm text-gray-400 transition-colors hover:text-white">For Companies</Link>
           <Link href="/capability-intelligence" className="text-sm text-gray-400 transition-colors hover:text-white">For KOLs</Link>
           <Link href="/world" className="text-sm text-gray-400 transition-colors hover:text-white">World</Link>
@@ -19,7 +20,7 @@ export default function Header() {
           <Link href="/contact" className="text-sm text-gray-400 transition-colors hover:text-white">Contact</Link>
         </nav>
         <Link
-          href="/business-intelligence"
+          href="/web3-growth"
           className="rounded-full bg-white px-5 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-200"
         >
           Start

@@ -1,4 +1,4 @@
-import { Activity, Database, Globe2, Radar, Signal, Sparkles, Target, Wifi } from "lucide-react";
+import { Activity, Database, Globe2, Network, Radar, Signal, Sparkles, Target, Wifi } from "lucide-react";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 import { loadWorldMemorySummary } from "@/lib/grointel/worldMemory";
 
@@ -20,11 +20,22 @@ function metricTone(value: number) {
   return "text-sky-300";
 }
 
+type RealityGapView = {
+  description: string;
+  severity?: string;
+};
+
+type RealityPriorityView = {
+  priority: string;
+};
+
 export default async function WorldPage() {
   const world = await getGroIntelWorldRuntime().observeTargets(3);
   const memory = await loadWorldMemorySummary(8);
   const { score, topGaps, topPriorities, progress, targets, observations, signals, evidence, connectorHealth } = world;
   const observedTargetIds = new Set(observations.map((observation) => observation.target.id));
+  const agentReach = connectorHealth.find((connector) => connector.id === "connector.agent_reach");
+  const agentReachHealth = agentReach?.health as { state?: string; success_rate?: number; latency_ms?: number; last_error?: string | null } | undefined;
 
   const metrics = [
     { label: "Reality Coverage", value: score.reality_coverage, icon: Globe2 },
@@ -43,9 +54,9 @@ export default async function WorldPage() {
                 <Wifi className="h-3.5 w-3.5" />
                 Connected to public reality
               </div>
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">The Living World</h1>
+              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">The Web3 Living World</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
-                GroIntel is observing companies and KOLs, collecting evidence, extracting growth signals, and turning missing context into priorities.
+                GroIntel is starting with Web3: observing projects, KOLs, communities, and historical growth collaborations so every future match is grounded in what actually worked, failed, or created risk.
               </p>
             </div>
 
@@ -201,7 +212,7 @@ export default async function WorldPage() {
             <div className="rounded-lg border border-white/5 bg-white/[0.03] p-5">
               <h2 className="text-sm font-semibold text-white">Reality Gaps</h2>
               <div className="mt-4 space-y-2">
-                {topGaps.map((gap: any, index: number) => (
+                {(topGaps as RealityGapView[]).map((gap, index) => (
                   <div key={`${gap.description}-${index}`} className="rounded-lg border border-white/5 bg-black/30 p-3">
                     <p className="text-sm text-gray-200">{gap.description}</p>
                     <p className="mt-1 text-xs text-gray-600">{gap.severity || "unknown"} severity</p>
@@ -213,7 +224,7 @@ export default async function WorldPage() {
             <div className="rounded-lg border border-white/5 bg-white/[0.03] p-5">
               <h2 className="text-sm font-semibold text-white">Next Priorities</h2>
               <div className="mt-4 space-y-2">
-                {topPriorities.map((priority: any, index: number) => (
+                {(topPriorities as RealityPriorityView[]).map((priority, index) => (
                   <div key={`${priority.priority}-${index}`} className="rounded-lg border border-white/5 bg-black/30 p-3">
                     <p className="text-sm text-gray-200">{priority.priority}</p>
                   </div>
@@ -221,6 +232,83 @@ export default async function WorldPage() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-white/5 bg-white/[0.03] p-5">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Web3 Growth Event Memory</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">
+                These are the first historical collaboration memories GroIntel uses to learn why company/KOL growth events succeed, fail, or create risk.
+              </p>
+            </div>
+            <a href="/api/grointel/growth-events" className="text-xs text-sky-300 hover:text-sky-200">Open event API</a>
+          </div>
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {memory.growthEvents.slice(0, 6).map((event) => {
+              const outcome = String(event.outcome || "mixed");
+              const outcomeClass = outcome === "success"
+                ? "bg-emerald-400/10 text-emerald-200"
+                : outcome === "failure"
+                  ? "bg-red-400/10 text-red-200"
+                  : outcome === "risk"
+                    ? "bg-amber-400/10 text-amber-200"
+                    : "bg-sky-400/10 text-sky-200";
+              return (
+                <div key={String(event.id)} className="rounded-lg border border-white/5 bg-black/30 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-1 text-xs ${outcomeClass}`}>{outcome}</span>
+                    <span className="text-xs text-gray-500">{event.chain_or_sector || event.chainOrSector || "Web3"}</span>
+                    <span className="ml-auto text-xs text-gray-600">{event.event_date || event.eventDate}</span>
+                  </div>
+                  <p className="mt-3 text-sm font-medium text-white">
+                    {event.project} x {event.partner}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-gray-400">{event.observed_result || event.observedResult}</p>
+                  <p className="mt-3 text-xs leading-5 text-gray-500">{event.reusable_pattern || event.reusablePattern}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-emerald-400/10 bg-emerald-400/[0.04] p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-2">
+                <Network className="h-4 w-4 text-emerald-300" />
+                <h2 className="text-sm font-semibold text-white">Agent Reach Social Source Mesh</h2>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-gray-400">
+                GroIntel now routes public reality checks through Agent Reach, using Exa and installed upstream tools to scan Reddit, Twitter/X, YouTube, Bilibili, XiaoHongShu, LinkedIn, and GitHub surfaces for social proof, product chatter, hiring motion, and community signals.
+              </p>
+              <a href="/agent-reach" className="mt-4 inline-flex rounded-md border border-emerald-400/20 px-3 py-2 text-xs font-medium text-emerald-200 transition-colors hover:bg-emerald-400/10">
+                Open source doctor
+              </a>
+            </div>
+            <div className="grid min-w-64 grid-cols-3 gap-2 text-xs">
+              <div className="rounded-lg border border-white/5 bg-black/30 p-3">
+                <p className="text-gray-500">State</p>
+                <p className="mt-2 font-medium text-emerald-200">{agentReachHealth?.state || "pending"}</p>
+              </div>
+              <div className="rounded-lg border border-white/5 bg-black/30 p-3">
+                <p className="text-gray-500">Sources</p>
+                <p className="mt-2 font-medium text-white">7</p>
+              </div>
+              <div className="rounded-lg border border-white/5 bg-black/30 p-3">
+                <p className="text-gray-500">Latency</p>
+                <p className="mt-2 font-medium text-white">{Math.round(agentReachHealth?.latency_ms || 0)}ms</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2 md:grid-cols-4 lg:grid-cols-7">
+            {["Reddit", "Twitter/X", "YouTube", "Bilibili", "XiaoHongShu", "LinkedIn", "GitHub"].map((source) => (
+              <div key={source} className="rounded-lg border border-white/5 bg-black/30 px-3 py-2 text-xs text-gray-300">
+                {source}
+              </div>
+            ))}
+          </div>
+          {agentReachHealth?.last_error && <p className="mt-3 text-xs text-amber-300">{agentReachHealth.last_error}</p>}
         </section>
 
         <section className="mt-6 rounded-lg border border-white/5 bg-white/[0.03] p-5">
