@@ -23,6 +23,7 @@ type DecisionResponse = {
       relevance: number;
       observedResult: string;
       reusablePattern: string;
+      evidenceUrls?: string[];
     }>;
   };
 };
@@ -172,6 +173,15 @@ export default function Web3GrowthPage() {
                       </div>
                       <p className="mt-2 text-sm font-medium">{event.project} x {event.partner}</p>
                       <p className="mt-2 text-sm leading-6 text-gray-400">{event.observedResult}</p>
+                      {event.evidenceUrls && event.evidenceUrls.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {event.evidenceUrls.slice(0, 3).map((url) => (
+                            <a key={url} href={url} target="_blank" rel="noreferrer" className="rounded-md border border-white/5 px-2 py-1 text-xs text-sky-300 hover:bg-white/[0.04]">
+                              source
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

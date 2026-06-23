@@ -57,7 +57,11 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "Quest campaigns work for ecosystem onboarding when throttled, staged, and tied to meaningful user education.",
     risks: ["Sybil activity", "Short-term reward farming", "Network congestion", "User frustration if rewards feel unclear"],
-    evidenceUrls: ["https://arbitrum.foundation/", "https://galxe.com/"],
+    evidenceUrls: [
+      "https://forum.arbitrum.foundation/t/galxe-final-stip-round-1/17561",
+      "https://arbitrumfoundation.medium.com/arbitrum-odyssey-reignited-a98f627d42ef",
+      "https://www.galxe.com/blog/arbitrum-odyssey",
+    ],
   },
   {
     id: "web3.event.optimism_quests_2022",
@@ -79,7 +83,11 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "Use quests to convert broad attention into segmented, behavior-based user cohorts.",
     risks: ["Quest fatigue", "Low-retention reward hunters", "Over-crediting vanity activity"],
-    evidenceUrls: ["https://optimism.io/", "https://galxe.com/"],
+    evidenceUrls: [
+      "https://app.galxe.com/quest/Optimism/GC6xiUtedg",
+      "https://medium.com/galxe-news/galxe-x-optimism-optimism-quests-f060c139d660",
+      "https://dune.com/springzhang/optimism-quests-tracking",
+    ],
   },
   {
     id: "web3.event.binance_ronaldo_nft_2022",
@@ -101,7 +109,10 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "Celebrity reach should be used only when disclosure, education, and user-risk controls are strong.",
     risks: ["Regulatory scrutiny", "Reputation backlash", "Low-intent traffic", "Expectation mismatch"],
-    evidenceUrls: ["https://www.binance.com/", "https://cristianoronaldo.com/"],
+    evidenceUrls: [
+      "https://www.binance.com/en/square/post/12560579612970",
+      "https://qz.com/cristiano-ronaldo-1-billion-lawsuit-promoting-binance-1851060565",
+    ],
   },
   {
     id: "web3.event.azuki_elementals_2023",
@@ -123,7 +134,11 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "For community-owned brands, protect trust and identity before optimizing launch revenue.",
     risks: ["Community backlash", "Floor price pressure", "Narrative reversal", "Creator trust damage"],
-    evidenceUrls: ["https://www.azuki.com/", "https://x.com/azuki"],
+    evidenceUrls: [
+      "https://www.binance.com/cs/square/post/728786",
+      "https://medium.com/coinmonks/azuki-elementals-and-azurbala-nft-navigating-community-challenges-in-established-nft-projects-336eaf51f4e5",
+      "https://thelinestudio.com/work/azuki",
+    ],
   },
   {
     id: "web3.event_friendtech_crypto_twitter_2023",
@@ -148,4 +163,3 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     evidenceUrls: ["https://friend.tech/", "https://x.com"],
   },
 ];
-
