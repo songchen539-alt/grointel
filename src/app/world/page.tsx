@@ -94,7 +94,11 @@ export default async function WorldPage() {
                 <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L4 {memory.evolutionMemories.length}</span>
               </div>
             </div>
-            {memory.error && <p className="mt-3 text-xs text-amber-300">{memory.error}</p>}
+            {memory.error && (
+              <p className="mt-3 text-xs text-amber-300">
+                {memory.error} · Run <span className="font-mono">supabase/migrations/013_world_memory.sql</span> to enable long-term memory.
+              </p>
+            )}
           </div>
         </div>
       </section>
