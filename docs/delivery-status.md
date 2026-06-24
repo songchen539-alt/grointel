@@ -10,18 +10,23 @@ Demand -> Intelligence -> Decision -> Action -> Supply
 
 The first focused market is Web3. The current working path is:
 
-1. User enters a Web3 project growth demand at `/web3-growth`.
-2. GroIntel compares the demand against historical Web3 company/KOL/channel growth events.
-3. The Web3 decision engine returns recommended supply types, collaboration patterns, risks, matched evidence events, and next actions.
-4. The Web3 event intake form can add new historical growth events.
-5. `/world` shows the Web3 Living World, reality signals, four-layer memory status, and growth event memory.
-6. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
+1. User can start from one identity signal at `/identity`.
+2. GroIntel classifies the subject as company or KOL/partner, creates the first understanding pass, and asks the missing questions that matter.
+3. Web3 companies are automatically routed into the Web3 decision engine.
+4. User can enter a Web3 project growth demand at `/web3-growth`.
+5. GroIntel compares the demand against historical Web3 company/KOL/channel growth events.
+6. The Web3 decision engine returns recommended supply types, partner profiles, collaboration patterns, risks, matched evidence events, measurement signals, qualification questions, and next actions.
+7. The Web3 event intake form can add new historical growth events.
+8. `/world` shows the Web3 Living World, reality signals, four-layer memory status, and growth event memory.
+9. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
 
 ## Live Routes
 
 - `/web3-growth` - Web3 demand-to-decision workspace.
+- `/identity` - unified one-signal identity intake for companies and KOLs.
 - `/world` - Web3 Living World dashboard.
 - `/agent-reach` - source/connector doctor for social and web routes.
+- `/api/grointel/identity-intake` - identity classification and first-pass understanding API.
 - `/api/grointel/web3-decision` - Web3 growth decision API.
 - `/api/grointel/growth-events` - growth event memory read/write API.
 - `/api/grointel/heartbeat` - scheduled reality heartbeat.
@@ -46,6 +51,14 @@ The first event library includes:
 - Celebrity and regulatory-risk growth: Binance x Cristiano Ronaldo.
 - NFT community trust failure: Azuki Elementals.
 - Crypto Twitter product-led virality: friend.tech.
+
+The Business Intelligence core also has first-class Web3 entity knowledge for:
+
+- Arbitrum
+- Optimism
+- Polygon
+- Galxe
+- friend.tech
 
 ## Known Deployment State
 
@@ -74,6 +87,8 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 
 - growth event intake returns `saved=true` via `world_events`
 - heartbeat returns `memory.saved=true` via legacy world tables
+- `/world` and `/api/grointel/world` read observations, signals, evidence, and growth events from legacy tables when primary tables are absent
+- `/api/grointel/web3-decision` merges legacy growth events with built-in Web3 seed memory, so new memories enhance the base event library instead of replacing it
 
 The primary 4-layer schema is still the preferred long-term structure, but the system no longer depends on it to start accumulating memory.
 
@@ -88,7 +103,9 @@ npm test
 
 Production smoke checks used:
 
+- `POST https://grointel.vercel.app/api/grointel/identity-intake`
 - `GET https://grointel.vercel.app/web3-growth`
 - `POST https://grointel.vercel.app/api/grointel/web3-decision`
+- `GET https://grointel.vercel.app/api/grointel/world`
 - `GET https://grointel.vercel.app/world`
 - `GET https://grointel.vercel.app/api/grointel/world-memory-status`
