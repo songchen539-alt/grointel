@@ -165,6 +165,27 @@ function legacyEventToGrowthEvent(event: Record<string, any>): Web3GrowthEvent {
   };
 }
 
+function growthEventKey(event: Record<string, any>) {
+  return [
+    event.project,
+    event.partner,
+    event.eventDate || event.event_date,
+    event.outcome,
+  ].map((item) => String(item || "").toLowerCase().trim()).join("|");
+}
+
+function mergeWithSeedGrowthEvents(events: Record<string, any>[]) {
+  const merged: Record<string, any>[] = [];
+  const seen = new Set<string>();
+  for (const event of [...events, ...WEB3_GROWTH_EVENTS]) {
+    const key = growthEventKey(event) || String(event.id || "");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(event);
+  }
+  return merged;
+}
+
 async function loadLegacyGrowthEvents(db: any, limit: number): Promise<Web3GrowthEvent[]> {
   const { data, error } = await db
     .from("world_events")
@@ -177,13 +198,14 @@ async function loadLegacyGrowthEvents(db: any, limit: number): Promise<Web3Growt
 }
 
 async function loadLegacyWorldMemorySummary(db: any, limit: number, primaryError: string): Promise<WorldMemorySummary> {
-  const [observationResult, signalResult, eventResult] = await Promise.all([
+  const [observationResult, signalResult, eventResult, growthEventResult] = await Promise.all([
     db.from("world_raw_observations").select("*").order("observed_at", { ascending: false }).limit(limit),
     db.from("world_growth_signals").select("*").order("created_at", { ascending: false }).limit(limit),
     db.from("world_events").select("*").order("detected_at", { ascending: false }).limit(limit * 2),
+    db.from("world_events").select("*").like("event_type", "web3_growth_%").order("event_date", { ascending: false }).limit(limit),
   ]);
 
-  const error = observationResult.error || signalResult.error || eventResult.error;
+  const error = observationResult.error || signalResult.error || eventResult.error || growthEventResult.error;
   if (error) throw error;
 
   const recentObservations = (observationResult.data || []).map((item: Record<string, any>) => ({
@@ -221,9 +243,7 @@ async function loadLegacyWorldMemorySummary(db: any, limit: number, primaryError
     observed_at: item.detected_at || item.event_date,
   }));
 
-  const growthEvents = (eventResult.data || [])
-    .filter((item: Record<string, any>) => String(item.event_type || "").startsWith("web3_growth_"))
-    .map(legacyEventToGrowthEvent);
+  const growthEvents = mergeWithSeedGrowthEvents((growthEventResult.data || []).map(legacyEventToGrowthEvent));
 
   return {
     configured: true,
@@ -234,7 +254,7 @@ async function loadLegacyWorldMemorySummary(db: any, limit: number, primaryError
     entityMemories: [],
     decisionMemories: [],
     evolutionMemories: [],
-    growthEvents: growthEvents.length ? growthEvents : WEB3_GROWTH_EVENTS,
+    growthEvents,
     error: `Reading legacy world memory because primary world memory is unavailable: ${primaryError}`,
   };
 }
@@ -446,13 +466,13 @@ export async function loadGrowthEvents(limit = 50): Promise<{ configured: boolea
       .order("event_date", { ascending: false })
       .limit(limit);
     if (error) throw error;
-    return { configured: true, events: data?.length ? data : WEB3_GROWTH_EVENTS, error: null };
+    return { configured: true, events: mergeWithSeedGrowthEvents(data || []), error: null };
   } catch (error: any) {
     try {
       const legacyEvents = await loadLegacyGrowthEvents(db, limit);
       return {
         configured: true,
-        events: legacyEvents.length ? legacyEvents : WEB3_GROWTH_EVENTS,
+        events: mergeWithSeedGrowthEvents(legacyEvents),
         error: `Loaded legacy world_events because world_growth_events is unavailable: ${error.message || "Failed to load growth events"}`,
       };
     } catch (legacyError: any) {
