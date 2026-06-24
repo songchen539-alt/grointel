@@ -26,6 +26,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      status: "alive",
+      observedAt: world.lastObservedAt,
+      memorySaved: memory.saved,
+      growthEventsSaved: growthEvents.saved,
       heartbeat: {
         status: "alive",
         mode: "scheduled_reality_observation",
