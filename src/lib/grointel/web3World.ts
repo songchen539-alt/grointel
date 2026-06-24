@@ -24,6 +24,19 @@ export interface Web3GrowthEvent {
   supplyProfile?: string;
 }
 
+export interface Web3SupplyProfile {
+  id: string;
+  name: string;
+  identity: string;
+  supplyType: "kol" | "media" | "community" | "platform" | "research" | "security" | "creator";
+  audience: string[];
+  capabilities: string[];
+  bestFor: string[];
+  collaborationFormats: string[];
+  proofSignals: string[];
+  risks: string[];
+}
+
 export const WEB3_TARGETS: RealityTarget[] = [
   { id: "web3.company.arbitrum", name: "Arbitrum", identity: "arbitrum.io", kind: "company", domain: "Web3 / Ethereum L2 ecosystem" },
   { id: "web3.company.optimism", name: "Optimism", identity: "optimism.io", kind: "company", domain: "Web3 / Ethereum L2 ecosystem" },
@@ -37,6 +50,113 @@ export const WEB3_TARGETS: RealityTarget[] = [
   { id: "web3.kol.bankless", name: "Bankless", identity: "bankless.com", kind: "kol", domain: "Web3 / Ethereum education media" },
   { id: "web3.kol.defiant", name: "The Defiant", identity: "thedefiant.io", kind: "kol", domain: "Web3 / DeFi media audience" },
   { id: "web3.kol.bitboy", name: "BitBoy Crypto", identity: "x.com/Bitboy_Crypto", kind: "kol", domain: "Web3 / retail crypto audience risk profile" },
+  { id: "web3.kol.ansem", name: "Ansem", identity: "x.com/blknoiz06", kind: "kol", domain: "Web3 / trader and memecoin-native audience" },
+  { id: "web3.kol.ignas", name: "Ignas", identity: "x.com/DefiIgnas", kind: "kol", domain: "Web3 / DeFi research and protocol audience" },
+  { id: "web3.kol.zachxbt", name: "ZachXBT", identity: "x.com/zachxbt", kind: "kol", domain: "Web3 / security and trust audience" },
+  { id: "web3.kol.defidad", name: "DeFi Dad", identity: "x.com/DeFi_Dad", kind: "kol", domain: "Web3 / DeFi education audience" },
+  { id: "web3.kol.coinbureau", name: "Coin Bureau", identity: "coinbureau.com", kind: "kol", domain: "Web3 / retail education media" },
+  { id: "web3.kol.delphi", name: "Delphi Digital", identity: "delphidigital.io", kind: "kol", domain: "Web3 / institutional research audience" },
+  { id: "web3.kol.messari", name: "Messari", identity: "messari.io", kind: "kol", domain: "Web3 / research and data audience" },
+  { id: "web3.kol.unchained", name: "Unchained", identity: "unchainedcrypto.com", kind: "kol", domain: "Web3 / crypto journalism and founder audience" },
+];
+
+export const WEB3_SUPPLY_PROFILES: Web3SupplyProfile[] = [
+  {
+    id: "web3.supply.cobie",
+    name: "Cobie",
+    identity: "x.com/cobie",
+    supplyType: "kol",
+    audience: ["crypto-native traders", "founders", "investors", "high-context Web3 users"],
+    capabilities: ["narrative validation", "market conversation", "founder/investor reach"],
+    bestFor: ["credible crypto-native launch", "founder-led narrative", "high-context product validation"],
+    collaborationFormats: ["selective advisory", "product-native conversation", "founder interview or public discussion"],
+    proofSignals: ["qualified wallet/account creation", "high-quality inbound", "founder/investor discourse", "retention after attention spike"],
+    risks: ["audience rejects shallow promotion", "requires strong product credibility", "not ideal for mainstream education"],
+  },
+  {
+    id: "web3.supply.bankless",
+    name: "Bankless",
+    identity: "bankless.com",
+    supplyType: "media",
+    audience: ["Ethereum users", "DeFi participants", "DAO contributors", "Web3 builders"],
+    capabilities: ["education", "podcast storytelling", "newsletter distribution", "community activation"],
+    bestFor: ["Ethereum ecosystem education", "L2 onboarding", "DeFi protocol explainers", "wallet and governance adoption"],
+    collaborationFormats: ["sponsored education", "founder interview", "ecosystem narrative campaign", "newsletter/podcast package"],
+    proofSignals: ["content engagement", "qualified traffic", "wallet/account activation", "community joins", "retention after education"],
+    risks: ["audience expects substance", "weak fit for low-context consumer hype", "requires clear educational angle"],
+  },
+  {
+    id: "web3.supply.defiant",
+    name: "The Defiant",
+    identity: "thedefiant.io",
+    supplyType: "media",
+    audience: ["DeFi users", "protocol teams", "on-chain finance investors", "builders"],
+    capabilities: ["DeFi editorial coverage", "protocol education", "market analysis", "launch storytelling"],
+    bestFor: ["DeFi protocol launch", "ecosystem education", "serious protocol credibility", "market narrative"],
+    collaborationFormats: ["sponsored report", "protocol explainer", "founder interview", "launch coverage"],
+    proofSignals: ["qualified DeFi traffic", "protocol signups", "wallet activation", "community sentiment"],
+    risks: ["not broad retail distribution", "needs meaningful protocol story", "editorial standards limit pure promotion"],
+  },
+  {
+    id: "web3.supply.zachxbt",
+    name: "ZachXBT",
+    identity: "x.com/zachxbt",
+    supplyType: "security",
+    audience: ["security-conscious crypto users", "investigators", "founders", "risk-aware investors"],
+    capabilities: ["trust scrutiny", "fraud awareness", "risk signal amplification", "security credibility"],
+    bestFor: ["trust repair", "security-first launch", "risk transparency", "anti-scam credibility"],
+    collaborationFormats: ["not a normal paid promotion fit", "security transparency reference", "risk education"],
+    proofSignals: ["trust sentiment", "reduced concern volume", "security disclosure engagement", "community confidence"],
+    risks: ["high scrutiny", "not a promotional channel", "can amplify unresolved risk"],
+  },
+  {
+    id: "web3.supply.ignas",
+    name: "Ignas",
+    identity: "x.com/DefiIgnas",
+    supplyType: "research",
+    audience: ["DeFi researchers", "protocol users", "builders", "crypto analysts"],
+    capabilities: ["research-led education", "protocol comparison", "DeFi narrative analysis"],
+    bestFor: ["DeFi product education", "protocol differentiation", "technical audience acquisition"],
+    collaborationFormats: ["research thread", "protocol breakdown", "educational campaign", "analyst briefing"],
+    proofSignals: ["high-intent traffic", "qualified wallet cohorts", "developer/community questions", "repeat app usage"],
+    risks: ["requires accurate technical claims", "audience notices weak mechanics", "slower than hype-led channels"],
+  },
+  {
+    id: "web3.supply.ansem",
+    name: "Ansem",
+    identity: "x.com/blknoiz06",
+    supplyType: "kol",
+    audience: ["crypto traders", "memecoin-native users", "Solana and high-velocity retail communities"],
+    capabilities: ["fast attention", "trader narrative", "community momentum"],
+    bestFor: ["consumer crypto attention", "trader community activation", "social momentum campaigns"],
+    collaborationFormats: ["public conversation", "launch amplification", "community-driven campaign"],
+    proofSignals: ["traffic spike", "wallet/account creation", "trading or app activity", "social velocity"],
+    risks: ["short attention half-life", "speculation-led churn", "high volatility audience"],
+  },
+  {
+    id: "web3.supply.coinbureau",
+    name: "Coin Bureau",
+    identity: "coinbureau.com",
+    supplyType: "media",
+    audience: ["retail crypto learners", "global crypto users", "token researchers"],
+    capabilities: ["retail education", "long-form explainers", "mainstream crypto reach"],
+    bestFor: ["consumer education", "wallet/exchange onboarding", "broad awareness with learning curve"],
+    collaborationFormats: ["video explainer", "sponsored education", "campaign landing funnel"],
+    proofSignals: ["qualified account creation", "education completion", "traffic conversion", "support ticket quality"],
+    risks: ["retail audience needs strong disclosure", "awareness may outrun product readiness", "compliance review required"],
+  },
+  {
+    id: "web3.supply.delphi",
+    name: "Delphi Digital",
+    identity: "delphidigital.io",
+    supplyType: "research",
+    audience: ["institutional crypto teams", "funds", "serious protocol operators", "founders"],
+    capabilities: ["institutional research", "market thesis", "protocol strategy", "operator credibility"],
+    bestFor: ["B2B/institutional Web3", "protocol positioning", "strategic narrative", "high-ticket partnerships"],
+    collaborationFormats: ["research partnership", "thesis report", "private briefing", "ecosystem strategy"],
+    proofSignals: ["qualified partner intros", "institutional leads", "BD conversations", "research engagement"],
+    risks: ["not for mass acquisition", "requires strong fundamentals", "longer sales cycle"],
+  },
 ];
 
 export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [

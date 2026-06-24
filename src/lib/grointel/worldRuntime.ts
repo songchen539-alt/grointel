@@ -89,10 +89,7 @@ class GroIntelWorldRuntime {
     if (this.observing) return this.snapshot();
     this.observing = true;
     try {
-      const start = this.tickCount % this.targets.length;
-      const selected = Array.from({ length: Math.min(limit, this.targets.length) }, (_, index) => {
-        return this.targets[(start + index) % this.targets.length];
-      });
+      const selected = this.selectObservationTargets(limit);
 
       for (const target of selected) {
         await this.observeTarget(target);
@@ -105,6 +102,35 @@ class GroIntelWorldRuntime {
     } finally {
       this.observing = false;
     }
+  }
+
+  private selectObservationTargets(limit: number): RealityTarget[] {
+    const safeLimit = Math.max(1, Math.min(limit, this.targets.length));
+    const demandTargets = this.targets.filter((target) => target.kind === "company");
+    const supplyTargets = this.targets.filter((target) => target.kind !== "company");
+    const selected: RealityTarget[] = [];
+
+    const takeRotating = (pool: RealityTarget[], count: number, offset: number) => {
+      if (pool.length === 0 || count <= 0) return;
+      for (let index = 0; index < count; index++) {
+        const target = pool[(offset + index) % pool.length];
+        if (!selected.some((item) => item.id === target.id)) selected.push(target);
+      }
+    };
+
+    const supplyCount = supplyTargets.length > 0 ? Math.max(1, Math.floor(safeLimit / 2)) : 0;
+    const demandCount = safeLimit - supplyCount;
+    takeRotating(demandTargets, demandCount, this.tickCount % Math.max(1, demandTargets.length));
+    takeRotating(supplyTargets, supplyCount, this.tickCount % Math.max(1, supplyTargets.length));
+
+    let fallbackIndex = this.tickCount % this.targets.length;
+    while (selected.length < safeLimit) {
+      const target = this.targets[fallbackIndex % this.targets.length];
+      if (!selected.some((item) => item.id === target.id)) selected.push(target);
+      fallbackIndex++;
+    }
+
+    return selected;
   }
 
   private async observeTarget(target: RealityTarget): Promise<void> {

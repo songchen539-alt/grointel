@@ -1,6 +1,7 @@
-import { Activity, Database, Globe2, Network, Radar, Signal, Sparkles, Target, Wifi } from "lucide-react";
+import { Activity, Building2, Database, Globe2, Network, Radar, Signal, Sparkles, Target, UserCheck, Wifi } from "lucide-react";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 import { loadWorldMemorySummary } from "@/lib/grointel/worldMemory";
+import { WEB3_SUPPLY_PROFILES } from "@/lib/grointel/web3World";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,10 @@ export default async function WorldPage() {
   const agentReach = connectorHealth.find((connector) => connector.id === "connector.agent_reach");
   const agentReachHealth = agentReach?.health as { state?: string; success_rate?: number; latency_ms?: number; last_error?: string | null } | undefined;
   const usingLegacyMemory = Boolean(memory.error?.toLowerCase().includes("legacy"));
+  const demandTargets = targets.filter((target) => target.kind === "company");
+  const supplyTargets = targets.filter((target) => target.kind !== "company");
+  const observedDemandCount = demandTargets.filter((target) => observedTargetIds.has(target.id)).length;
+  const observedSupplyCount = supplyTargets.filter((target) => observedTargetIds.has(target.id)).length;
 
   const metrics = [
     { label: "Reality Coverage", value: score.reality_coverage, icon: Globe2 },
@@ -67,12 +72,12 @@ export default async function WorldPage() {
                 <div className="mt-1 text-2xl font-semibold">{world.tickCount}</div>
               </div>
               <div className="rounded-lg border border-white/5 bg-white/[0.03] px-4 py-3">
-                <div className="text-xs text-gray-500">Evidence</div>
-                <div className="mt-1 text-2xl font-semibold">{evidence.length}</div>
+                <div className="text-xs text-gray-500">Demand</div>
+                <div className="mt-1 text-2xl font-semibold">{demandTargets.length}</div>
               </div>
               <div className="rounded-lg border border-white/5 bg-white/[0.03] px-4 py-3">
-                <div className="text-xs text-gray-500">Signals</div>
-                <div className="mt-1 text-2xl font-semibold">{signals.length}</div>
+                <div className="text-xs text-gray-500">Supply</div>
+                <div className="mt-1 text-2xl font-semibold">{supplyTargets.length}</div>
               </div>
             </div>
           </div>
@@ -151,14 +156,40 @@ export default async function WorldPage() {
           </div>
         </section>
 
-        <section className="mt-6 grid gap-4 lg:grid-cols-[1fr_1.25fr]">
-          <div className="rounded-lg border border-white/5 bg-white/[0.03] p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <Globe2 className="h-4 w-4 text-sky-300" />
-              <h2 className="text-sm font-semibold text-white">Observed Entities</h2>
+        <section className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_1.15fr_1.35fr]">
+          <div className="rounded-lg border border-sky-400/10 bg-sky-400/[0.035] p-5">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-sky-300" />
+                <h2 className="text-sm font-semibold text-white">Demand World</h2>
+              </div>
+              <span className="rounded-full bg-sky-400/10 px-2 py-1 text-xs text-sky-200">{observedDemandCount}/{demandTargets.length} observed</span>
             </div>
             <div className="grid gap-2">
-              {targets.map((target) => (
+              {demandTargets.map((target) => (
+                <div key={target.id} className="flex items-center justify-between rounded-lg border border-white/5 bg-black/30 px-3 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-white">{target.name}</p>
+                    <p className="mt-0.5 text-xs text-gray-500">{target.identity}</p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-xs ${observedTargetIds.has(target.id) ? "bg-emerald-400/10 text-emerald-200" : "bg-white/[0.04] text-gray-500"}`}>
+                    company
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-violet-400/10 bg-violet-400/[0.035] p-5">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-violet-300" />
+                <h2 className="text-sm font-semibold text-white">Supply World</h2>
+              </div>
+              <span className="rounded-full bg-violet-400/10 px-2 py-1 text-xs text-violet-200">{observedSupplyCount}/{supplyTargets.length} observed</span>
+            </div>
+            <div className="grid gap-2">
+              {supplyTargets.map((target) => (
                 <div key={target.id} className="flex items-center justify-between rounded-lg border border-white/5 bg-black/30 px-3 py-3">
                   <div>
                     <p className="text-sm font-medium text-white">{target.name}</p>
@@ -196,6 +227,36 @@ export default async function WorldPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-violet-400/10 bg-violet-400/[0.035] p-5">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Web3 Growth Supply Memory</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">
+                These are the KOL, media, research, community, and trust-side growth suppliers GroIntel can understand and match against company demand.
+              </p>
+            </div>
+            <a href="/identity" className="text-xs text-violet-300 hover:text-violet-200">Add a KOL identity</a>
+          </div>
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {WEB3_SUPPLY_PROFILES.map((profile) => (
+              <div key={profile.id} className="rounded-lg border border-white/5 bg-black/30 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-violet-400/10 px-2.5 py-1 text-xs text-violet-200">{profile.supplyType}</span>
+                  <span className="text-xs text-gray-500">{profile.identity}</span>
+                </div>
+                <p className="mt-3 text-sm font-medium text-white">{profile.name}</p>
+                <p className="mt-2 text-xs leading-5 text-gray-500">{profile.audience.slice(0, 3).join(" / ")}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {profile.bestFor.slice(0, 3).map((item) => (
+                    <span key={item} className="rounded-md border border-white/5 bg-white/[0.03] px-2 py-1 text-xs text-gray-300">{item}</span>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs leading-5 text-amber-200">Risk: {profile.risks[0]}</p>
+              </div>
+            ))}
           </div>
         </section>
 

@@ -80,6 +80,9 @@ async function main() {
     assert(heartbeat.success, "heartbeat should succeed");
     assert(heartbeat.status === "alive", "heartbeat status should be alive");
     assert(heartbeat.memorySaved, "heartbeat should save memory");
+    const observedKinds = new Set((heartbeat.heartbeat?.targets_observed || []).map((target) => target.kind));
+    assert(observedKinds.has("company"), "heartbeat should observe Web3 demand/company side");
+    assert(observedKinds.has("kol") || observedKinds.has("partner"), "heartbeat should observe Web3 KOL/supply side");
     console.log(`ok heartbeat: ${heartbeat.status} / ${heartbeat.observedAt}`);
   }
 
