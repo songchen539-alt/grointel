@@ -140,6 +140,105 @@ async function saveLegacyGrowthEvents(db: any, events: Web3GrowthEvent[]): Promi
   }
 }
 
+function legacyEventToGrowthEvent(event: Record<string, any>): Web3GrowthEvent {
+  const title = String(event.event_title || "");
+  const [project, partner] = title.includes(" x ") ? title.split(" x ", 2) : [title || "Unknown Web3 project", "Unknown partner"];
+  const outcome = String(event.event_type || "").replace("web3_growth_", "") as Web3GrowthEvent["outcome"];
+
+  return {
+    id: String(event.id || event.event_title || event.source_url || `legacy_${Date.now()}`),
+    project,
+    projectIdentity: String(event.source_url || ""),
+    partner,
+    partnerIdentity: String(event.source_url || ""),
+    partnerType: "kol",
+    chainOrSector: "Web3",
+    eventDate: String(event.event_date || event.detected_at || ""),
+    outcome: ["success", "failure", "mixed", "risk"].includes(outcome) ? outcome : "mixed",
+    growthGoal: "Legacy growth memory imported from world_events.",
+    collaborationFormat: String(event.evidence_item_type || "growth_event"),
+    observedResult: String(event.event_summary || ""),
+    whyItWorkedOrFailed: [String(event.evidence_title || event.event_summary || "")].filter(Boolean),
+    reusablePattern: String(event.evidence_title || event.event_summary || "Use as weak legacy evidence until primary memory is migrated."),
+    risks: [],
+    evidenceUrls: [String(event.source_url || event.evidence_url || "")].filter(Boolean),
+  };
+}
+
+async function loadLegacyGrowthEvents(db: any, limit: number): Promise<Web3GrowthEvent[]> {
+  const { data, error } = await db
+    .from("world_events")
+    .select("*")
+    .like("event_type", "web3_growth_%")
+    .order("event_date", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data || []).map(legacyEventToGrowthEvent);
+}
+
+async function loadLegacyWorldMemorySummary(db: any, limit: number, primaryError: string): Promise<WorldMemorySummary> {
+  const [observationResult, signalResult, eventResult] = await Promise.all([
+    db.from("world_raw_observations").select("*").order("observed_at", { ascending: false }).limit(limit),
+    db.from("world_growth_signals").select("*").order("created_at", { ascending: false }).limit(limit),
+    db.from("world_events").select("*").order("detected_at", { ascending: false }).limit(limit * 2),
+  ]);
+
+  const error = observationResult.error || signalResult.error || eventResult.error;
+  if (error) throw error;
+
+  const recentObservations = (observationResult.data || []).map((item: Record<string, any>) => ({
+    id: item.id,
+    target: { name: item.title || item.url, identity: item.url },
+    observed_at: item.observed_at,
+    signal_count: 0,
+    evidence_count: 1,
+    connectors_used: ["legacy_world_raw_observations"],
+    raw: item,
+  }));
+
+  const recentSignals = (signalResult.data || []).map((item: Record<string, any>) => ({
+    id: item.id,
+    entity: item.signal_type || "legacy signal",
+    type: item.signal_type,
+    category: item.signal_type,
+    summary: item.signal_reason,
+    confidence: item.confidence || item.signal_strength || 0,
+    source: "legacy_world_growth_signals",
+    url: null,
+    raw: item,
+    observed_at: item.created_at,
+  }));
+
+  const recentEvidence = (eventResult.data || []).map((item: Record<string, any>) => ({
+    id: item.id,
+    entity: item.event_title,
+    connector: "legacy_world_events",
+    source: item.source_name,
+    url: item.source_url || item.evidence_url,
+    evidence_summary: item.event_summary,
+    confidence: item.confidence || 0,
+    raw: item,
+    observed_at: item.detected_at || item.event_date,
+  }));
+
+  const growthEvents = (eventResult.data || [])
+    .filter((item: Record<string, any>) => String(item.event_type || "").startsWith("web3_growth_"))
+    .map(legacyEventToGrowthEvent);
+
+  return {
+    configured: true,
+    latestRun: recentObservations[0] ? { created_at: recentObservations[0].observed_at, source: "legacy_world_memory" } : null,
+    recentObservations,
+    recentSignals,
+    recentEvidence,
+    entityMemories: [],
+    decisionMemories: [],
+    evolutionMemories: [],
+    growthEvents: growthEvents.length ? growthEvents : WEB3_GROWTH_EVENTS,
+    error: `Reading legacy world memory because primary world memory is unavailable: ${primaryError}`,
+  };
+}
+
 export async function saveWorldMemory(world: RealityWorldSnapshot, source = "heartbeat"): Promise<WorldMemorySaveResult> {
   const supabase = getServerClient();
   if (!supabase) return { configured: false, saved: false, runId: null, error: "Supabase is not configured" };
@@ -349,7 +448,16 @@ export async function loadGrowthEvents(limit = 50): Promise<{ configured: boolea
     if (error) throw error;
     return { configured: true, events: data?.length ? data : WEB3_GROWTH_EVENTS, error: null };
   } catch (error: any) {
-    return { configured: true, events: WEB3_GROWTH_EVENTS, error: error.message || "Failed to load growth events" };
+    try {
+      const legacyEvents = await loadLegacyGrowthEvents(db, limit);
+      return {
+        configured: true,
+        events: legacyEvents.length ? legacyEvents : WEB3_GROWTH_EVENTS,
+        error: `Loaded legacy world_events because world_growth_events is unavailable: ${error.message || "Failed to load growth events"}`,
+      };
+    } catch (legacyError: any) {
+      return { configured: true, events: WEB3_GROWTH_EVENTS, error: legacyError.message || error.message || "Failed to load growth events" };
+    }
   }
 }
 
@@ -399,17 +507,21 @@ export async function loadWorldMemorySummary(limit = 20): Promise<WorldMemorySum
       error: null,
     };
   } catch (error: any) {
-    return {
-      configured: true,
-      latestRun: null,
-      recentObservations: [],
-      recentSignals: [],
-      recentEvidence: [],
-      entityMemories: [],
-      decisionMemories: [],
-      evolutionMemories: [],
-      growthEvents: WEB3_GROWTH_EVENTS,
-      error: error.message || "Failed to load world memory",
-    };
+    try {
+      return await loadLegacyWorldMemorySummary(db, limit, error.message || "Failed to load world memory");
+    } catch (legacyError: any) {
+      return {
+        configured: true,
+        latestRun: null,
+        recentObservations: [],
+        recentSignals: [],
+        recentEvidence: [],
+        entityMemories: [],
+        decisionMemories: [],
+        evolutionMemories: [],
+        growthEvents: WEB3_GROWTH_EVENTS,
+        error: legacyError.message || error.message || "Failed to load world memory",
+      };
+    }
   }
 }
