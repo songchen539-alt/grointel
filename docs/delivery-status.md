@@ -60,6 +60,13 @@ The Business Intelligence core also has first-class Web3 entity knowledge for:
 - Galxe
 - friend.tech
 
+The Capability Intelligence core has first-class Web3 KOL/media profiles for:
+
+- Cobie
+- Bankless
+- The Defiant
+- BitBoy Crypto risk profile
+
 ## Known Deployment State
 
 Production is deployed through Vercel from `main`.
@@ -89,6 +96,7 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 - heartbeat returns `memory.saved=true` via legacy world tables
 - `/world` and `/api/grointel/world` read observations, signals, evidence, and growth events from legacy tables when primary tables are absent
 - `/api/grointel/web3-decision` merges legacy growth events with built-in Web3 seed memory, so new memories enhance the base event library instead of replacing it
+- `/api/grointel/heartbeat` exposes top-level `status=alive`, `memorySaved`, and `growthEventsSaved` for simple monitors
 
 The primary 4-layer schema is still the preferred long-term structure, but the system no longer depends on it to start accumulating memory.
 
