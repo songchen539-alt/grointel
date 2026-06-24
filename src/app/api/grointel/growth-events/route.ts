@@ -22,6 +22,9 @@ function normalizeEvent(body: any): Web3GrowthEvent {
     reusablePattern: String(body.reusablePattern || body.reusable_pattern || ""),
     risks: Array.isArray(body.risks) ? body.risks : [],
     evidenceUrls: Array.isArray(body.evidenceUrls) ? body.evidenceUrls : Array.isArray(body.evidence_urls) ? body.evidence_urls : [],
+    bestForStages: Array.isArray(body.bestForStages) ? body.bestForStages : Array.isArray(body.best_for_stages) ? body.best_for_stages : [],
+    measurableSignals: Array.isArray(body.measurableSignals) ? body.measurableSignals : Array.isArray(body.measurable_signals) ? body.measurable_signals : [],
+    supplyProfile: String(body.supplyProfile || body.supply_profile || ""),
   };
 }
 

@@ -60,6 +60,9 @@ export default function Web3GrowthPage() {
     reusablePattern: "",
     risks: "",
     evidenceUrls: "",
+    bestForStages: "",
+    measurableSignals: "",
+    supplyProfile: "",
   });
 
   async function submit(event: React.FormEvent) {
@@ -91,6 +94,9 @@ export default function Web3GrowthPage() {
         ...eventForm,
         risks: eventForm.risks.split("\n").map((item) => item.trim()).filter(Boolean),
         evidenceUrls: eventForm.evidenceUrls.split("\n").map((item) => item.trim()).filter(Boolean),
+        bestForStages: eventForm.bestForStages.split("\n").map((item) => item.trim()).filter(Boolean),
+        measurableSignals: eventForm.measurableSignals.split("\n").map((item) => item.trim()).filter(Boolean),
+        supplyProfile: eventForm.supplyProfile,
         whyItWorkedOrFailed: [eventForm.reusablePattern].filter(Boolean),
       };
       const response = await fetch("/api/grointel/growth-events", {
@@ -171,6 +177,7 @@ export default function Web3GrowthPage() {
               ["collaborationFormat", "Collaboration Format"],
               ["observedResult", "Observed Result"],
               ["reusablePattern", "Why it worked / failed"],
+              ["supplyProfile", "Supply Profile"],
             ].map(([key, label]) => (
               <label key={key} className="block">
                 <span className="text-xs text-gray-500">{label}</span>
@@ -206,6 +213,16 @@ export default function Web3GrowthPage() {
               <span className="text-xs text-gray-500">Evidence URLs, one per line</span>
               <textarea value={eventForm.evidenceUrls} onChange={(event) => setEventForm((prev) => ({ ...prev, evidenceUrls: event.target.value }))} className="mt-1.5 min-h-20 w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white outline-none focus:border-sky-400/40" />
             </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs text-gray-500">Best stages, one per line</span>
+                <textarea value={eventForm.bestForStages} onChange={(event) => setEventForm((prev) => ({ ...prev, bestForStages: event.target.value }))} className="mt-1.5 min-h-20 w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white outline-none focus:border-sky-400/40" />
+              </label>
+              <label className="block">
+                <span className="text-xs text-gray-500">Measurable signals, one per line</span>
+                <textarea value={eventForm.measurableSignals} onChange={(event) => setEventForm((prev) => ({ ...prev, measurableSignals: event.target.value }))} className="mt-1.5 min-h-20 w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white outline-none focus:border-sky-400/40" />
+              </label>
+            </div>
             {eventMessage && <p className="text-xs text-amber-200">{eventMessage}</p>}
             <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm text-white transition-colors hover:bg-white/[0.05] disabled:opacity-60" disabled={savingEvent}>
               {savingEvent ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
