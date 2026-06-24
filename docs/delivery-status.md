@@ -18,7 +18,8 @@ The first focused market is Web3. The current working path is:
 6. The Web3 decision engine returns recommended supply types, partner profiles, collaboration patterns, risks, matched evidence events, measurement signals, qualification questions, and next actions.
 7. The Web3 event intake form can add new historical growth events.
 8. `/world` shows the Web3 Living World, reality signals, four-layer memory status, and growth event memory.
-9. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
+9. Web3 KOLs, media, research providers, security voices, and creator communities are now first-class supply-side world entities.
+10. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
 
 ## Live Routes
 
@@ -67,6 +68,23 @@ The Capability Intelligence core has first-class Web3 KOL/media profiles for:
 - The Defiant
 - BitBoy Crypto risk profile
 
+The World runtime also tracks a broader Web3 supply pool:
+
+- Cobie
+- Bankless
+- The Defiant
+- BitBoy Crypto
+- Ansem
+- Ignas
+- ZachXBT
+- DeFi Dad
+- Coin Bureau
+- Delphi Digital
+- Messari
+- Unchained
+
+Heartbeat target selection is balanced so low-limit runs still observe both sides of the market. Production verification confirmed `limit=2` observed one KOL and one company.
+
 ## Known Deployment State
 
 Production is deployed through Vercel from `main`.
@@ -104,6 +122,7 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 - `/world` and `/api/grointel/world` read observations, signals, evidence, and growth events from legacy tables when primary tables are absent
 - `/api/grointel/web3-decision` merges legacy growth events with built-in Web3 seed memory, so new memories enhance the base event library instead of replacing it
 - `/api/grointel/heartbeat` exposes top-level `status=alive`, `memorySaved`, and `growthEventsSaved` for simple monitors
+- `/world` separates Demand World and Supply World, and shows Web3 Growth Supply Memory for KOL/media/research supply
 
 The primary 4-layer schema is still the preferred long-term structure, but the system no longer depends on it to start accumulating memory.
 
