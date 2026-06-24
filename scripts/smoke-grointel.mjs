@@ -72,7 +72,8 @@ async function main() {
 
   const memoryStatus = await request("/api/grointel/world-memory-status");
   assert(memoryStatus.success !== false, "world memory status should respond");
-  console.log(`ok memory status: ready=${Boolean(memoryStatus.ready)}`);
+  assert(memoryStatus.ready || memoryStatus.legacyReady, "primary or legacy world memory should be available");
+  console.log(`ok memory status: ready=${Boolean(memoryStatus.ready)} legacyReady=${Boolean(memoryStatus.legacyReady)}`);
 
   if (includeHeartbeat) {
     const heartbeat = await request("/api/grointel/heartbeat?limit=2");
