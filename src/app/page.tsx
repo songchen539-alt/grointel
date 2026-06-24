@@ -77,10 +77,17 @@ export default function HomePage() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/web3-growth"
+                href="/identity"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-sky-400 px-5 py-3 text-sm font-medium text-black transition-colors hover:bg-sky-300"
               >
-                Run Web3 growth decision
+                Start with one identity
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/web3-growth"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-medium text-white transition-colors hover:border-white/20 hover:bg-white/[0.06]"
+              >
+                Web3 decision
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
