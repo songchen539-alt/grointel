@@ -99,6 +99,7 @@ Local verification used:
 ```text
 npm run build
 npm test
+npm run smoke
 ```
 
 Production smoke checks used:
@@ -109,3 +110,9 @@ Production smoke checks used:
 - `GET https://grointel.vercel.app/api/grointel/world`
 - `GET https://grointel.vercel.app/world`
 - `GET https://grointel.vercel.app/api/grointel/world-memory-status`
+
+Optional heartbeat smoke:
+
+```text
+node scripts/smoke-grointel.mjs --heartbeat
+```
