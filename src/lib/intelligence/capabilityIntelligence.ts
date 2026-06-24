@@ -45,6 +45,66 @@ const PROFILE_PATTERNS: Record<string, {
   pricing: Record<string, unknown>;
   availability: Record<string, unknown>;
 }> = {
+  "x.com/cobie": {
+    display_name: "Cobie",
+    entity_type: "crypto_kol",
+    summary: "Cobie is a crypto-native commentator and investor voice with strong reach among traders, founders, and high-context Web3 audiences.",
+    capabilities: ["Crypto-native distribution", "Market commentary", "Founder and trader audience access", "Narrative framing", "High-signal social amplification"],
+    audiences: ["Crypto traders", "Web3 founders", "Investors", "Ethereum and broader crypto community", "High-context Crypto Twitter"],
+    markets: ["Web3", "Crypto investing", "DeFi", "SocialFi", "Token launches"],
+    channels: ["X / Crypto Twitter", "Podcast appearances", "Community discourse"],
+    evidence: ["Long-running public crypto presence", "High-context market commentary", "Strong founder/investor audience trust"],
+    strengths: ["Credibility with crypto-native audiences", "Fast narrative distribution", "Strong market literacy", "High trust among advanced users"],
+    limitations: ["Not a mainstream consumer channel", "Audience may be skeptical of overt promotion", "Best fit requires product credibility"],
+    collaborations: ["Founder-led launches", "Product-native creator loops", "Market education", "Narrative validation", "Selective advisory"],
+    pricing: { model: "Selective / relationship-led", range: "Unknown", factors: ["Credibility fit", "product quality", "audience relevance"] },
+    availability: { status: "Selective", lead_time: "Unknown", booking: "Relationship or public profile" },
+  },
+  "bankless.com": {
+    display_name: "Bankless",
+    entity_type: "web3_media",
+    summary: "Bankless is an Ethereum-focused media and education brand with a strong audience across DeFi, wallets, governance, and crypto-native adoption.",
+    capabilities: ["Web3 education", "Newsletter distribution", "Podcast storytelling", "Community activation", "Ethereum-native thought leadership"],
+    audiences: ["Ethereum users", "DeFi participants", "Web3 builders", "DAO contributors", "Crypto investors"],
+    markets: ["Ethereum", "DeFi", "Wallets", "L2 ecosystems", "DAO tooling"],
+    channels: ["Newsletter", "Podcast", "YouTube", "X", "Community"],
+    evidence: ["Recognized Ethereum media brand", "Recurring podcast and newsletter distribution", "Crypto-native community trust"],
+    strengths: ["Educational depth", "Ethereum audience fit", "Multi-channel distribution", "Trusted narrative building"],
+    limitations: ["Less suited to low-context consumer campaigns", "Audience expects substance", "Requires clear educational angle"],
+    collaborations: ["Sponsored education", "Launch explainers", "Ecosystem narratives", "Founder interviews", "Campaign amplification"],
+    pricing: { model: "Media sponsorship", range: "Campaign-dependent", factors: ["Channel mix", "placement", "audience fit"] },
+    availability: { status: "Media calendar dependent", lead_time: "2-6 weeks", booking: "Media partnership" },
+  },
+  "thedefiant.io": {
+    display_name: "The Defiant",
+    entity_type: "web3_media",
+    summary: "The Defiant is a DeFi and Web3 media outlet suited for protocol education, ecosystem storytelling, and industry credibility campaigns.",
+    capabilities: ["DeFi media coverage", "Protocol education", "Industry analysis", "Newsletter distribution", "Video and editorial storytelling"],
+    audiences: ["DeFi users", "Protocol teams", "Crypto investors", "Web3 operators", "Builders"],
+    markets: ["DeFi", "Ethereum", "L2 ecosystems", "Protocol launches", "On-chain finance"],
+    channels: ["Website", "Newsletter", "YouTube", "X", "Editorial coverage"],
+    evidence: ["Established DeFi publication", "Protocol and ecosystem coverage", "Audience alignment with on-chain finance"],
+    strengths: ["DeFi audience precision", "Editorial credibility", "Useful for protocol education", "Strong category relevance"],
+    limitations: ["Not a broad retail channel", "Works best with substantial protocol news", "Editorial standards constrain messaging"],
+    collaborations: ["Sponsored reports", "Protocol explainers", "Launch education", "Founder interviews", "Market analysis"],
+    pricing: { model: "Media sponsorship", range: "Campaign-dependent", factors: ["Format", "reach", "editorial depth"] },
+    availability: { status: "Media calendar dependent", lead_time: "2-6 weeks", booking: "Media partnership" },
+  },
+  "x.com/bitboy_crypto": {
+    display_name: "BitBoy Crypto",
+    entity_type: "retail_crypto_kol",
+    summary: "BitBoy Crypto represents high-reach retail crypto attention with significant audience scale but elevated reputation and suitability risk for serious growth campaigns.",
+    capabilities: ["Retail crypto reach", "Fast awareness", "Video and social amplification", "Consumer-facing campaign visibility"],
+    audiences: ["Retail crypto users", "Speculative traders", "Token communities", "Crypto newcomers"],
+    markets: ["Retail crypto", "Token awareness", "Exchange campaigns", "Consumer crypto"],
+    channels: ["X", "YouTube", "Social video", "Community discourse"],
+    evidence: ["High public visibility", "Retail crypto recognition", "Controversy and reputation sensitivity"],
+    strengths: ["Large retail reach", "Fast awareness generation", "Consumer crypto familiarity"],
+    limitations: ["Reputation risk", "Low-intent traffic risk", "Regulatory and trust sensitivity", "Poor fit for high-credibility institutional campaigns"],
+    collaborations: ["Awareness-only campaigns", "Retail education with strong disclosure", "Carefully controlled consumer campaigns"],
+    pricing: { model: "Sponsorship", range: "Unknown", factors: ["Reach", "risk controls", "content format"] },
+    availability: { status: "Unknown", lead_time: "Unknown", booking: "Public profile or management" },
+  },
   "youtube.com": {
     display_name: "YouTube Creator",
     entity_type: "creator",
@@ -120,7 +180,12 @@ function extractDomain(input: string): string {
   }
 }
 
-function findKnownProfile(domain: string): string | null {
+function findKnownProfile(input: string): string | null {
+  const lower = input.toLowerCase();
+  for (const known of Object.keys(PROFILE_PATTERNS)) {
+    if (lower.includes(known)) return known;
+  }
+  const domain = extractDomain(input);
   for (const known of Object.keys(PROFILE_PATTERNS)) {
     if (domain.includes(known)) return known;
   }
@@ -138,7 +203,7 @@ export function normalizeProfileUrl(input: string): string {
 export function generateMockCapabilityScan(profileUrl: string): CapabilityScanResult {
   const url = normalizeProfileUrl(profileUrl);
   const domain = extractDomain(profileUrl);
-  const known = findKnownProfile(domain);
+  const known = findKnownProfile(url);
 
   if (known) {
     const k = PROFILE_PATTERNS[known];
@@ -175,7 +240,7 @@ export function generateMockCapabilityScan(profileUrl: string): CapabilityScanRe
 }
 
 export function createInitialCapabilityKnowledge(scan: CapabilityScanResult): CapabilityKnowledgeResult {
-  const known = findKnownProfile(scan.normalized_domain);
+  const known = findKnownProfile(scan.profile_url || scan.normalized_domain);
   const conf = scan.confidence;
 
   if (known) {
