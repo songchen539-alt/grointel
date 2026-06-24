@@ -36,6 +36,7 @@ export default async function WorldPage() {
   const observedTargetIds = new Set(observations.map((observation) => observation.target.id));
   const agentReach = connectorHealth.find((connector) => connector.id === "connector.agent_reach");
   const agentReachHealth = agentReach?.health as { state?: string; success_rate?: number; latency_ms?: number; last_error?: string | null } | undefined;
+  const usingLegacyMemory = Boolean(memory.error?.toLowerCase().includes("legacy"));
 
   const metrics = [
     { label: "Reality Coverage", value: score.reality_coverage, icon: Globe2 },
@@ -82,7 +83,9 @@ export default async function WorldPage() {
                 <p className="mt-1 text-sm text-gray-300">
                   {memory.configured
                     ? memory.latestRun
-                      ? `Last saved run: ${formatTime(memory.latestRun.created_at)}`
+                      ? usingLegacyMemory
+                        ? `Legacy memory active: ${formatTime(memory.latestRun.created_at)}`
+                        : `Last saved run: ${formatTime(memory.latestRun.created_at)}`
                       : "Memory tables are connected, waiting for first saved run"
                     : "Supabase memory is not configured in this environment"}
                 </p>
@@ -94,9 +97,14 @@ export default async function WorldPage() {
                 <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L4 {memory.evolutionMemories.length}</span>
               </div>
             </div>
-            {memory.error && (
+            {memory.error && usingLegacyMemory && (
+              <p className="mt-3 text-xs text-emerald-300">
+                Primary four-layer memory tables are pending. GroIntel is reading and writing legacy world memory now; run <span className="font-mono">supabase/migrations/013_world_memory.sql</span> to enable the preferred long-term schema.
+              </p>
+            )}
+            {memory.error && !usingLegacyMemory && (
               <p className="mt-3 text-xs text-amber-300">
-                {memory.error} · Run <span className="font-mono">supabase/migrations/013_world_memory.sql</span> to enable long-term memory.
+                {memory.error} Run <span className="font-mono">supabase/migrations/013_world_memory.sql</span> to enable long-term memory.
               </p>
             )}
           </div>
@@ -325,7 +333,7 @@ export default async function WorldPage() {
                   <p className="text-sm font-medium text-white">{connector.name}</p>
                   <p className="mt-1 text-xs text-gray-500">{connector.type}</p>
                   <p className="mt-3 text-xs text-gray-400">
-                    {health.state || "unknown"} · {Math.round(health.success_rate || 0)}% · {Math.round(health.latency_ms || 0)}ms
+                    {health.state || "unknown"} / {Math.round(health.success_rate || 0)}% / {Math.round(health.latency_ms || 0)}ms
                   </p>
                 </div>
               );
