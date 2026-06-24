@@ -19,6 +19,9 @@ export interface Web3GrowthEvent {
   reusablePattern: string;
   risks: string[];
   evidenceUrls: string[];
+  bestForStages?: string[];
+  measurableSignals?: string[];
+  supplyProfile?: string;
 }
 
 export const WEB3_TARGETS: RealityTarget[] = [
@@ -57,6 +60,9 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "Quest campaigns work for ecosystem onboarding when throttled, staged, and tied to meaningful user education.",
     risks: ["Sybil activity", "Short-term reward farming", "Network congestion", "User frustration if rewards feel unclear"],
+    bestForStages: ["ecosystem onboarding", "pre-token community growth", "app discovery"],
+    measurableSignals: ["unique wallets", "bridge transactions", "quest completion rate", "retained active wallets"],
+    supplyProfile: "Quest platform with anti-Sybil controls and ecosystem task design.",
     evidenceUrls: [
       "https://forum.arbitrum.foundation/t/galxe-final-stip-round-1/17561",
       "https://arbitrumfoundation.medium.com/arbitrum-odyssey-reignited-a98f627d42ef",
@@ -83,6 +89,9 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "Use quests to convert broad attention into segmented, behavior-based user cohorts.",
     risks: ["Quest fatigue", "Low-retention reward hunters", "Over-crediting vanity activity"],
+    bestForStages: ["ecosystem education", "early app activation", "multi-app discovery"],
+    measurableSignals: ["on-chain action completion", "repeat app usage", "qualified wallet cohorts", "retention after rewards"],
+    supplyProfile: "Credential/quest distribution platform plus ecosystem educators.",
     evidenceUrls: [
       "https://app.galxe.com/quest/Optimism/GC6xiUtedg",
       "https://medium.com/galxe-news/galxe-x-optimism-optimism-quests-f060c139d660",
@@ -109,6 +118,9 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "Celebrity reach should be used only when disclosure, education, and user-risk controls are strong.",
     risks: ["Regulatory scrutiny", "Reputation backlash", "Low-intent traffic", "Expectation mismatch"],
+    bestForStages: ["mainstream awareness", "consumer brand campaign"],
+    measurableSignals: ["qualified account creation", "risk disclosure engagement", "conversion quality", "complaint rate"],
+    supplyProfile: "Mainstream celebrity partner only with compliance review and user education.",
     evidenceUrls: [
       "https://www.binance.com/en/square/post/12560579612970",
       "https://qz.com/cristiano-ronaldo-1-billion-lawsuit-promoting-binance-1851060565",
@@ -134,6 +146,9 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "For community-owned brands, protect trust and identity before optimizing launch revenue.",
     risks: ["Community backlash", "Floor price pressure", "Narrative reversal", "Creator trust damage"],
+    bestForStages: ["NFT/IP community expansion", "collector retention", "brand trust repair"],
+    measurableSignals: ["holder sentiment", "mint conversion quality", "secondary market stability", "community retention"],
+    supplyProfile: "Community-native creator network with strong collector trust and expectation management.",
     evidenceUrls: [
       "https://www.binance.com/cs/square/post/728786",
       "https://medium.com/coinmonks/azuki-elementals-and-azurbala-nft-navigating-community-challenges-in-established-nft-projects-336eaf51f4e5",
@@ -160,6 +175,9 @@ export const WEB3_GROWTH_EVENTS: Web3GrowthEvent[] = [
     ],
     reusablePattern: "KOL-native product loops can launch quickly when creators are not just promoters but part of the product mechanic.",
     risks: ["Speculation-led churn", "Creator fatigue", "Trust erosion", "Liquidity cliffs"],
+    bestForStages: ["crypto-native launch", "social graph activation", "creator-led distribution"],
+    measurableSignals: ["invite conversion", "active creators", "repeat sessions", "retention after speculation cools"],
+    supplyProfile: "Crypto Twitter creator network embedded into the product loop.",
     evidenceUrls: ["https://friend.tech/", "https://x.com"],
   },
 ];

@@ -28,6 +28,8 @@ assert(decision.matchedEvents.length > 0, "should match historical events");
 assert(decision.matchedEvents[0].relevance > 0, "should score relevance");
 assert(decision.nextActions.length >= 3, "should produce next actions");
 assert(decision.risks.length > 0, "should surface risks");
+assert(decision.measurementPlan.length > 0, "should produce measurable campaign signals");
+assert(decision.qualificationQuestions.length >= 4, "should produce qualification questions");
 assert(decision.confidence > 0 && decision.confidence <= 100, "confidence should be bounded");
 
 console.log(`=== Results: ${passed} passed, ${failed} failed, ${passed + failed} total ===`);

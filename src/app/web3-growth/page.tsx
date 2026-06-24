@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Loader2, Network, ShieldAlert, Sparkles, Target } from "lucide-react";
+import { ArrowRight, CheckCircle2, HelpCircle, Loader2, Network, ShieldAlert, Sparkles, Target } from "lucide-react";
 
 type DecisionResponse = {
   success: boolean;
@@ -14,6 +14,8 @@ type DecisionResponse = {
     collaborationPatterns: string[];
     avoidPatterns: string[];
     risks: string[];
+    measurementPlan: string[];
+    qualificationQuestions: string[];
     nextActions: string[];
     confidence: number;
     matchedEvents: Array<{
@@ -261,6 +263,33 @@ export default function Web3GrowthPage() {
                   <div className="mt-3 space-y-2">
                     {[...result.decision.avoidPatterns, ...result.decision.risks].slice(0, 8).map((item) => (
                       <p key={item} className="rounded-lg bg-black/30 p-3 text-sm leading-6 text-gray-400">{item}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-white/5 bg-white/[0.03] p-5">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                    <h2 className="text-sm font-semibold">Measurement Plan</h2>
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {result.decision.measurementPlan.map((item) => (
+                      <div key={item} className="rounded-lg border border-emerald-400/10 bg-emerald-400/[0.04] px-3 py-2 text-sm text-emerald-50">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-white/5 bg-white/[0.03] p-5">
+                  <div className="flex items-center gap-2">
+                    <HelpCircle className="h-4 w-4 text-violet-300" />
+                    <h2 className="text-sm font-semibold">Qualification Questions</h2>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {result.decision.qualificationQuestions.map((item, index) => (
+                      <p key={item} className="rounded-lg bg-black/30 p-3 text-sm leading-6 text-gray-300">{index + 1}. {item}</p>
                     ))}
                   </div>
                 </div>

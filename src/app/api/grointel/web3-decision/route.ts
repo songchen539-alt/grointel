@@ -36,6 +36,9 @@ function dbEventToWeb3Event(event: any): Web3GrowthEvent {
     reusablePattern: String(event.reusable_pattern || ""),
     risks: Array.isArray(event.risks) ? event.risks : [],
     evidenceUrls: Array.isArray(event.evidence_urls) ? event.evidence_urls : [],
+    bestForStages: Array.isArray(event.best_for_stages) ? event.best_for_stages : Array.isArray(event.bestForStages) ? event.bestForStages : [],
+    measurableSignals: Array.isArray(event.measurable_signals) ? event.measurable_signals : Array.isArray(event.measurableSignals) ? event.measurableSignals : [],
+    supplyProfile: String(event.supply_profile || event.supplyProfile || ""),
   };
 }
 

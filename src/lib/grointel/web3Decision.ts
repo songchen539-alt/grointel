@@ -17,6 +17,8 @@ export interface Web3GrowthDecision {
   avoidPatterns: string[];
   matchedEvents: Array<Web3GrowthEvent & { relevance: number; reason: string }>;
   risks: string[];
+  measurementPlan: string[];
+  qualificationQuestions: string[];
   nextActions: string[];
   confidence: number;
 }
@@ -86,7 +88,9 @@ export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEve
   const collaborationPatterns = [...new Set(successful.map((event) => event.reusablePattern))];
   const avoidPatterns = [...new Set(risky.map((event) => event.reusablePattern))];
   const risks = [...new Set(matchedEvents.flatMap((event) => event.risks))].slice(0, 8);
+  const measurementPlan = [...new Set(matchedEvents.flatMap((event) => event.measurableSignals || []))].slice(0, 8);
   const confidence = Math.round(matchedEvents.reduce((sum, event) => sum + event.relevance, 0) / Math.max(1, matchedEvents.length));
+  const stageSignals = [...new Set(matchedEvents.flatMap((event) => event.bestForStages || []))].slice(0, 4);
 
   return {
     recommendedSupply: recommendedSupply.length > 0 ? recommendedSupply : ["Crypto-native KOL network", "Web3 media and community partner"],
@@ -97,6 +101,18 @@ export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEve
     avoidPatterns,
     matchedEvents,
     risks,
+    measurementPlan: measurementPlan.length > 0
+      ? measurementPlan
+      : ["tracked referrals", "qualified wallet/account creation", "campaign conversion", "retention after campaign"],
+    qualificationQuestions: [
+      `Which growth outcome matters most for ${demand.projectName}: awareness, wallets/users, volume, community quality, or qualified leads?`,
+      "What is the minimum acceptable evidence for success: on-chain actions, traffic conversion, CRM leads, community joins, or revenue?",
+      "Which audience must the partner already own: builders, traders, collectors, founders, retail users, or institutions?",
+      "What risks are unacceptable: regulatory exposure, low-intent traffic, community backlash, or short-term farming?",
+      stageSignals.length > 0
+        ? `Does the project match these proven stages: ${stageSignals.join(", ")}?`
+        : "Is the project stage ready for public amplification, or should it first run a smaller validation campaign?",
+    ],
     nextActions: [
       "Clarify the growth goal into one measurable outcome: wallets, deposits, trading volume, community activation, or qualified leads.",
       "Select 3-5 KOL/community partners whose audience matches the project stage instead of optimizing only for follower count.",
