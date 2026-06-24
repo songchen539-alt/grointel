@@ -71,6 +71,13 @@ The Capability Intelligence core has first-class Web3 KOL/media profiles for:
 
 Production is deployed through Vercel from `main`.
 
+If production appears to show the older Analyze/Sample Reports navigation or `/identity` returns 404, the alias is pointing at an old deployment. Restore the latest local `main` build with:
+
+```text
+npx vercel deploy --prod --yes
+npm run smoke
+```
+
 `/api/grointel/world-memory-status` currently reports whether Supabase has the required world memory tables.
 
 If `ready=false`, run:
