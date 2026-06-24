@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, BrainCircuit, Building2, Loader2, Network, Sparkles, UserCheck } from "lucide-react";
 
 type IdentityResult = {
@@ -25,11 +26,14 @@ type IdentityResult = {
 };
 
 export default function IdentityPage() {
+  const router = useRouter();
   const [identity, setIdentity] = useState("arbitrum.io");
   const [side, setSide] = useState("");
   const [loading, setLoading] = useState(false);
+  const [creatingPassport, setCreatingPassport] = useState(false);
   const [result, setResult] = useState<IdentityResult | null>(null);
   const [error, setError] = useState("");
+  const [passportError, setPassportError] = useState("");
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -44,10 +48,36 @@ export default function IdentityPage() {
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || "Identity intake failed");
       setResult(json);
+      setPassportError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Identity intake failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function createPassport() {
+    if (!result?.side || !result.normalizedIdentity) return;
+    setCreatingPassport(true);
+    setPassportError("");
+    try {
+      const endpoint = result.side === "company" ? "/api/business-intelligence/intake" : "/api/capability-intelligence/intake";
+      const payload = result.side === "company"
+        ? { website: result.normalizedIdentity }
+        : { profileUrl: result.normalizedIdentity };
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await response.json();
+      if (!response.ok || !json.success || !json.knowledgeProfile?.id) {
+        throw new Error(json.error || "Could not build passport");
+      }
+      router.push(`${result.side === "company" ? "/business-intelligence" : "/capability-intelligence"}/${json.knowledgeProfile.id}`);
+    } catch (err) {
+      setPassportError(err instanceof Error ? err.message : "Could not build passport");
+      setCreatingPassport(false);
     }
   }
 
@@ -131,6 +161,24 @@ export default function IdentityPage() {
                 </div>
                 <p className="mt-4 text-sm leading-6 text-gray-300">{String(result.profile.summary || "")}</p>
                 <p className="mt-3 text-xs text-gray-500">{result.classification?.reason}</p>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={createPassport}
+                    disabled={creatingPassport}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-gray-200 disabled:opacity-60"
+                  >
+                    {creatingPassport ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                    Build Full Passport
+                  </button>
+                  <Link
+                    href={isCompany ? "/business-intelligence" : "/capability-intelligence"}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm text-white transition-colors hover:bg-white/[0.05]"
+                  >
+                    Open {isCompany ? "company" : "KOL"} workspace
+                  </Link>
+                </div>
+                {passportError && <p className="mt-3 text-sm text-red-300">{passportError}</p>}
               </div>
 
               <div className="grid gap-4 lg:grid-cols-2">
