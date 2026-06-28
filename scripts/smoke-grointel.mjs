@@ -73,6 +73,9 @@ async function main() {
   assert((decision.decision?.matchedEvents || []).length > 0, "web3 decision should match events");
   assert((decision.decision?.measurementPlan || []).length > 0, "web3 decision should include measurement plan");
   assert((decision.decision?.recommendedConcretePartners || []).length > 0, "web3 decision should recommend concrete KOL/supply partners");
+  assert(decision.decision.recommendedConcretePartners.length >= 8, "web3 decision should use expanded KOL/supply pool");
+  assert(decision.decision.recommendedConcretePartners.some((partner) => partner.source || (partner.tags || []).length > 0), "web3 decision should include discovery-sourced KOL/supply partners");
+  assert(new Set(decision.decision.recommendedConcretePartners.map((partner) => partner.supplyType)).size >= 3, "web3 decision should diversify supply partner types");
   console.log(`ok web3 decision: ${decision.memory.eventCount} events / ${decision.decision.confidence}% confidence / ${decision.decision.recommendedConcretePartners[0].name}`);
 
   const memoryStatus = await request("/api/grointel/world-memory-status");

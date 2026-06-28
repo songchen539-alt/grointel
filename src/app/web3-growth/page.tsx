@@ -23,6 +23,9 @@ type DecisionResponse = {
       suggestedFormat: string;
       keyMetric: string;
       primaryRisk: string;
+      source?: string;
+      tags?: string[];
+      matchSignals?: string[];
     }>;
     collaborationPatterns: string[];
     avoidPatterns: string[];
@@ -290,10 +293,18 @@ export default function Web3GrowthPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full bg-violet-400/10 px-2.5 py-1 text-xs text-violet-200">{partner.supplyType}</span>
                         <span className="text-xs text-gray-500">{partner.fitScore}% fit</span>
+                        {partner.source && <span className="text-xs text-gray-600">{partner.source}</span>}
                       </div>
                       <p className="mt-3 text-sm font-medium text-white">{partner.name}</p>
                       <p className="mt-1 text-xs text-gray-500">{partner.identity}</p>
                       <p className="mt-3 text-sm leading-6 text-gray-300">{partner.fitReason}</p>
+                      {partner.matchSignals && partner.matchSignals.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {partner.matchSignals.map((signal) => (
+                            <span key={signal} className="rounded-md border border-violet-400/10 bg-violet-400/[0.04] px-2 py-1 text-xs text-violet-100">{signal}</span>
+                          ))}
+                        </div>
+                      )}
                       <div className="mt-3 grid gap-2 text-xs text-gray-400">
                         <p><span className="text-gray-500">Format:</span> {partner.suggestedFormat}</p>
                         <p><span className="text-gray-500">Metric:</span> {partner.keyMetric}</p>
