@@ -85,6 +85,9 @@ async function main() {
     assert(heartbeat.success, "heartbeat should succeed");
     assert(heartbeat.status === "alive", "heartbeat status should be alive");
     assert(heartbeat.memorySaved, "heartbeat should save memory");
+    assert(heartbeat.life?.status === "alive", "heartbeat should expose life status");
+    assert(heartbeat.life?.cronSchedule, "heartbeat should expose cron schedule");
+    assert(heartbeat.life?.manualTickAvailable, "heartbeat should expose manual tick availability");
     const observedKinds = new Set((heartbeat.heartbeat?.targets_observed || []).map((target) => target.kind));
     assert(observedKinds.has("company"), "heartbeat should observe Web3 demand/company side");
     assert(observedKinds.has("kol") || observedKinds.has("partner"), "heartbeat should observe Web3 KOL/supply side");

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 import { saveWorldMemory, seedGrowthEvents } from "@/lib/grointel/worldMemory";
+import { getGroIntelLifeStatus } from "@/lib/grointel/lifeStatus";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export async function GET(req: NextRequest) {
       observedAt: world.lastObservedAt,
       memorySaved: memory.saved,
       growthEventsSaved: growthEvents.saved,
+      life: getGroIntelLifeStatus(),
       heartbeat: {
         status: "alive",
         mode: "scheduled_reality_observation",
