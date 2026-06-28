@@ -13,7 +13,17 @@ type IdentityResult = {
   classification?: { confidence: number; reason: string };
   profile?: Record<string, any>;
   missingQuestions?: string[];
-  recommendedCompanyProfiles?: Array<{ company: string; sector: string; growthNeed: string; evidence: string }>;
+  recommendedCompanyProfiles?: Array<{
+    company: string;
+    sector: string;
+    growthNeed: string;
+    usefulWhen?: string[];
+    evidence: string;
+    fitScore?: number;
+    fitReason?: string;
+    suggestedCollaboration?: string;
+    keyMetric?: string;
+  }>;
   web3Decision?: {
     confidence: number;
     recommendedSupply: string[];
@@ -240,9 +250,36 @@ export default function IdentityPage() {
                   <div className="mt-4 grid gap-3 lg:grid-cols-2">
                     {result.recommendedCompanyProfiles.map((item) => (
                       <div key={`${item.company}-${item.sector}`} className="rounded-lg border border-white/5 bg-black/30 p-4">
-                        <p className="text-sm font-medium text-white">{item.company}</p>
-                        <p className="mt-1 text-xs text-gray-500">{item.sector}</p>
-                        <p className="mt-3 text-sm leading-6 text-gray-300">{item.evidence}</p>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-white">{item.company}</p>
+                            <p className="mt-1 text-xs text-gray-500">{item.sector}</p>
+                          </div>
+                          {typeof item.fitScore === "number" && (
+                            <span className="shrink-0 rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-200">{item.fitScore}% fit</span>
+                          )}
+                        </div>
+                        <p className="mt-3 text-xs uppercase tracking-[0.18em] text-emerald-200/70">Growth need</p>
+                        <p className="mt-1 text-sm leading-6 text-gray-300">{item.growthNeed}</p>
+                        {item.fitReason && <p className="mt-3 text-sm leading-6 text-emerald-100">{item.fitReason}</p>}
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-lg bg-white/[0.03] p-3">
+                            <p className="text-xs text-gray-500">Suggested collaboration</p>
+                            <p className="mt-1 text-sm text-gray-200">{item.suggestedCollaboration || "growth collaboration"}</p>
+                          </div>
+                          <div className="rounded-lg bg-white/[0.03] p-3">
+                            <p className="text-xs text-gray-500">Key metric</p>
+                            <p className="mt-1 text-sm text-gray-200">{item.keyMetric || "qualified growth signal"}</p>
+                          </div>
+                        </div>
+                        {item.usefulWhen && item.usefulWhen.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {item.usefulWhen.slice(0, 3).map((stage) => (
+                              <span key={stage} className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-gray-400">{stage}</span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="mt-3 text-xs leading-5 text-gray-500">{item.evidence}</p>
                       </div>
                     ))}
                   </div>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateMockBusinessScan, createInitialBusinessKnowledge, normalizeWebsite } from "@/lib/intelligence/businessIntelligence";
 import { generateMockCapabilityScan, createInitialCapabilityKnowledge, normalizeProfileUrl } from "@/lib/intelligence/capabilityIntelligence";
 import { decideWeb3Growth } from "@/lib/grointel/web3Decision";
-import { WEB3_GROWTH_EVENTS, WEB3_TARGETS } from "@/lib/grointel/web3World";
+import { WEB3_GROWTH_EVENTS, WEB3_SUPPLY_PROFILES, WEB3_TARGETS, type Web3SupplyProfile } from "@/lib/grointel/web3World";
 
 export const dynamic = "force-dynamic";
 
@@ -46,17 +46,70 @@ function capabilityQuestions(confidence: Record<string, number>) {
   return questions;
 }
 
-function web3CompanyMatches() {
+function findSupplyProfile(identity: string, displayName?: string): Web3SupplyProfile | null {
+  const lower = `${identity} ${displayName || ""}`.toLowerCase();
+  return WEB3_SUPPLY_PROFILES.find((profile) => {
+    return lower.includes(profile.identity.toLowerCase())
+      || lower.includes(profile.name.toLowerCase())
+      || profile.identity.toLowerCase().includes(lower);
+  }) || null;
+}
+
+function supplyProfileText(profile: Web3SupplyProfile) {
+  return [
+    profile.supplyType,
+    ...profile.audience,
+    ...profile.capabilities,
+    ...profile.bestFor,
+    ...profile.collaborationFormats,
+    ...profile.proofSignals,
+  ].join(" ").toLowerCase();
+}
+
+function web3CompanyMatches(profile?: Web3SupplyProfile | null) {
+  const supplyText = profile ? supplyProfileText(profile) : "";
   return WEB3_GROWTH_EVENTS
     .filter((event) => event.outcome === "success" || event.outcome === "mixed")
-    .slice(0, 5)
-    .map((event) => ({
-      company: event.project,
-      sector: event.chainOrSector,
-      growthNeed: event.growthGoal,
-      usefulWhen: event.bestForStages || [],
-      evidence: event.reusablePattern,
-    }));
+    .map((event) => {
+      const eventText = [
+        event.project,
+        event.chainOrSector,
+        event.partner,
+        event.partnerType,
+        event.growthGoal,
+        event.collaborationFormat,
+        event.reusablePattern,
+        event.supplyProfile || "",
+        ...(event.bestForStages || []),
+        ...(event.measurableSignals || []),
+      ].join(" ").toLowerCase();
+      let fitScore = 55;
+      if (profile && event.partner.toLowerCase().includes(profile.name.toLowerCase())) fitScore += 25;
+      if (profile && event.partnerType === String(profile.supplyType)) fitScore += 14;
+      if (profile && profile.bestFor.some((item) => eventText.includes(item.split(" ")[0].toLowerCase()))) fitScore += 10;
+      if (profile && profile.capabilities.some((item) => eventText.includes(item.split(" ")[0].toLowerCase()))) fitScore += 8;
+      if (profile && profile.audience.some((item) => eventText.includes(item.split(" ")[0].toLowerCase()))) fitScore += 8;
+      if (!profile && event.partnerType === "kol") fitScore += 8;
+      if (supplyText.includes("education") && eventText.includes("quest")) fitScore += 8;
+      if (supplyText.includes("defi") && eventText.includes("defi")) fitScore += 8;
+      if (supplyText.includes("trust") && eventText.includes("trust")) fitScore += 8;
+
+      return {
+        company: event.project,
+        sector: event.chainOrSector,
+        growthNeed: event.growthGoal,
+        usefulWhen: event.bestForStages || [],
+        evidence: event.reusablePattern,
+        fitScore: Math.min(100, fitScore),
+        fitReason: profile
+          ? `${profile.name} can support ${event.project} when it needs ${event.growthGoal.toLowerCase()}`
+          : `This growth event needs a Web3 supply partner for ${event.growthGoal.toLowerCase()}`,
+        suggestedCollaboration: profile?.collaborationFormats[0] || event.collaborationFormat,
+        keyMetric: profile?.proofSignals[0] || event.measurableSignals?.[0] || "qualified conversion",
+      };
+    })
+    .sort((a, b) => b.fitScore - a.fitScore)
+    .slice(0, 5);
 }
 
 export async function POST(req: NextRequest) {
@@ -71,6 +124,7 @@ export async function POST(req: NextRequest) {
       const scan = generateMockCapabilityScan(profileUrl);
       const knowledge = createInitialCapabilityKnowledge(scan);
       const web3 = isWeb3Identity(identity, String(knowledge.audience_dna?.primary_audiences || ""));
+      const supplyProfile = findSupplyProfile(profileUrl, String(knowledge.capability_identity?.name || ""));
 
       return NextResponse.json({
         success: true,
@@ -86,9 +140,10 @@ export async function POST(req: NextRequest) {
           limitations: knowledge.limitations,
           preferredCollaborations: knowledge.preferred_collaborations,
           confidence: knowledge.knowledge_confidence,
+          supplyProfile,
         },
         missingQuestions: capabilityQuestions(knowledge.knowledge_confidence),
-        recommendedCompanyProfiles: web3 ? web3CompanyMatches() : [],
+        recommendedCompanyProfiles: web3 ? web3CompanyMatches(supplyProfile) : [],
         nextActions: [
           "Confirm the audience and proof fields that decide matching quality.",
           "Turn strongest capability into a reusable offer companies can buy.",
