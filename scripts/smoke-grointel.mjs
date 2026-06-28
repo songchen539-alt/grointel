@@ -80,6 +80,12 @@ async function main() {
   assert(memoryStatus.ready || memoryStatus.legacyReady, "primary or legacy world memory should be available");
   console.log(`ok memory status: ready=${Boolean(memoryStatus.ready)} legacyReady=${Boolean(memoryStatus.legacyReady)}`);
 
+  const aiHealth = await request("/api/grointel/ai-health");
+  assert(aiHealth.success, "AI health should respond");
+  assert(aiHealth.active?.chat, "AI health should expose active chat provider");
+  assert(["real_ai_active", "fallback_ready", "mock_only"].includes(aiHealth.mode), "AI health should expose usable mode");
+  console.log(`ok ai health: ${aiHealth.mode} / chat=${aiHealth.active.chat}`);
+
   if (includeHeartbeat) {
     const heartbeat = await request("/api/grointel/heartbeat?limit=2");
     assert(heartbeat.success, "heartbeat should succeed");

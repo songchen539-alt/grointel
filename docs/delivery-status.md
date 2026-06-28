@@ -33,6 +33,7 @@ The first focused market is Web3. The current working path is:
 - `/api/grointel/web3-decision` - Web3 growth decision API.
 - `/api/grointel/growth-events` - growth event memory read/write API.
 - `/api/grointel/heartbeat` - scheduled reality heartbeat.
+- `/api/grointel/ai-health` - AI Gateway provider health and fallback status.
 - `/api/grointel/world-memory-status` - persistent world memory table status.
 
 ## Four-Layer Memory
@@ -127,6 +128,17 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 - `/api/grointel/identity-intake` returns KOL-to-company Web3 matches with fit score, fit reason, collaboration format, and key metric
 - `/api/grointel/heartbeat` exposes top-level `status=alive`, `memorySaved`, and `growthEventsSaved` for simple monitors
 - `/world` separates Demand World and Supply World, and shows Web3 Growth Supply Memory for KOL/media/research supply
+- `/api/grointel/ai-health` exposes the active chat/json/embedding/rerank providers and whether GroIntel is running with a real AI provider, fallback-ready provider, or mock-only mode
+
+## AI Gateway
+
+GroIntel can route generative understanding through:
+
+- OpenAI via the Responses API when `OPENAI_API_KEY` is configured.
+- DeepSeek when `DEEPSEEK_API_KEY` is configured.
+- Deterministic mock fallback when no real model key is configured or a provider fails.
+
+If no explicit `AI_CHAT_PROVIDER` / `AI_JSON_PROVIDER` is set, GroIntel automatically prefers OpenAI when `OPENAI_API_KEY` exists, then DeepSeek when `DEEPSEEK_API_KEY` exists, and otherwise mock fallback.
 
 The primary 4-layer schema is still the preferred long-term structure, but the system no longer depends on it to start accumulating memory.
 
