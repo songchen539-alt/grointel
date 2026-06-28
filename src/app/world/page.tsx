@@ -70,7 +70,7 @@ export default async function WorldPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 text-right">
+            <div className="grid grid-cols-2 gap-3 text-right md:grid-cols-4">
               <div className="rounded-lg border border-white/5 bg-white/[0.03] px-4 py-3">
                 <div className="text-xs text-gray-500">World Ticks</div>
                 <div className="mt-1 text-2xl font-semibold">{world.tickCount}</div>
@@ -82,6 +82,10 @@ export default async function WorldPage() {
               <div className="rounded-lg border border-white/5 bg-white/[0.03] px-4 py-3">
                 <div className="text-xs text-gray-500">Supply</div>
                 <div className="mt-1 text-2xl font-semibold">{supplyTargets.length}</div>
+              </div>
+              <div className="rounded-lg border border-white/5 bg-white/[0.03] px-4 py-3">
+                <div className="text-xs text-gray-500">Web3 Pool</div>
+                <div className="mt-1 text-2xl font-semibold">{world.discovery.web3TargetCount}</div>
               </div>
             </div>
           </div>
@@ -140,6 +144,22 @@ export default async function WorldPage() {
                   <p className="mt-1 text-emerald-100">{life.realityLoop.length} steps</p>
                 </div>
               </div>
+            </div>
+          </div>
+          <div className="mt-4 rounded-lg border border-violet-400/10 bg-violet-400/[0.04] p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs text-violet-200">Web3 Discovery Registry</p>
+                <p className="mt-1 text-sm leading-6 text-gray-300">
+                  Auto-expanded target pool: {world.discovery.web3DemandCount} growth-demand companies and {world.discovery.web3SupplyCount} KOL/media/research supply entities.
+                </p>
+                <p className="mt-2 text-xs leading-5 text-gray-500">
+                  Catalog size: {world.discovery.discoveryCatalogCount}. Last expanded: {formatTime(world.discovery.lastExpandedAt)}.
+                </p>
+              </div>
+              <a href="/api/grointel/web3-discovery" className="w-fit rounded-lg border border-violet-400/20 px-3 py-2 text-xs font-medium text-violet-200 transition-colors hover:bg-violet-400/10">
+                Open discovery API
+              </a>
             </div>
           </div>
           <div className="mt-4 rounded-lg border border-sky-400/10 bg-sky-400/[0.04] p-4">

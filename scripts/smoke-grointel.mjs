@@ -86,6 +86,12 @@ async function main() {
   assert(["real_ai_active", "fallback_ready", "mock_only"].includes(aiHealth.mode), "AI health should expose usable mode");
   console.log(`ok ai health: ${aiHealth.mode} / chat=${aiHealth.active.chat}`);
 
+  const discovery = await request("/api/grointel/web3-discovery?limit=5");
+  assert(discovery.success, "Web3 discovery should respond");
+  assert(discovery.stats?.web3DemandCount >= 40, "Web3 discovery should include an expanded company demand pool");
+  assert(discovery.stats?.web3SupplyCount >= 30, "Web3 discovery should include an expanded KOL/supply pool");
+  console.log(`ok web3 discovery: demand=${discovery.stats.web3DemandCount} supply=${discovery.stats.web3SupplyCount}`);
+
   if (includeHeartbeat) {
     const heartbeat = await request("/api/grointel/heartbeat?limit=2");
     assert(heartbeat.success, "heartbeat should succeed");
@@ -94,6 +100,8 @@ async function main() {
     assert(heartbeat.life?.status === "alive", "heartbeat should expose life status");
     assert(heartbeat.life?.cronSchedule, "heartbeat should expose cron schedule");
     assert(heartbeat.life?.manualTickAvailable, "heartbeat should expose manual tick availability");
+    assert(heartbeat.world?.discovery?.web3DemandCount >= 40, "heartbeat should carry expanded Web3 company pool");
+    assert(heartbeat.world?.discovery?.web3SupplyCount >= 30, "heartbeat should carry expanded Web3 supply pool");
     const observedKinds = new Set((heartbeat.heartbeat?.targets_observed || []).map((target) => target.kind));
     assert(observedKinds.has("company"), "heartbeat should observe Web3 demand/company side");
     assert(observedKinds.has("kol") || observedKinds.has("partner"), "heartbeat should observe Web3 KOL/supply side");

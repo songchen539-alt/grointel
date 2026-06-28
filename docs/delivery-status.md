@@ -34,6 +34,7 @@ The first focused market is Web3. The current working path is:
 - `/api/grointel/growth-events` - growth event memory read/write API.
 - `/api/grointel/heartbeat` - scheduled reality heartbeat.
 - `/api/grointel/ai-health` - AI Gateway provider health and fallback status.
+- `/api/grointel/web3-discovery` - expanded Web3 company/KOL discovery registry and runtime target pool.
 - `/api/grointel/world-memory-status` - persistent world memory table status.
 
 ## Four-Layer Memory
@@ -129,6 +130,7 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 - `/api/grointel/heartbeat` exposes top-level `status=alive`, `memorySaved`, and `growthEventsSaved` for simple monitors
 - `/world` separates Demand World and Supply World, and shows Web3 Growth Supply Memory for KOL/media/research supply
 - `/api/grointel/ai-health` exposes the active chat/json/embedding/rerank providers and whether GroIntel is running with a real AI provider, fallback-ready provider, or mock-only mode
+- `/api/grointel/web3-discovery` exposes the expanded Web3 demand/supply registry used by heartbeat and World runtime
 
 ## AI Gateway
 
@@ -139,6 +141,15 @@ GroIntel can route generative understanding through:
 - Deterministic mock fallback when no real model key is configured or a provider fails.
 
 If no explicit `AI_CHAT_PROVIDER` / `AI_JSON_PROVIDER` is set, GroIntel automatically prefers OpenAI when `OPENAI_API_KEY` exists, then DeepSeek when `DEEPSEEK_API_KEY` exists, and otherwise mock fallback.
+
+## Web3 Discovery Registry
+
+GroIntel now auto-expands the World target pool before every heartbeat or World snapshot. The registry currently covers 60+ Web3 demand/supply entities across:
+
+- Demand: L1/L2 ecosystems, DeFi protocols, wallets, NFT/creator products, consumer crypto apps, developer infrastructure, interoperability, data availability, and identity.
+- Supply: KOLs, crypto media, research providers, on-chain data providers, risk/security voices, trader audiences, and creator/community networks.
+
+Initial landscape references include YC's Crypto/Web3 startup directory, Alchemy's Layer 2 ecosystem list, Messari Crypto Theses 2026, and public crypto media/research/KOL indices. The registry is not intended to be final; it is the bootstrap pool that heartbeat can continuously observe, score, and eventually replace with evidence-backed discovered entities.
 
 The primary 4-layer schema is still the preferred long-term structure, but the system no longer depends on it to start accumulating memory.
 

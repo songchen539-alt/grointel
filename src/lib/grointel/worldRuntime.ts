@@ -3,6 +3,7 @@ import { AgentReachConnector } from "../../../apps/grointel/reality/connectors/a
 import type { ConnectorEvidence, ConnectorSignal } from "../../../apps/grointel/reality/reality_types";
 import { WorldBuildingFlow } from "../../../apps/grointel/world/world_building_flow";
 import { WEB3_TARGETS } from "./web3World";
+import { getWeb3DiscoveryTargets, web3DiscoveryStats } from "./web3Discovery";
 
 export type RealityTargetKind = "company" | "kol" | "partner";
 
@@ -35,6 +36,10 @@ export interface RealityWorldSnapshot {
   signals: ConnectorSignal[];
   evidence: ConnectorEvidence[];
   connectorHealth: { id: string; name: string; type: string; health: unknown; metrics: unknown }[];
+  discovery: ReturnType<typeof web3DiscoveryStats> & {
+    autoExpanded: boolean;
+    lastExpandedAt: string | null;
+  };
   lastObservedAt: string | null;
   tickCount: number;
 }
@@ -58,12 +63,14 @@ class GroIntelWorldRuntime {
   private signals: ConnectorSignal[] = [];
   private evidence: ConnectorEvidence[] = [];
   private lastObservedAt: string | null = null;
+  private lastExpandedAt: string | null = null;
   private tickCount = 0;
   private observationCounter = 0;
   private observing = false;
 
   snapshot(): RealityWorldSnapshot {
     this.ensureAgentReachConnector();
+    this.expandWeb3DiscoveryTargets();
     this.updateMetrics();
     const update = this.flow.runFullUpdate();
     return {
@@ -79,6 +86,11 @@ class GroIntelWorldRuntime {
         health: connector.health(),
         metrics: connector.metrics(),
       })),
+      discovery: {
+        ...web3DiscoveryStats(this.targets),
+        autoExpanded: true,
+        lastExpandedAt: this.lastExpandedAt,
+      },
       lastObservedAt: this.lastObservedAt,
       tickCount: this.tickCount,
     };
@@ -86,6 +98,7 @@ class GroIntelWorldRuntime {
 
   async observeTargets(limit = 3): Promise<RealityWorldSnapshot> {
     this.ensureAgentReachConnector();
+    this.expandWeb3DiscoveryTargets();
     if (this.observing) return this.snapshot();
     this.observing = true;
     try {
@@ -217,6 +230,27 @@ class GroIntelWorldRuntime {
   private ensureAgentReachConnector(): void {
     if (!this.registry.get("connector.agent_reach")) {
       this.registry.register(new AgentReachConnector());
+    }
+  }
+
+  private expandWeb3DiscoveryTargets(): void {
+    const existing = new Set(this.targets.map((target) => target.id));
+    const discovered = getWeb3DiscoveryTargets(undefined, this.tickCount);
+    let added = 0;
+    for (const target of discovered) {
+      if (existing.has(target.id)) continue;
+      this.targets.push(target);
+      existing.add(target.id);
+      added++;
+    }
+    if (added > 0) {
+      this.lastExpandedAt = new Date().toISOString();
+      this.flow.recordEvent(
+        "coverage",
+        "Web3 / discovery registry",
+        `Expanded Web3 world target pool by ${added} demand/supply entities`,
+        Math.min(100, added),
+      );
     }
   }
 }

@@ -30,6 +30,7 @@ export function getGroIntelLifeStatus(now = new Date()): GroIntelLifeStatus {
     manualTickAvailable: true,
     manualTickPath: "/api/grointel/heartbeat?limit=2",
     realityLoop: [
+      "Expand the Web3 demand/supply discovery registry",
       "Observe balanced Web3 demand and supply targets",
       "Save raw observations, signals, and evidence into world memory",
       "Seed and merge Web3 growth event memory",
