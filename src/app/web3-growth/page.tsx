@@ -11,6 +11,19 @@ type DecisionResponse = {
   decision?: {
     recommendedSupply: string[];
     recommendedPartnerProfiles: string[];
+    recommendedConcretePartners: Array<{
+      id: string;
+      name: string;
+      identity: string;
+      supplyType: string;
+      audience: string[];
+      capabilities: string[];
+      fitScore: number;
+      fitReason: string;
+      suggestedFormat: string;
+      keyMetric: string;
+      primaryRisk: string;
+    }>;
     collaborationPatterns: string[];
     avoidPatterns: string[];
     risks: string[];
@@ -258,6 +271,34 @@ export default function Web3GrowthPage() {
                   {result.decision.recommendedPartnerProfiles.map((item) => (
                     <div key={item} className="rounded-lg border border-sky-400/10 bg-sky-400/[0.04] px-3 py-2 text-sm text-sky-100">
                       {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-violet-400/10 bg-violet-400/[0.04] p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Network className="h-4 w-4 text-violet-300" />
+                    <h2 className="text-sm font-semibold">Concrete Web3 KOL / Supply Matches</h2>
+                  </div>
+                  <span className="rounded-full bg-violet-400/10 px-2.5 py-1 text-xs text-violet-200">from Supply World</span>
+                </div>
+                <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                  {result.decision.recommendedConcretePartners.map((partner) => (
+                    <div key={partner.id} className="rounded-lg border border-white/5 bg-black/30 p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-violet-400/10 px-2.5 py-1 text-xs text-violet-200">{partner.supplyType}</span>
+                        <span className="text-xs text-gray-500">{partner.fitScore}% fit</span>
+                      </div>
+                      <p className="mt-3 text-sm font-medium text-white">{partner.name}</p>
+                      <p className="mt-1 text-xs text-gray-500">{partner.identity}</p>
+                      <p className="mt-3 text-sm leading-6 text-gray-300">{partner.fitReason}</p>
+                      <div className="mt-3 grid gap-2 text-xs text-gray-400">
+                        <p><span className="text-gray-500">Format:</span> {partner.suggestedFormat}</p>
+                        <p><span className="text-gray-500">Metric:</span> {partner.keyMetric}</p>
+                        <p><span className="text-amber-200">Risk:</span> {partner.primaryRisk}</p>
+                      </div>
                     </div>
                   ))}
                 </div>

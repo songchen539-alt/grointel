@@ -18,6 +18,7 @@ type IdentityResult = {
     confidence: number;
     recommendedSupply: string[];
     recommendedPartnerProfiles: string[];
+    recommendedConcretePartners?: Array<{ id: string; name: string; supplyType: string; fitScore: number; suggestedFormat: string; keyMetric: string }>;
     measurementPlan: string[];
     qualificationQuestions: string[];
   } | null;
@@ -220,9 +221,9 @@ export default function IdentityPage() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Measurement</p>
+                      <p className="text-xs text-gray-500">Concrete Matches</p>
                       <div className="mt-2 space-y-2">
-                        {result.web3Decision.measurementPlan.slice(0, 4).map((item) => <p key={item} className="text-sm text-sky-100">{item}</p>)}
+                        {(result.web3Decision.recommendedConcretePartners || []).slice(0, 4).map((item) => <p key={item.id} className="text-sm text-sky-100">{item.name} · {item.fitScore}%</p>)}
                       </div>
                     </div>
                   </div>

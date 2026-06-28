@@ -1,4 +1,4 @@
-import { WEB3_GROWTH_EVENTS, type Web3GrowthEvent } from "./web3World";
+import { WEB3_GROWTH_EVENTS, WEB3_SUPPLY_PROFILES, type Web3GrowthEvent, type Web3SupplyProfile } from "./web3World";
 
 export interface Web3GrowthDemand {
   projectName: string;
@@ -13,6 +13,7 @@ export interface Web3GrowthDemand {
 export interface Web3GrowthDecision {
   recommendedSupply: string[];
   recommendedPartnerProfiles: string[];
+  recommendedConcretePartners: Array<Web3SupplyProfile & { fitScore: number; fitReason: string; suggestedFormat: string; keyMetric: string; primaryRisk: string }>;
   collaborationPatterns: string[];
   avoidPatterns: string[];
   matchedEvents: Array<Web3GrowthEvent & { relevance: number; reason: string }>;
@@ -43,6 +44,12 @@ function eventText(event: Web3GrowthEvent) {
   ].join(" ");
 }
 
+function demandText(demand: Web3GrowthDemand) {
+  return [demand.projectName, demand.website, demand.sector, demand.stage, demand.growthGoal, demand.targetAudience, demand.riskTolerance]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function scoreEvent(demand: Web3GrowthDemand, event: Web3GrowthEvent) {
   const demandText = [demand.sector, demand.stage, demand.growthGoal, demand.targetAudience].filter(Boolean).join(" ");
   const text = eventText(event);
@@ -71,6 +78,39 @@ function supplyFromEvent(event: Web3GrowthEvent) {
   return "Web3 growth partner";
 }
 
+function profileText(profile: Web3SupplyProfile) {
+  return [
+    profile.name,
+    profile.identity,
+    profile.supplyType,
+    ...profile.audience,
+    ...profile.capabilities,
+    ...profile.bestFor,
+    ...profile.collaborationFormats,
+    ...profile.proofSignals,
+    ...profile.risks,
+  ].join(" ");
+}
+
+function scoreSupplyProfile(demand: Web3GrowthDemand, profile: Web3SupplyProfile) {
+  const text = profileText(profile);
+  const demandValue = demandText(demand);
+  let score = 35;
+
+  if (demand.sector && includesAny(text, demand.sector.split(/[,\s/]+/).filter((item) => item.length > 2))) score += 14;
+  if (includesAny(text, demand.growthGoal.split(/[,\s/]+/).filter((item) => item.length > 3))) score += 20;
+  if (demand.targetAudience && includesAny(text, demand.targetAudience.split(/[,\s/]+/).filter((item) => item.length > 3))) score += 16;
+  if (includesAny(demandValue, ["quest", "airdrop", "wallet", "onboarding", "l2", "ethereum"]) && includesAny(text, ["education", "ethereum", "l2", "wallet", "onboarding"])) score += 12;
+  if (includesAny(demandValue, ["defi", "protocol", "liquidity", "deposit", "trading"]) && includesAny(text, ["defi", "protocol", "research", "on-chain"])) score += 14;
+  if (includesAny(demandValue, ["trust", "security", "risk", "scam", "compliance"]) && includesAny(text, ["security", "trust", "risk", "transparency"])) score += 16;
+  if (includesAny(demandValue, ["consumer", "retail", "exchange", "mainstream"]) && includesAny(text, ["retail", "consumer", "education", "video"])) score += 10;
+  if (includesAny(demandValue, ["institution", "fund", "bd", "partnership", "enterprise"]) && includesAny(text, ["institutional", "research", "partner", "briefing"])) score += 14;
+  if (demand.riskTolerance === "low" && profile.risks.some((risk) => /speculation|volatility|hype|retail/i.test(risk))) score -= 10;
+  if (demand.riskTolerance === "low" && profile.supplyType === "security") score += 8;
+
+  return Math.max(0, Math.min(100, score));
+}
+
 export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEvent[] = WEB3_GROWTH_EVENTS): Web3GrowthDecision {
   const matchedEvents = events
     .map((event) => ({
@@ -85,6 +125,17 @@ export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEve
   const risky = matchedEvents.filter((event) => event.outcome === "failure" || event.outcome === "risk");
   const recommendedSupply = [...new Set(successful.map(supplyFromEvent))];
   const recommendedPartnerProfiles = [...new Set(successful.map((event) => `${event.partner} (${event.partnerType}, ${event.chainOrSector})`))];
+  const recommendedConcretePartners = WEB3_SUPPLY_PROFILES
+    .map((profile) => ({
+      ...profile,
+      fitScore: scoreSupplyProfile(demand, profile),
+      fitReason: profile.bestFor[0] || profile.capabilities[0] || "Relevant Web3 growth supply profile.",
+      suggestedFormat: profile.collaborationFormats[0] || "Targeted collaboration",
+      keyMetric: profile.proofSignals[0] || "qualified conversion",
+      primaryRisk: profile.risks[0] || "Audience fit risk",
+    }))
+    .sort((a, b) => b.fitScore - a.fitScore)
+    .slice(0, 5);
   const collaborationPatterns = [...new Set(successful.map((event) => event.reusablePattern))];
   const avoidPatterns = [...new Set(risky.map((event) => event.reusablePattern))];
   const risks = [...new Set(matchedEvents.flatMap((event) => event.risks))].slice(0, 8);
@@ -97,6 +148,7 @@ export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEve
     recommendedPartnerProfiles: recommendedPartnerProfiles.length > 0
       ? recommendedPartnerProfiles
       : ["Crypto-native KOL with product-native audience", "Web3 media partner with measurable distribution", "Quest platform with anti-Sybil controls"],
+    recommendedConcretePartners,
     collaborationPatterns,
     avoidPatterns,
     matchedEvents,
