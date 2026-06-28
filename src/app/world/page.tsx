@@ -3,6 +3,7 @@ import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 import { loadWorldMemorySummary } from "@/lib/grointel/worldMemory";
 import { WEB3_SUPPLY_PROFILES } from "@/lib/grointel/web3World";
 import { getGroIntelLifeStatus } from "@/lib/grointel/lifeStatus";
+import { getAIGatewayStatus } from "@/lib/ai/gateway/status";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function WorldPage() {
   const world = await getGroIntelWorldRuntime().observeTargets(3);
   const memory = await loadWorldMemorySummary(8);
   const life = getGroIntelLifeStatus();
+  const ai = await getAIGatewayStatus();
   const { score, topGaps, topPriorities, progress, targets, observations, signals, evidence, connectorHealth } = world;
   const observedTargetIds = new Set(observations.map((observation) => observation.target.id));
   const agentReach = connectorHealth.find((connector) => connector.id === "connector.agent_reach");
@@ -136,6 +138,31 @@ export default async function WorldPage() {
                 <div className="rounded-lg bg-black/30 p-3">
                   <p className="text-gray-500">Loop</p>
                   <p className="mt-1 text-emerald-100">{life.realityLoop.length} steps</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 rounded-lg border border-sky-400/10 bg-sky-400/[0.04] p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs text-sky-200">AI Gateway</p>
+                <p className="mt-1 text-sm leading-6 text-gray-300">
+                  Mode: {ai.mode.replaceAll("_", " ")}. Chat: {ai.active.chat}; JSON: {ai.active.json}; fallback: {ai.active.fallback}.
+                </p>
+                <p className="mt-2 text-xs leading-5 text-gray-500">{ai.guidance}</p>
+              </div>
+              <div className="grid gap-2 text-xs sm:grid-cols-3 lg:min-w-[28rem]">
+                <div className="rounded-lg bg-black/30 p-3">
+                  <p className="text-gray-500">OpenAI</p>
+                  <p className="mt-1 text-sky-100">{ai.configured.openai ? "configured" : "missing key"}</p>
+                </div>
+                <div className="rounded-lg bg-black/30 p-3">
+                  <p className="text-gray-500">DeepSeek</p>
+                  <p className="mt-1 text-sky-100">{ai.configured.deepseek ? "configured" : "missing key"}</p>
+                </div>
+                <div className="rounded-lg bg-black/30 p-3">
+                  <p className="text-gray-500">Providers</p>
+                  <p className="mt-1 text-sky-100">{ai.providers.length} checked</p>
                 </div>
               </div>
             </div>
