@@ -111,6 +111,20 @@ function scoreSupplyProfile(demand: Web3GrowthDemand, profile: Web3SupplyProfile
   return Math.max(0, Math.min(100, score));
 }
 
+function supplyFitReason(profile: Web3SupplyProfile, demand: Web3GrowthDemand) {
+  const goal = demand.growthGoal.toLowerCase();
+  if (goal.includes("trust") || goal.includes("risk") || goal.includes("security")) {
+    return `${profile.name} is useful when the campaign depends on ${profile.bestFor[0]}; validate with ${profile.proofSignals[0]}.`;
+  }
+  if (goal.includes("quest") || goal.includes("onboarding") || goal.includes("wallet")) {
+    return `${profile.name} can help turn Web3 attention into ${profile.proofSignals[0]} through ${profile.collaborationFormats[0]}.`;
+  }
+  if (goal.includes("defi") || goal.includes("protocol")) {
+    return `${profile.name} fits protocol education and high-intent audiences; use ${profile.collaborationFormats[0]} and track ${profile.proofSignals[0]}.`;
+  }
+  return `${profile.name} matches ${profile.audience[0]} and is best for ${profile.bestFor[0]}; start with ${profile.collaborationFormats[0]}.`;
+}
+
 export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEvent[] = WEB3_GROWTH_EVENTS): Web3GrowthDecision {
   const matchedEvents = events
     .map((event) => ({
@@ -129,7 +143,7 @@ export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEve
     .map((profile) => ({
       ...profile,
       fitScore: scoreSupplyProfile(demand, profile),
-      fitReason: profile.bestFor[0] || profile.capabilities[0] || "Relevant Web3 growth supply profile.",
+      fitReason: supplyFitReason(profile, demand),
       suggestedFormat: profile.collaborationFormats[0] || "Targeted collaboration",
       keyMetric: profile.proofSignals[0] || "qualified conversion",
       primaryRisk: profile.risks[0] || "Audience fit risk",
