@@ -1,6 +1,6 @@
 # GroIntel Delivery Status
 
-Last updated: 2026-06-28
+Last updated: 2026-06-29
 
 ## Current Product Loop
 
@@ -17,11 +17,12 @@ The first focused market is Web3. The current working path is:
 5. GroIntel compares the demand against historical Web3 company/KOL/channel growth events.
 6. The Web3 decision engine returns recommended supply types, partner profiles, collaboration patterns, risks, matched evidence events, measurement signals, qualification questions, and next actions.
 7. The Web3 decision engine now recommends concrete KOL/media/research supply matches from Supply World, including fit score, suggested collaboration format, key metric, and primary risk.
-8. Web3 KOLs can enter through `/identity` and receive company demand matches with fit score, fit reason, suggested collaboration format, key metric, and evidence pattern.
-9. The Web3 event intake form can add new historical growth events.
-10. `/world` shows the Web3 Living World, reality signals, four-layer memory status, and growth event memory.
-11. Web3 KOLs, media, research providers, security voices, and creator communities are now first-class supply-side world entities.
-12. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
+8. The Web3 collaboration brief engine turns the shortlist into partner-specific angles, deliverables, outreach copy, success metrics, risk controls, qualification questions, and a four-phase pilot plan.
+9. Web3 KOLs can enter through `/identity` and receive company demand matches with fit score, fit reason, suggested collaboration format, key metric, and evidence pattern.
+10. The Web3 event intake form can add new historical growth events.
+11. `/world` shows the Web3 Living World, reality signals, four-layer memory status, and growth event memory.
+12. Web3 KOLs, media, research providers, security voices, and creator communities are now first-class supply-side world entities.
+13. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
 
 ## Live Routes
 
@@ -31,6 +32,7 @@ The first focused market is Web3. The current working path is:
 - `/agent-reach` - source/connector doctor for social and web routes.
 - `/api/grointel/identity-intake` - identity classification and first-pass understanding API.
 - `/api/grointel/web3-decision` - Web3 growth decision API.
+- `/api/grointel/web3-collaboration-brief` - Web3 partner shortlist to execution brief API.
 - `/api/grointel/growth-events` - growth event memory read/write API.
 - `/api/grointel/heartbeat` - scheduled reality heartbeat.
 - `/api/grointel/ai-health` - AI Gateway provider health and fallback status.
@@ -126,6 +128,7 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 - `/world` and `/api/grointel/world` read observations, signals, evidence, and growth events from legacy tables when primary tables are absent
 - `/api/grointel/web3-decision` merges legacy growth events with built-in Web3 seed memory, so new memories enhance the base event library instead of replacing it
 - `/api/grointel/web3-decision` returns `recommendedConcretePartners` from Web3 Supply World, not just generic partner categories
+- `/api/grointel/web3-collaboration-brief` returns partner-specific outreach, deliverables, metrics, risk controls, and pilot plan from the Web3 decision output
 - `/api/grointel/identity-intake` returns KOL-to-company Web3 matches with fit score, fit reason, collaboration format, and key metric
 - `/api/grointel/heartbeat` exposes top-level `status=alive`, `memorySaved`, and `growthEventsSaved` for simple monitors
 - `/world` separates Demand World and Supply World, and shows Web3 Growth Supply Memory for KOL/media/research supply
@@ -168,6 +171,7 @@ Production smoke checks used:
 - `POST https://grointel.vercel.app/api/grointel/identity-intake`
 - `GET https://grointel.vercel.app/web3-growth`
 - `POST https://grointel.vercel.app/api/grointel/web3-decision`
+- `POST https://grointel.vercel.app/api/grointel/web3-collaboration-brief`
 - `GET https://grointel.vercel.app/api/grointel/world`
 - `GET https://grointel.vercel.app/world`
 - `GET https://grointel.vercel.app/api/grointel/world-memory-status`

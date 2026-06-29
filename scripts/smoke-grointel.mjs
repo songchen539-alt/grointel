@@ -78,6 +78,25 @@ async function main() {
   assert(new Set(decision.decision.recommendedConcretePartners.map((partner) => partner.supplyType)).size >= 3, "web3 decision should diversify supply partner types");
   console.log(`ok web3 decision: ${decision.memory.eventCount} events / ${decision.decision.confidence}% confidence / ${decision.decision.recommendedConcretePartners[0].name}`);
 
+  const brief = await request("/api/grointel/web3-collaboration-brief", {
+    method: "POST",
+    body: JSON.stringify({
+      projectName: "Smoke L2",
+      sector: "Ethereum L2",
+      growthGoal: "Acquire real users through quest and KOL partnerships",
+      targetAudience: "crypto-native builders",
+      riskTolerance: "low",
+      partnerLimit: 5,
+    }),
+  });
+  assert(brief.success, "web3 collaboration brief should succeed");
+  assert((brief.brief?.partnerBriefs || []).length >= 3, "brief should include multiple partner briefs");
+  assert(brief.brief.partnerBriefs[0].outreachMessage, "brief should include outreach copy");
+  assert(brief.brief.partnerBriefs[0].suggestedDeliverables.length >= 3, "brief should include deliverables");
+  assert(brief.brief.partnerBriefs[0].successMetrics.length >= 2, "brief should include success metrics");
+  assert((brief.brief?.campaignPlan || []).length >= 4, "brief should include campaign plan");
+  console.log(`ok web3 collaboration brief: ${brief.brief.partnerBriefs.length} partners / ${brief.brief.partnerBriefs[0].partnerName}`);
+
   const memoryStatus = await request("/api/grointel/world-memory-status");
   assert(memoryStatus.success !== false, "world memory status should respond");
   assert(memoryStatus.ready || memoryStatus.legacyReady, "primary or legacy world memory should be available");

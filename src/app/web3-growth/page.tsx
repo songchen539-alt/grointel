@@ -47,12 +47,45 @@ type DecisionResponse = {
   };
 };
 
+type CollaborationBriefResponse = {
+  success: boolean;
+  error?: string;
+  brief?: {
+    briefTitle: string;
+    objective: string;
+    targetAudience: string;
+    positioning: string;
+    partnerShortlist: string[];
+    partnerBriefs: Array<{
+      partnerId: string;
+      partnerName: string;
+      partnerIdentity: string;
+      supplyType: string;
+      fitScore: number;
+      whyThisPartner: string;
+      collaborationAngle: string;
+      suggestedDeliverables: string[];
+      outreachMessage: string;
+      successMetrics: string[];
+      riskControls: string[];
+      qualificationQuestions: string[];
+    }>;
+    campaignPlan: Array<{ phase: string; action: string; output: string }>;
+    trackingPlan: string[];
+    doNotDo: string[];
+    nextActionChecklist: string[];
+  };
+};
+
 export default function Web3GrowthPage() {
   const [loading, setLoading] = useState(false);
+  const [briefLoading, setBriefLoading] = useState(false);
   const [savingEvent, setSavingEvent] = useState(false);
   const [error, setError] = useState("");
+  const [briefError, setBriefError] = useState("");
   const [eventMessage, setEventMessage] = useState("");
   const [result, setResult] = useState<DecisionResponse | null>(null);
+  const [briefResult, setBriefResult] = useState<CollaborationBriefResponse | null>(null);
   const [form, setForm] = useState({
     projectName: "Example Web3 Project",
     website: "",
@@ -94,10 +127,31 @@ export default function Web3GrowthPage() {
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || "Decision failed");
       setResult(json);
+      setBriefResult(null);
+      setBriefError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Decision failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function generateBrief() {
+    setBriefLoading(true);
+    setBriefError("");
+    try {
+      const response = await fetch("/api/grointel/web3-collaboration-brief", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, partnerLimit: 5 }),
+      });
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || "Brief failed");
+      setBriefResult(json);
+    } catch (err) {
+      setBriefError(err instanceof Error ? err.message : "Brief failed");
+    } finally {
+      setBriefLoading(false);
     }
   }
 
@@ -313,6 +367,87 @@ export default function Web3GrowthPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div className="rounded-lg border border-emerald-400/10 bg-emerald-400/[0.04] p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                      <h2 className="text-sm font-semibold">Collaboration Execution Brief</h2>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-emerald-50/70">
+                      Turn the shortlist into outreach, deliverables, tracking, and pilot execution.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={generateBrief}
+                    disabled={briefLoading}
+                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-emerald-300 disabled:opacity-60"
+                  >
+                    {briefLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                    Generate Brief
+                  </button>
+                </div>
+                {briefError && <p className="mt-3 text-sm text-red-200">{briefError}</p>}
+                {briefResult?.brief && (
+                  <div className="mt-5 space-y-4">
+                    <div className="rounded-lg border border-white/5 bg-black/30 p-4">
+                      <p className="text-sm font-semibold">{briefResult.brief.briefTitle}</p>
+                      <p className="mt-2 text-sm leading-6 text-gray-300">{briefResult.brief.objective}</p>
+                      <p className="mt-2 text-sm leading-6 text-gray-400">{briefResult.brief.positioning}</p>
+                    </div>
+                    <div className="grid gap-3 lg:grid-cols-2">
+                      {briefResult.brief.partnerBriefs.map((partner) => (
+                        <div key={partner.partnerId} className="rounded-lg border border-white/5 bg-black/30 p-4">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-100">{partner.supplyType}</span>
+                            <span className="text-xs text-gray-500">{partner.fitScore}% fit</span>
+                          </div>
+                          <p className="mt-3 text-sm font-medium">{partner.partnerName}</p>
+                          <p className="mt-1 text-xs text-gray-500">{partner.partnerIdentity}</p>
+                          <p className="mt-3 text-sm leading-6 text-gray-300">{partner.collaborationAngle}</p>
+                          <div className="mt-3 space-y-2">
+                            {partner.suggestedDeliverables.slice(0, 3).map((item) => (
+                              <p key={item} className="rounded-md border border-white/5 bg-white/[0.03] px-3 py-2 text-xs leading-5 text-gray-300">{item}</p>
+                            ))}
+                          </div>
+                          <div className="mt-3 rounded-md border border-emerald-400/10 bg-emerald-400/[0.04] p-3">
+                            <p className="text-xs text-emerald-100">Outreach</p>
+                            <p className="mt-2 text-xs leading-5 text-gray-300">{partner.outreachMessage}</p>
+                          </div>
+                          <div className="mt-3 grid gap-2 text-xs text-gray-400">
+                            <p><span className="text-gray-500">Metrics:</span> {partner.successMetrics.join(", ")}</p>
+                            <p><span className="text-amber-200">Controls:</span> {partner.riskControls.join(", ")}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <div className="rounded-lg border border-white/5 bg-black/30 p-4">
+                        <h3 className="text-sm font-semibold">Campaign Plan</h3>
+                        <div className="mt-3 space-y-2">
+                          {briefResult.brief.campaignPlan.map((phase) => (
+                            <div key={phase.phase} className="rounded-md bg-white/[0.03] p-3">
+                              <p className="text-xs font-medium text-emerald-100">{phase.phase}</p>
+                              <p className="mt-1 text-xs leading-5 text-gray-300">{phase.action}</p>
+                              <p className="mt-1 text-xs text-gray-500">Output: {phase.output}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-white/5 bg-black/30 p-4">
+                        <h3 className="text-sm font-semibold">Next Checklist</h3>
+                        <div className="mt-3 space-y-2">
+                          {briefResult.brief.nextActionChecklist.map((item, index) => (
+                            <p key={item} className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300">{index + 1}. {item}</p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-4 lg:grid-cols-2">
