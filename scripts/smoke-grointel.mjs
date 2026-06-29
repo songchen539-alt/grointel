@@ -44,6 +44,8 @@ async function main() {
   assert(company.success, "company identity intake should succeed");
   assert(company.side === "company", "arbitrum.io should classify as company");
   assert(company.web3Decision, "arbitrum.io should attach a Web3 decision");
+  assert(company.web3CollaborationBrief, "arbitrum.io should attach a Web3 collaboration brief");
+  assert((company.web3CollaborationBrief?.partnerBriefs || []).length >= 3, "company identity should include KOL collaboration briefs");
   console.log(`ok identity company: ${company.profile.identity.name} / ${company.profile.identity.industry}`);
 
   const kol = await request("/api/grointel/identity-intake", {

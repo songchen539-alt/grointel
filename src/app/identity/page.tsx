@@ -32,6 +32,23 @@ type IdentityResult = {
     measurementPlan: string[];
     qualificationQuestions: string[];
   } | null;
+  web3CollaborationBrief?: {
+    briefTitle: string;
+    objective: string;
+    partnerBriefs: Array<{
+      partnerId: string;
+      partnerName: string;
+      supplyType: string;
+      fitScore: number;
+      collaborationAngle: string;
+      suggestedDeliverables: string[];
+      outreachMessage: string;
+      successMetrics: string[];
+      riskControls: string[];
+    }>;
+    campaignPlan: Array<{ phase: string; action: string; output: string }>;
+    nextActionChecklist: string[];
+  } | null;
   nextActions?: string[];
   routeHint?: string;
 };
@@ -241,6 +258,41 @@ export default function IdentityPage() {
                     Open full Web3 decision
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
+                </div>
+              )}
+
+              {result.web3CollaborationBrief && (
+                <div className="rounded-lg border border-emerald-400/10 bg-emerald-400/[0.04] p-5">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <h2 className="text-sm font-semibold">KOL Collaboration Brief Attached</h2>
+                      <p className="mt-2 text-sm leading-6 text-emerald-50/70">{result.web3CollaborationBrief.objective}</p>
+                    </div>
+                    <Link href="/web3-growth" className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-400 px-3 py-2 text-xs font-medium text-black transition-colors hover:bg-emerald-300">
+                      Expand Brief
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                  <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                    {result.web3CollaborationBrief.partnerBriefs.slice(0, 3).map((partner) => (
+                      <div key={partner.partnerId} className="rounded-lg border border-white/5 bg-black/30 p-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-100">{partner.supplyType}</span>
+                          <span className="text-xs text-gray-500">{partner.fitScore}% fit</span>
+                        </div>
+                        <p className="mt-3 text-sm font-medium">{partner.partnerName}</p>
+                        <p className="mt-2 text-sm leading-6 text-gray-300">{partner.collaborationAngle}</p>
+                        <p className="mt-3 text-xs text-gray-500">First deliverable</p>
+                        <p className="mt-1 text-sm leading-6 text-gray-300">{partner.suggestedDeliverables[0]}</p>
+                        <p className="mt-3 text-xs text-gray-500">Metric</p>
+                        <p className="mt-1 text-sm text-emerald-100">{partner.successMetrics[0]}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 rounded-lg border border-emerald-400/10 bg-black/30 p-4">
+                    <p className="text-xs text-emerald-100">First action</p>
+                    <p className="mt-2 text-sm leading-6 text-gray-300">{result.web3CollaborationBrief.nextActionChecklist[0]}</p>
+                  </div>
                 </div>
               )}
 
