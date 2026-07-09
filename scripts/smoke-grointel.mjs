@@ -120,6 +120,17 @@ async function main() {
   assert(discovery.stats?.web3SupplyCount >= 30, "Web3 discovery should include an expanded KOL/supply pool");
   console.log(`ok web3 discovery: demand=${discovery.stats.web3DemandCount} supply=${discovery.stats.web3SupplyCount}`);
 
+  const readiness = await request("/api/grointel/delivery-readiness");
+  assert(readiness.success, "delivery readiness should respond");
+  assert(readiness.readyForDelivery, "delivery readiness should not be blocked");
+  assert(readiness.score >= 80, "delivery readiness should be high enough for handoff");
+  assert(readiness.counts?.web3Demand >= 40, "delivery readiness should count Web3 company demand");
+  assert(readiness.counts?.web3Supply >= 30, "delivery readiness should count Web3 KOL/supply");
+  assert(readiness.counts?.entityMemories > 0, "delivery readiness should expose L2 memory");
+  assert(readiness.counts?.decisionMemories > 0, "delivery readiness should expose L3 memory");
+  assert(readiness.counts?.evolutionMemories > 0, "delivery readiness should expose L4 memory");
+  console.log(`ok delivery readiness: ${readiness.status} / score=${readiness.score}`);
+
   if (includeHeartbeat) {
     const heartbeat = await request("/api/grointel/heartbeat?limit=2");
     assert(heartbeat.success, "heartbeat should succeed");

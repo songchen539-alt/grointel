@@ -1,0 +1,184 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAIGatewayStatus } from "@/lib/ai/gateway/status";
+import { getGroIntelLifeStatus } from "@/lib/grointel/lifeStatus";
+import { web3DiscoveryStats } from "@/lib/grointel/web3Discovery";
+import { loadWorldMemorySummary, saveWorldMemory, seedGrowthEvents } from "@/lib/grointel/worldMemory";
+import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
+
+export const dynamic = "force-dynamic";
+
+type ReadinessState = "pass" | "warn" | "fail";
+
+function readinessCheck(
+  key: string,
+  state: ReadinessState,
+  summary: string,
+  evidence: Record<string, unknown> = {},
+  action: string | null = null,
+) {
+  return { key, state, summary, evidence, action };
+}
+
+function overallStatus(checks: ReturnType<typeof readinessCheck>[]) {
+  if (checks.some((check) => check.state === "fail")) return "blocked";
+  if (checks.some((check) => check.state === "warn")) return "degraded";
+  return "ready";
+}
+
+function scoreChecks(checks: ReturnType<typeof readinessCheck>[]) {
+  if (checks.length === 0) return 0;
+  const points = checks.reduce((sum, check) => {
+    if (check.state === "pass") return sum + 1;
+    if (check.state === "warn") return sum + 0.5;
+    return sum;
+  }, 0);
+  return Math.round((points / checks.length) * 100);
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const shouldObserve = searchParams.get("observe") === "1";
+    const limit = Number(searchParams.get("limit") || 3);
+    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(limit, 10)) : 3;
+
+    const runtime = getGroIntelWorldRuntime();
+    const world = shouldObserve ? await runtime.observeTargets(safeLimit) : runtime.snapshot();
+    const memorySave = shouldObserve ? await saveWorldMemory(world, "delivery_readiness") : null;
+    const growthEventSeed = shouldObserve ? await seedGrowthEvents() : null;
+    const [ai, memory] = await Promise.all([getAIGatewayStatus(), loadWorldMemorySummary(20)]);
+    const discovery = web3DiscoveryStats(world.targets);
+    const life = getGroIntelLifeStatus();
+
+    const latestMemoryAt = String(memory.latestRun?.created_at || memory.latestRun?.observed_at || "");
+    const hasPersistentObservation = Boolean(latestMemoryAt || memory.recentObservations.length > 0);
+    const hasFourLayerMemory =
+      memory.recentObservations.length > 0 &&
+      memory.entityMemories.length > 0 &&
+      memory.decisionMemories.length > 0 &&
+      memory.evolutionMemories.length > 0;
+    const hasGrowthEvents = memory.growthEvents.length > 0;
+
+    const checks = [
+      readinessCheck(
+        "real_ai",
+        ai.mode === "real_ai_active" ? "pass" : ai.mode === "fallback_ready" ? "warn" : "fail",
+        ai.mode === "real_ai_active"
+          ? "Real generative AI is connected for GroIntel reasoning."
+          : "GroIntel can respond, but real AI is not fully active.",
+        { mode: ai.mode, chat: ai.active.chat, json: ai.active.json, deepseekConfigured: ai.configured.deepseek },
+        "Verify DEEPSEEK_API_KEY or OPENAI_API_KEY and AI_CHAT_PROVIDER / AI_JSON_PROVIDER.",
+      ),
+      readinessCheck(
+        "web3_demand_pool",
+        discovery.web3DemandCount >= 40 ? "pass" : discovery.web3DemandCount >= 15 ? "warn" : "fail",
+        "Web3 company demand pool is available for growth matching.",
+        { demandCount: discovery.web3DemandCount },
+        "Expand Web3 company discovery targets.",
+      ),
+      readinessCheck(
+        "web3_supply_pool",
+        discovery.web3SupplyCount >= 30 ? "pass" : discovery.web3SupplyCount >= 12 ? "warn" : "fail",
+        "Web3 KOL and partner supply pool is available for matching.",
+        { supplyCount: discovery.web3SupplyCount },
+        "Expand KOL, media, community, launchpad, and ecosystem partner supply targets.",
+      ),
+      readinessCheck(
+        "reality_loop",
+        world.tickCount > 0 || hasPersistentObservation ? "pass" : "warn",
+        "GroIntel has a reality loop through heartbeat/manual observation.",
+        {
+          tickCount: world.tickCount,
+          lastObservedAt: world.lastObservedAt,
+          latestMemoryAt: latestMemoryAt || null,
+          cronSchedule: life.cronSchedule,
+          manualTickPath: life.manualTickPath,
+        },
+        "Run /api/grointel/heartbeat?limit=2 or call this endpoint with ?observe=1.",
+      ),
+      readinessCheck(
+        "memory_persistence",
+        memory.configured && hasPersistentObservation ? "pass" : memory.configured ? "warn" : "fail",
+        "World observations are persisted or projected from the connected memory layer.",
+        {
+          configured: memory.configured,
+          latestMemoryAt: latestMemoryAt || null,
+          observations: memory.recentObservations.length,
+          signals: memory.recentSignals.length,
+          evidence: memory.recentEvidence.length,
+          legacyProjection: Boolean(memory.error),
+          memoryError: memory.error,
+          saveError: memorySave?.error || null,
+        },
+        "Apply the primary world memory migration or keep legacy projection healthy until migration is available.",
+      ),
+      readinessCheck(
+        "four_layer_memory",
+        hasFourLayerMemory ? "pass" : memory.entityMemories.length + memory.decisionMemories.length + memory.evolutionMemories.length > 0 ? "warn" : "fail",
+        "Four-layer memory is visible: raw observation, entity memory, decision memory, and evolution memory.",
+        {
+          l1Observations: memory.recentObservations.length,
+          l2EntityMemories: memory.entityMemories.length,
+          l3DecisionMemories: memory.decisionMemories.length,
+          l4EvolutionMemories: memory.evolutionMemories.length,
+        },
+        "Verify world memory tables or legacy projection output.",
+      ),
+      readinessCheck(
+        "growth_event_memory",
+        hasGrowthEvents ? "pass" : "fail",
+        "Historical Web3 growth events are available for success/failure pattern matching.",
+        { growthEvents: memory.growthEvents.length, seedSaved: growthEventSeed?.saved || null, seedError: growthEventSeed?.error || null },
+        "Seed Web3 growth event memory.",
+      ),
+    ];
+
+    const status = overallStatus(checks);
+    const readyForDelivery = status !== "blocked";
+
+    return NextResponse.json({
+      success: true,
+      status,
+      readyForDelivery,
+      score: scoreChecks(checks),
+      generatedAt: new Date().toISOString(),
+      summary: readyForDelivery
+        ? "GroIntel is connected enough to deliver the company-to-Web3-KOL growth matching flow."
+        : "GroIntel has blocking readiness gaps before delivery.",
+      productPromise: "A company enters one identity, GroIntel understands growth state and matches KOL/partner supply; a KOL enters one identity, GroIntel understands supply capability and matches companies.",
+      checks,
+      operatingMode: {
+        life,
+        observeOnRequest: shouldObserve,
+        memorySavedOnRequest: memorySave?.saved || false,
+      },
+      counts: {
+        runtimeTargets: world.targets.length,
+        web3Demand: discovery.web3DemandCount,
+        web3Supply: discovery.web3SupplyCount,
+        recentObservations: memory.recentObservations.length,
+        recentSignals: memory.recentSignals.length,
+        recentEvidence: memory.recentEvidence.length,
+        entityMemories: memory.entityMemories.length,
+        decisionMemories: memory.decisionMemories.length,
+        evolutionMemories: memory.evolutionMemories.length,
+        growthEvents: memory.growthEvents.length,
+      },
+      nextActions: checks.filter((check) => check.state !== "pass").map((check) => ({
+        key: check.key,
+        action: check.action,
+      })),
+      verificationPaths: [
+        "/api/grointel/ai-health",
+        "/api/grointel/web3-discovery?limit=5",
+        "/api/grointel/heartbeat?limit=2",
+        "/api/grointel/world?limit=2",
+        "/api/grointel/identity-intake",
+        "/api/grointel/web3-decision",
+        "/api/grointel/web3-collaboration-brief",
+      ],
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, status: "blocked", error: error.message || "Readiness check failed" }, { status: 500 });
+  }
+}
