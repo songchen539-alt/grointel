@@ -3,7 +3,7 @@ import { generateMockBusinessScan, createInitialBusinessKnowledge, normalizeWebs
 import { generateMockCapabilityScan, createInitialCapabilityKnowledge, normalizeProfileUrl } from "@/lib/intelligence/capabilityIntelligence";
 import { decideWeb3Growth } from "@/lib/grointel/web3Decision";
 import { buildWeb3CollaborationBrief } from "@/lib/grointel/web3CollaborationBrief";
-import { generateWeb3AIGrowthInsight } from "@/lib/grointel/aiGrowthInsight";
+import { generateWeb3AIGrowthInsight, generateWeb3KOLSupplyInsight } from "@/lib/grointel/aiGrowthInsight";
 import { WEB3_GROWTH_EVENTS, WEB3_SUPPLY_PROFILES, WEB3_TARGETS, type Web3SupplyProfile } from "@/lib/grointel/web3World";
 
 export const dynamic = "force-dynamic";
@@ -127,6 +127,16 @@ export async function POST(req: NextRequest) {
       const knowledge = createInitialCapabilityKnowledge(scan);
       const web3 = isWeb3Identity(identity, String(knowledge.audience_dna?.primary_audiences || ""));
       const supplyProfile = findSupplyProfile(profileUrl, String(knowledge.capability_identity?.name || ""));
+      const recommendedCompanyProfiles = web3 ? web3CompanyMatches(supplyProfile) : [];
+      const web3KOLSupplyInsight = web3
+        ? await generateWeb3KOLSupplyInsight({
+          identity: knowledge.capability_identity,
+          summary: scan.public_summary,
+          capabilities: knowledge.capability_dna,
+          audience: knowledge.audience_dna,
+          supplyProfile,
+        }, recommendedCompanyProfiles)
+        : null;
 
       return NextResponse.json({
         success: true,
@@ -145,7 +155,8 @@ export async function POST(req: NextRequest) {
           supplyProfile,
         },
         missingQuestions: capabilityQuestions(knowledge.knowledge_confidence),
-        recommendedCompanyProfiles: web3 ? web3CompanyMatches(supplyProfile) : [],
+        recommendedCompanyProfiles,
+        web3KOLSupplyInsight,
         nextActions: [
           "Confirm the audience and proof fields that decide matching quality.",
           "Turn strongest capability into a reusable offer companies can buy.",

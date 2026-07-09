@@ -56,6 +56,7 @@ async function main() {
   assert(kol.success, "KOL identity intake should succeed");
   assert(kol.side === "kol", "x.com/cobie should classify as KOL");
   assert((kol.recommendedCompanyProfiles || []).length > 0, "KOL should receive recommended company profiles");
+  assert(kol.web3KOLSupplyInsight, "KOL identity should attach an AI supply insight");
   assert(kol.recommendedCompanyProfiles[0].fitScore > 0, "KOL company match should include fit score");
   assert(kol.recommendedCompanyProfiles[0].fitReason, "KOL company match should explain fit");
   assert(kol.recommendedCompanyProfiles[0].suggestedCollaboration, "KOL company match should include collaboration format");

@@ -24,6 +24,17 @@ type IdentityResult = {
     suggestedCollaboration?: string;
     keyMetric?: string;
   }>;
+  web3KOLSupplyInsight?: {
+    enabled: boolean;
+    provider: string;
+    model?: string;
+    positioning: string;
+    bestCompanyNeed: string;
+    proofToShow: string;
+    outreachAngle: string;
+    avoid: string;
+    missingEvidence: string[];
+  } | null;
   web3Decision?: {
     confidence: number;
     recommendedSupply: string[];
@@ -320,6 +331,22 @@ export default function IdentityPage() {
               {result.recommendedCompanyProfiles && result.recommendedCompanyProfiles.length > 0 && (
                 <div className="rounded-lg border border-emerald-400/10 bg-emerald-400/[0.04] p-5">
                   <h2 className="text-sm font-semibold">Companies This KOL Could Help</h2>
+                  {result.web3KOLSupplyInsight && (
+                    <div className="mt-4 rounded-lg border border-emerald-400/10 bg-black/30 p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-100">
+                          AI {result.web3KOLSupplyInsight.enabled ? "active" : "fallback"}
+                        </span>
+                        <span className="text-xs text-gray-500">{result.web3KOLSupplyInsight.provider}{result.web3KOLSupplyInsight.model ? ` / ${result.web3KOLSupplyInsight.model}` : ""}</span>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-gray-200">{result.web3KOLSupplyInsight.positioning}</p>
+                      <div className="mt-3 grid gap-3 md:grid-cols-3">
+                        <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-emerald-100">Best need:</span> {result.web3KOLSupplyInsight.bestCompanyNeed}</p>
+                        <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-sky-100">Proof:</span> {result.web3KOLSupplyInsight.proofToShow}</p>
+                        <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-amber-100">Avoid:</span> {result.web3KOLSupplyInsight.avoid}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="mt-4 grid gap-3 lg:grid-cols-2">
                     {result.recommendedCompanyProfiles.map((item) => (
                       <div key={`${item.company}-${item.sector}`} className="rounded-lg border border-white/5 bg-black/30 p-4">
