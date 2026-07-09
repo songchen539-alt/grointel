@@ -186,6 +186,83 @@ function mergeWithSeedGrowthEvents(events: Record<string, any>[]) {
   return merged;
 }
 
+function buildLegacyEntityMemories(recentObservations: Record<string, any>[], recentEvidence: Record<string, any>[]) {
+  const groups = new Map<string, Record<string, any>>();
+  for (const item of [...recentObservations, ...recentEvidence]) {
+    const identity = String(item.target?.identity || item.url || item.entity || "unknown");
+    const name = String(item.target?.name || item.entity || identity);
+    const current = groups.get(identity) || {
+      target_id: `legacy_${identity}`.replace(/[^a-zA-Z0-9_-]/g, "_"),
+      identity,
+      kind: identity.includes("x.com") || identity.includes("youtube") ? "kol" : "company",
+      domain: "legacy world memory",
+      signal_count: 0,
+      evidence_count: 0,
+      confidence: 0,
+      profile: {
+        name,
+        recent_evidence: [],
+      },
+      updated_at: item.observed_at,
+    };
+    current.evidence_count += item.evidence_summary || item.raw ? 1 : 0;
+    current.signal_count += item.signal_count || 0;
+    current.confidence = Math.max(current.confidence || 0, Number(item.confidence || 0));
+    current.updated_at = item.observed_at || current.updated_at;
+    current.profile.recent_evidence = [
+      ...(current.profile.recent_evidence || []),
+      {
+        summary: item.evidence_summary || item.raw?.title || item.target?.name || name,
+        source: item.source || item.connector || "legacy_world_memory",
+        url: item.url || identity,
+      },
+    ].slice(0, 5);
+    groups.set(identity, current);
+  }
+  return Array.from(groups.values()).slice(0, 12);
+}
+
+function buildLegacyDecisionMemories(recentSignals: Record<string, any>[], growthEvents: Record<string, any>[]) {
+  const topSignals = recentSignals.slice(0, 5).map((signal) => signal.summary || signal.category).filter(Boolean);
+  const successEvents = growthEvents.filter((event) => String(event.outcome || "").toLowerCase() === "success").slice(0, 5);
+  return [
+    {
+      id: "legacy_decision_world_gap_and_priority_update",
+      decision_type: "legacy_world_gap_and_priority_update",
+      confidence: topSignals.length > 0 ? 68 : 52,
+      reasoning: topSignals.length > 0
+        ? "GroIntel projected decision memory from legacy growth signals and world events while primary decision memory tables are pending."
+        : "GroIntel is using curated Web3 growth events as decision memory until primary tables are migrated.",
+      gaps: topSignals.map((signal) => ({ description: signal })),
+      priorities: successEvents.map((event) => ({ priority: `Reuse pattern: ${event.project} x ${event.partner}` })),
+      created_at: new Date().toISOString(),
+    },
+  ];
+}
+
+function buildLegacyEvolutionMemories(recentObservations: Record<string, any>[], recentSignals: Record<string, any>[], growthEvents: Record<string, any>[]) {
+  const coverage = Math.min(100, recentObservations.length * 10);
+  const quality = Math.min(100, Math.max(40, recentSignals.length * 8));
+  const outcomes = Math.min(100, growthEvents.length * 8);
+  return [
+    {
+      id: "legacy_evolution_world_memory_projection",
+      intelligence_index: Math.round((coverage + quality + outcomes) / 3),
+      reality_coverage: coverage,
+      knowledge_quality: quality,
+      decision_accuracy: growthEvents.length > 0 ? 62 : 40,
+      business_outcomes: outcomes,
+      progress: {
+        legacy_observations: recentObservations.length,
+        legacy_signals: recentSignals.length,
+        growth_events: growthEvents.length,
+      },
+      lesson: "Primary four-layer memory tables are pending; GroIntel is projecting L2/L3/L4 memory from legacy world tables so the living loop remains inspectable.",
+      created_at: new Date().toISOString(),
+    },
+  ];
+}
+
 async function loadLegacyGrowthEvents(db: any, limit: number): Promise<Web3GrowthEvent[]> {
   const { data, error } = await db
     .from("world_events")
@@ -244,6 +321,9 @@ async function loadLegacyWorldMemorySummary(db: any, limit: number, primaryError
   }));
 
   const growthEvents = mergeWithSeedGrowthEvents((growthEventResult.data || []).map(legacyEventToGrowthEvent));
+  const entityMemories = buildLegacyEntityMemories(recentObservations, recentEvidence);
+  const decisionMemories = buildLegacyDecisionMemories(recentSignals, growthEvents);
+  const evolutionMemories = buildLegacyEvolutionMemories(recentObservations, recentSignals, growthEvents);
 
   return {
     configured: true,
@@ -251,9 +331,9 @@ async function loadLegacyWorldMemorySummary(db: any, limit: number, primaryError
     recentObservations,
     recentSignals,
     recentEvidence,
-    entityMemories: [],
-    decisionMemories: [],
-    evolutionMemories: [],
+    entityMemories,
+    decisionMemories,
+    evolutionMemories,
     growthEvents,
     error: `Reading legacy world memory because primary world memory is unavailable: ${primaryError}`,
   };

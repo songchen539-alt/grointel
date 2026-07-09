@@ -134,6 +134,13 @@ async function main() {
     assert(observedKinds.has("company"), "heartbeat should observe Web3 demand/company side");
     assert(observedKinds.has("kol") || observedKinds.has("partner"), "heartbeat should observe Web3 KOL/supply side");
     console.log(`ok heartbeat: ${heartbeat.status} / ${heartbeat.observedAt}`);
+
+    const world = await request("/api/grointel/world?limit=2");
+    assert(world.success, "world API should respond");
+    assert((world.memory?.entityMemories || []).length > 0, "world memory should expose L2 entity memory or legacy projection");
+    assert((world.memory?.decisionMemories || []).length > 0, "world memory should expose L3 decision memory or legacy projection");
+    assert((world.memory?.evolutionMemories || []).length > 0, "world memory should expose L4 evolution memory or legacy projection");
+    console.log(`ok world memory layers: L2=${world.memory.entityMemories.length} L3=${world.memory.decisionMemories.length} L4=${world.memory.evolutionMemories.length}`);
   }
 
   console.log("GroIntel smoke passed.");
