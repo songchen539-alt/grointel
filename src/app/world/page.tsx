@@ -1,7 +1,7 @@
 import { Activity, Building2, Database, Globe2, Network, Radar, Signal, Sparkles, Target, UserCheck, Wifi } from "lucide-react";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 import { loadWorldMemorySummary } from "@/lib/grointel/worldMemory";
-import { WEB3_SUPPLY_PROFILES } from "@/lib/grointel/web3World";
+import { getExpandedSupplyProfiles } from "@/lib/grointel/web3Decision";
 import { getGroIntelLifeStatus } from "@/lib/grointel/lifeStatus";
 import { getAIGatewayStatus } from "@/lib/ai/gateway/status";
 
@@ -37,6 +37,7 @@ export default async function WorldPage() {
   const memory = await loadWorldMemorySummary(8);
   const life = getGroIntelLifeStatus();
   const ai = await getAIGatewayStatus();
+  const supplyProfiles = getExpandedSupplyProfiles();
   const { score, topGaps, topPriorities, progress, targets, observations, signals, evidence, connectorHealth } = world;
   const observedTargetIds = new Set(observations.map((observation) => observation.target.id));
   const agentReach = connectorHealth.find((connector) => connector.id === "connector.agent_reach");
@@ -315,7 +316,7 @@ export default async function WorldPage() {
             <a href="/identity" className="text-xs text-violet-300 hover:text-violet-200">Add a KOL identity</a>
           </div>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            {WEB3_SUPPLY_PROFILES.map((profile) => (
+            {supplyProfiles.map((profile) => (
               <div key={profile.id} className="rounded-lg border border-white/5 bg-black/30 p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-violet-400/10 px-2.5 py-1 text-xs text-violet-200">{profile.supplyType}</span>

@@ -182,7 +182,7 @@ function discoveryToSupplyProfile(target: Web3DiscoveryTarget): Web3SupplyProfil
   };
 }
 
-function getExpandedSupplyProfiles() {
+export function getExpandedSupplyProfiles() {
   const profiles = [...WEB3_SUPPLY_PROFILES];
   const seen = new Set(profiles.map((profile) => `${profile.name}|${profile.identity}`.toLowerCase()));
   for (const target of WEB3_DISCOVERY_TARGETS.filter((item) => item.segment === "supply")) {
