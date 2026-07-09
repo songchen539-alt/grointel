@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { normalizeWeb3GrowthDemand, dbEventToWeb3Event } from "@/lib/grointel/web3Api";
 import { buildWeb3CollaborationBrief } from "@/lib/grointel/web3CollaborationBrief";
 import { decideWeb3Growth } from "@/lib/grointel/web3Decision";
+import { generateWeb3AIGrowthInsight } from "@/lib/grointel/aiGrowthInsight";
 import { loadGrowthEvents } from "@/lib/grointel/worldMemory";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export async function POST(req: NextRequest) {
     const events = eventMemory.events.map(dbEventToWeb3Event);
     const decision = decideWeb3Growth(demand, events);
     const brief = buildWeb3CollaborationBrief(demand, decision, Number(body.partnerLimit || 5));
+    const aiInsight = await generateWeb3AIGrowthInsight(demand, decision, brief);
 
     return NextResponse.json({
       success: true,
@@ -33,6 +35,7 @@ export async function POST(req: NextRequest) {
         topPartner: decision.recommendedConcretePartners[0]?.name,
       },
       brief,
+      aiInsight,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

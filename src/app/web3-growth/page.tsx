@@ -50,6 +50,18 @@ type DecisionResponse = {
 type CollaborationBriefResponse = {
   success: boolean;
   error?: string;
+  aiInsight?: {
+    enabled: boolean;
+    provider: string;
+    model?: string;
+    fallbackUsed: boolean;
+    growthState: string;
+    opportunity: string;
+    risk: string;
+    recommendedMove: string;
+    missingEvidence: string[];
+    operatorNote: string;
+  };
   brief?: {
     briefTitle: string;
     objective: string;
@@ -393,6 +405,22 @@ export default function Web3GrowthPage() {
                 {briefError && <p className="mt-3 text-sm text-red-200">{briefError}</p>}
                 {briefResult?.brief && (
                   <div className="mt-5 space-y-4">
+                    {briefResult.aiInsight && (
+                      <div className="rounded-lg border border-emerald-400/10 bg-black/30 p-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-100">
+                            AI {briefResult.aiInsight.enabled ? "active" : "fallback"}
+                          </span>
+                          <span className="text-xs text-gray-500">{briefResult.aiInsight.provider}{briefResult.aiInsight.model ? ` / ${briefResult.aiInsight.model}` : ""}</span>
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-gray-200">{briefResult.aiInsight.growthState}</p>
+                        <div className="mt-3 grid gap-3 md:grid-cols-3">
+                          <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-emerald-100">Opportunity:</span> {briefResult.aiInsight.opportunity}</p>
+                          <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-amber-100">Risk:</span> {briefResult.aiInsight.risk}</p>
+                          <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-sky-100">Move:</span> {briefResult.aiInsight.recommendedMove}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="rounded-lg border border-white/5 bg-black/30 p-4">
                       <p className="text-sm font-semibold">{briefResult.brief.briefTitle}</p>
                       <p className="mt-2 text-sm leading-6 text-gray-300">{briefResult.brief.objective}</p>

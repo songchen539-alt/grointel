@@ -46,6 +46,7 @@ async function main() {
   assert(company.web3Decision, "arbitrum.io should attach a Web3 decision");
   assert(company.web3CollaborationBrief, "arbitrum.io should attach a Web3 collaboration brief");
   assert((company.web3CollaborationBrief?.partnerBriefs || []).length >= 3, "company identity should include KOL collaboration briefs");
+  assert(company.web3AIGrowthInsight, "company identity should attach an AI growth insight");
   console.log(`ok identity company: ${company.profile.identity.name} / ${company.profile.identity.industry}`);
 
   const kol = await request("/api/grointel/identity-intake", {
@@ -97,6 +98,7 @@ async function main() {
   assert(brief.brief.partnerBriefs[0].suggestedDeliverables.length >= 3, "brief should include deliverables");
   assert(brief.brief.partnerBriefs[0].successMetrics.length >= 2, "brief should include success metrics");
   assert((brief.brief?.campaignPlan || []).length >= 4, "brief should include campaign plan");
+  assert(brief.aiInsight?.growthState, "brief should include AI growth insight");
   console.log(`ok web3 collaboration brief: ${brief.brief.partnerBriefs.length} partners / ${brief.brief.partnerBriefs[0].partnerName}`);
 
   const memoryStatus = await request("/api/grointel/world-memory-status");

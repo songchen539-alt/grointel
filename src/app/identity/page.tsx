@@ -49,6 +49,15 @@ type IdentityResult = {
     campaignPlan: Array<{ phase: string; action: string; output: string }>;
     nextActionChecklist: string[];
   } | null;
+  web3AIGrowthInsight?: {
+    enabled: boolean;
+    provider: string;
+    model?: string;
+    growthState: string;
+    opportunity: string;
+    risk: string;
+    recommendedMove: string;
+  } | null;
   nextActions?: string[];
   routeHint?: string;
 };
@@ -273,6 +282,18 @@ export default function IdentityPage() {
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
+                  {result.web3AIGrowthInsight && (
+                    <div className="mt-4 rounded-lg border border-emerald-400/10 bg-black/30 p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-100">
+                          AI {result.web3AIGrowthInsight.enabled ? "active" : "fallback"}
+                        </span>
+                        <span className="text-xs text-gray-500">{result.web3AIGrowthInsight.provider}{result.web3AIGrowthInsight.model ? ` / ${result.web3AIGrowthInsight.model}` : ""}</span>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-gray-200">{result.web3AIGrowthInsight.growthState}</p>
+                      <p className="mt-2 text-sm leading-6 text-emerald-100">{result.web3AIGrowthInsight.recommendedMove}</p>
+                    </div>
+                  )}
                   <div className="mt-4 grid gap-3 lg:grid-cols-3">
                     {result.web3CollaborationBrief.partnerBriefs.slice(0, 3).map((partner) => (
                       <div key={partner.partnerId} className="rounded-lg border border-white/5 bg-black/30 p-4">

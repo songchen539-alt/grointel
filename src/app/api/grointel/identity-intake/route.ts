@@ -3,6 +3,7 @@ import { generateMockBusinessScan, createInitialBusinessKnowledge, normalizeWebs
 import { generateMockCapabilityScan, createInitialCapabilityKnowledge, normalizeProfileUrl } from "@/lib/intelligence/capabilityIntelligence";
 import { decideWeb3Growth } from "@/lib/grointel/web3Decision";
 import { buildWeb3CollaborationBrief } from "@/lib/grointel/web3CollaborationBrief";
+import { generateWeb3AIGrowthInsight } from "@/lib/grointel/aiGrowthInsight";
 import { WEB3_GROWTH_EVENTS, WEB3_SUPPLY_PROFILES, WEB3_TARGETS, type Web3SupplyProfile } from "@/lib/grointel/web3World";
 
 export const dynamic = "force-dynamic";
@@ -180,6 +181,17 @@ export async function POST(req: NextRequest) {
         riskTolerance: "medium",
       }, web3Decision, 3)
       : null;
+    const web3AIGrowthInsight = web3Decision
+      ? await generateWeb3AIGrowthInsight({
+        projectName: String(knowledge.business_identity?.name || scan.company_name),
+        website,
+        sector: String(knowledge.business_identity?.industry || "Web3"),
+        stage: String(knowledge.business_model?.scale || "Growth stage"),
+        growthGoal: "Acquire real users through KOL, community, and partner collaborations",
+        targetAudience: "crypto-native users, builders, traders, or collectors",
+        riskTolerance: "medium",
+      }, web3Decision, web3CollaborationBrief || undefined)
+      : null;
 
     return NextResponse.json({
       success: true,
@@ -198,6 +210,7 @@ export async function POST(req: NextRequest) {
       missingQuestions: companyQuestions(knowledge.knowledge_confidence),
       web3Decision,
       web3CollaborationBrief,
+      web3AIGrowthInsight,
       nextActions: web3Decision?.nextActions || [
         "Confirm the growth goal and target customer.",
         "Identify which channels already create demand.",

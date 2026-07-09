@@ -18,11 +18,12 @@ The first focused market is Web3. The current working path is:
 6. The Web3 decision engine returns recommended supply types, partner profiles, collaboration patterns, risks, matched evidence events, measurement signals, qualification questions, and next actions.
 7. The Web3 decision engine now recommends concrete KOL/media/research supply matches from Supply World, including fit score, suggested collaboration format, key metric, and primary risk.
 8. The Web3 collaboration brief engine turns the shortlist into partner-specific angles, deliverables, outreach copy, success metrics, risk controls, qualification questions, and a four-phase pilot plan.
-9. Web3 KOLs can enter through `/identity` and receive company demand matches with fit score, fit reason, suggested collaboration format, key metric, and evidence pattern.
-10. The Web3 event intake form can add new historical growth events.
-11. `/world` shows the Web3 Living World, reality signals, four-layer memory status, and growth event memory.
-12. Web3 KOLs, media, research providers, security voices, and creator communities are now first-class supply-side world entities.
-13. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
+9. The AI Gateway now feeds Web3 decision/brief output with an AI growth insight: growth state, opportunity, risk, recommended move, missing evidence, and operator note.
+10. Web3 KOLs can enter through `/identity` and receive company demand matches with fit score, fit reason, suggested collaboration format, key metric, and evidence pattern.
+11. The Web3 event intake form can add new historical growth events.
+12. `/world` shows the Web3 Living World, reality signals, four-layer memory status, and growth event memory.
+13. Web3 KOLs, media, research providers, security voices, and creator communities are now first-class supply-side world entities.
+14. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
 
 ## Live Routes
 
@@ -129,6 +130,7 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 - `/api/grointel/web3-decision` merges legacy growth events with built-in Web3 seed memory, so new memories enhance the base event library instead of replacing it
 - `/api/grointel/web3-decision` returns `recommendedConcretePartners` from Web3 Supply World, not just generic partner categories
 - `/api/grointel/web3-collaboration-brief` returns partner-specific outreach, deliverables, metrics, risk controls, and pilot plan from the Web3 decision output
+- `/api/grointel/web3-collaboration-brief` and Web3 company `/api/grointel/identity-intake` responses include `aiInsight` / `web3AIGrowthInsight` when the AI Gateway is available, with deterministic fallback if the provider fails
 - `/api/grointel/identity-intake` returns KOL-to-company Web3 matches with fit score, fit reason, collaboration format, and key metric
 - `/api/grointel/heartbeat` exposes top-level `status=alive`, `memorySaved`, and `growthEventsSaved` for simple monitors
 - `/world` separates Demand World and Supply World, and shows Web3 Growth Supply Memory for KOL/media/research supply
@@ -144,6 +146,15 @@ GroIntel can route generative understanding through:
 - Deterministic mock fallback when no real model key is configured or a provider fails.
 
 If no explicit `AI_CHAT_PROVIDER` / `AI_JSON_PROVIDER` is set, GroIntel automatically prefers OpenAI when `OPENAI_API_KEY` exists, then DeepSeek when `DEEPSEEK_API_KEY` exists, and otherwise mock fallback.
+
+Production is currently configured to use DeepSeek for chat and JSON. `/api/grointel/ai-health` should report:
+
+```text
+mode=real_ai_active
+chat=deepseek
+json=deepseek
+deepseek.status=healthy
+```
 
 ## Web3 Discovery Registry
 
