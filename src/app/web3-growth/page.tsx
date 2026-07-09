@@ -8,6 +8,18 @@ type DecisionResponse = {
   error?: string;
   demand?: Record<string, string>;
   memory?: { configured: boolean; eventCount: number; error: string | null };
+  aiInsight?: {
+    enabled: boolean;
+    provider: string;
+    model?: string;
+    fallbackUsed: boolean;
+    growthState: string;
+    opportunity: string;
+    risk: string;
+    recommendedMove: string;
+    missingEvidence: string[];
+    operatorNote: string;
+  };
   decision?: {
     recommendedSupply: string[];
     recommendedPartnerProfiles: string[];
@@ -343,6 +355,22 @@ export default function Web3GrowthPage() {
                     </div>
                   ))}
                 </div>
+                {result.aiInsight && (
+                  <div className="mt-5 rounded-lg border border-sky-400/10 bg-black/30 p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-sky-400/10 px-2.5 py-1 text-xs text-sky-100">
+                        AI {result.aiInsight.enabled ? "active" : "fallback"}
+                      </span>
+                      <span className="text-xs text-gray-500">{result.aiInsight.provider}{result.aiInsight.model ? ` / ${result.aiInsight.model}` : ""}</span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-gray-200">{result.aiInsight.growthState}</p>
+                    <div className="mt-3 grid gap-3 md:grid-cols-3">
+                      <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-emerald-100">Opportunity:</span> {result.aiInsight.opportunity}</p>
+                      <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-amber-100">Risk:</span> {result.aiInsight.risk}</p>
+                      <p className="rounded-md bg-white/[0.03] p-3 text-xs leading-5 text-gray-300"><span className="text-sky-100">Move:</span> {result.aiInsight.recommendedMove}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-lg border border-violet-400/10 bg-violet-400/[0.04] p-5">

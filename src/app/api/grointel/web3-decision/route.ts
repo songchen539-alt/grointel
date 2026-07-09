@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decideWeb3Growth, type Web3GrowthDemand } from "@/lib/grointel/web3Decision";
 import { normalizeWeb3GrowthDemand, dbEventToWeb3Event } from "@/lib/grointel/web3Api";
+import { generateWeb3AIGrowthInsight } from "@/lib/grointel/aiGrowthInsight";
 import { loadGrowthEvents } from "@/lib/grointel/worldMemory";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
     const eventMemory = await loadGrowthEvents(50);
     const events = eventMemory.events.map(dbEventToWeb3Event);
     const decision = decideWeb3Growth(demand, events);
+    const aiInsight = await generateWeb3AIGrowthInsight(demand, decision);
 
     return NextResponse.json({
       success: true,
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
         error: eventMemory.error,
       },
       decision,
+      aiInsight,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

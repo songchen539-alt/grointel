@@ -80,6 +80,7 @@ async function main() {
   assert(decision.decision.recommendedConcretePartners.length >= 8, "web3 decision should use expanded KOL/supply pool");
   assert(decision.decision.recommendedConcretePartners.some((partner) => partner.source || (partner.tags || []).length > 0), "web3 decision should include discovery-sourced KOL/supply partners");
   assert(new Set(decision.decision.recommendedConcretePartners.map((partner) => partner.supplyType)).size >= 3, "web3 decision should diversify supply partner types");
+  assert(decision.aiInsight?.growthState, "web3 decision should include AI growth insight");
   console.log(`ok web3 decision: ${decision.memory.eventCount} events / ${decision.decision.confidence}% confidence / ${decision.decision.recommendedConcretePartners[0].name}`);
 
   const brief = await request("/api/grointel/web3-collaboration-brief", {
