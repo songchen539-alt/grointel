@@ -1,6 +1,6 @@
 # GroIntel Delivery Status
 
-Last updated: 2026-06-29
+Last updated: 2026-07-09
 
 ## Current Product Loop
 
@@ -24,6 +24,8 @@ The first focused market is Web3. The current working path is:
 12. `/world` shows the Web3 Living World, reality signals, four-layer memory status, and growth event memory.
 13. Web3 KOLs, media, research providers, security voices, and creator communities are now first-class supply-side world entities.
 14. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
+15. `/api/grointel/delivery-readiness` gives a single delivery status across AI, Web3 demand, KOL supply, reality loop, memory, and growth-event evidence.
+16. `/world` now surfaces the same delivery-readiness state so operators can see whether the living world is ready without opening raw API JSON.
 
 ## Live Routes
 
@@ -39,6 +41,7 @@ The first focused market is Web3. The current working path is:
 - `/api/grointel/ai-health` - AI Gateway provider health and fallback status.
 - `/api/grointel/web3-discovery` - expanded Web3 company/KOL discovery registry and runtime target pool.
 - `/api/grointel/world-memory-status` - persistent world memory table status.
+- `/api/grointel/delivery-readiness` - delivery self-check for real AI, demand/supply pool, heartbeat, four-layer memory, and growth-event memory.
 
 ## Four-Layer Memory
 
@@ -50,6 +53,8 @@ The memory model is implemented as:
 4. L4 evolution memory: `world_evolution_memories`.
 
 Historical company/KOL/channel collaboration events are stored in `world_growth_events`.
+
+Production currently uses the legacy world tables as the persistence layer because the primary `013_world_memory.sql` tables are not installed yet. GroIntel projects those legacy observations, events, and signals into L2/L3/L4 memory so `/world`, `/api/grointel/world`, `/api/grointel/delivery-readiness`, and smoke tests can still inspect the four-layer model. The primary migration remains the preferred long-term schema.
 
 ## Web3 Seed Event Types
 
@@ -122,7 +127,7 @@ Update: production already has legacy world storage tables:
 - `world_contexts`
 - `world_relationships`
 
-GroIntel now falls back to these legacy tables when the primary `013_world_memory.sql` tables are missing. Production smoke tests confirm:
+GroIntel now falls back to these legacy tables when the primary `013_world_memory.sql` tables are missing. It also projects legacy memory into L2 entity memory, L3 decision memory, and L4 evolution memory. Production smoke tests confirm:
 
 - growth event intake returns `saved=true` via `world_events`
 - heartbeat returns `memory.saved=true` via legacy world tables
@@ -136,6 +141,8 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 - `/world` separates Demand World and Supply World, and shows Web3 Growth Supply Memory for KOL/media/research supply
 - `/api/grointel/ai-health` exposes the active chat/json/embedding/rerank providers and whether GroIntel is running with a real AI provider, fallback-ready provider, or mock-only mode
 - `/api/grointel/web3-discovery` exposes the expanded Web3 demand/supply registry used by heartbeat and World runtime
+- `/api/grointel/delivery-readiness` reports `ready`, `score=100`, real AI passing, Web3 demand/supply counts, and non-empty L2/L3/L4 memory
+- `/world` shows a Delivery Readiness band with score, pass/watch checks, and a link to the readiness API
 
 ## AI Gateway
 
@@ -156,6 +163,8 @@ json=deepseek
 deepseek.status=healthy
 ```
 
+Do not commit provider keys. Local `.env*` files are ignored, and production keys should be managed through Vercel environment variables.
+
 ## Web3 Discovery Registry
 
 GroIntel now auto-expands the World target pool before every heartbeat or World snapshot. The registry currently covers 60+ Web3 demand/supply entities across:
@@ -173,8 +182,9 @@ Local verification used:
 
 ```text
 npm run build
-npm test
-npm run smoke
+npx tsx src/lib/grointel/__tests__/web3Decision.test.ts
+npx tsx src/lib/grointel/__tests__/web3CollaborationBrief.test.ts
+npm run smoke -- --heartbeat
 ```
 
 Production smoke checks used:
@@ -186,9 +196,20 @@ Production smoke checks used:
 - `GET https://grointel.vercel.app/api/grointel/world`
 - `GET https://grointel.vercel.app/world`
 - `GET https://grointel.vercel.app/api/grointel/world-memory-status`
+- `GET https://grointel.vercel.app/api/grointel/delivery-readiness`
 
 Optional heartbeat smoke:
 
 ```text
 node scripts/smoke-grointel.mjs --heartbeat
+```
+
+Latest production smoke on 2026-07-09 confirmed:
+
+```text
+ai health: real_ai_active / chat=deepseek
+web3 discovery: demand=46 supply=36
+delivery readiness: ready / score=100
+heartbeat: alive
+world memory layers: L2=6 L3=1 L4=1
 ```
