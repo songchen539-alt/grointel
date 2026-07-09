@@ -1,4 +1,4 @@
-import { Activity, Building2, Database, Globe2, Network, Radar, Signal, Sparkles, Target, UserCheck, Wifi } from "lucide-react";
+import { Activity, Building2, CheckCircle2, Database, Globe2, Network, Radar, Signal, Sparkles, Target, UserCheck, Wifi } from "lucide-react";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 import { loadWorldMemorySummary } from "@/lib/grointel/worldMemory";
 import { getExpandedSupplyProfiles } from "@/lib/grointel/web3Decision";
@@ -47,6 +47,18 @@ export default async function WorldPage() {
   const supplyTargets = targets.filter((target) => target.kind !== "company");
   const observedDemandCount = demandTargets.filter((target) => observedTargetIds.has(target.id)).length;
   const observedSupplyCount = supplyTargets.filter((target) => observedTargetIds.has(target.id)).length;
+  const readinessChecks = [
+    { label: "Real AI", pass: ai.mode === "real_ai_active" },
+    { label: "Company demand", pass: world.discovery.web3DemandCount >= 40 },
+    { label: "KOL supply", pass: world.discovery.web3SupplyCount >= 30 },
+    { label: "Reality loop", pass: world.tickCount > 0 || Boolean(memory.latestRun) },
+    { label: "L2 memory", pass: memory.entityMemories.length > 0 },
+    { label: "L3 memory", pass: memory.decisionMemories.length > 0 },
+    { label: "L4 memory", pass: memory.evolutionMemories.length > 0 },
+    { label: "Growth events", pass: memory.growthEvents.length > 0 },
+  ];
+  const readinessScore = Math.round((readinessChecks.filter((check) => check.pass).length / readinessChecks.length) * 100);
+  const readinessStatus = readinessScore === 100 ? "Ready" : readinessScore >= 75 ? "Degraded" : "Blocked";
 
   const metrics = [
     { label: "Reality Coverage", value: score.reality_coverage, icon: Globe2 },
@@ -87,6 +99,35 @@ export default async function WorldPage() {
               <div className="rounded-lg border border-white/5 bg-white/[0.03] px-4 py-3">
                 <div className="text-xs text-gray-500">Web3 Pool</div>
                 <div className="mt-1 text-2xl font-semibold">{world.discovery.web3TargetCount}</div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 rounded-lg border border-emerald-400/10 bg-emerald-400/[0.04] p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <p className="text-xs text-emerald-200">Delivery Readiness</p>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-gray-300">
+                  {readinessStatus}: company identity to Web3 KOL matching is connected through real AI, discovery, world memory, and growth-event evidence.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 lg:min-w-[34rem]">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-3xl font-semibold text-emerald-100">{readinessScore}%</span>
+                  <a href="/api/grointel/delivery-readiness" className="rounded-lg border border-emerald-400/20 px-3 py-2 text-xs font-medium text-emerald-200 transition-colors hover:bg-emerald-400/10">
+                    Open readiness API
+                  </a>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-4">
+                  {readinessChecks.map((check) => (
+                    <div key={check.label} className="rounded-md bg-black/30 px-2.5 py-2 text-xs">
+                      <span className={check.pass ? "text-emerald-200" : "text-amber-200"}>{check.pass ? "pass" : "watch"}</span>
+                      <span className="ml-2 text-gray-400">{check.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
