@@ -23,7 +23,7 @@ export async function GET() {
   };
   const companyDecision = decideWeb3Growth(companyDemand, WEB3_GROWTH_EVENTS, liveSupplyProfiles);
   const liveSupplyMatches = companyDecision.recommendedConcretePartners
-    .filter((partner) => partner.source === "web3_media_feeds_live")
+    .filter((partner) => String(partner.source || "").endsWith("_live"))
     .slice(0, 8)
     .map((partner) => ({
       name: partner.name,
