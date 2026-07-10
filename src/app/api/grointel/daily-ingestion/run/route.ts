@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) return unauthorized();
 
   const date = new Date().toISOString().slice(0, 10);
-  const liveDiscovery = await fetchLiveWeb3DiscoveryCandidates({ limit: 100, timeoutMs: 6000 });
+  const liveDiscovery = await fetchLiveWeb3DiscoveryCandidates({ demandLimit: 100, supplyLimit: 60, timeoutMs: 6000 });
   const batch = buildDailyWeb3IngestionBatch(date, 100, 100, liveDiscovery.candidates);
   const runtime = getGroIntelWorldRuntime();
   const runtimeIngestion = runtime.ingestTargets(batch.targets.map(dailyCandidateToRealityTarget), "daily_ingestion_cron");
@@ -46,6 +46,17 @@ export async function GET(req: NextRequest) {
       latencyMs: liveDiscovery.latencyMs,
       rawCount: liveDiscovery.rawCount,
       candidateCount: liveDiscovery.candidateCount,
+      demandCandidateCount: liveDiscovery.demandCandidateCount,
+      supplyCandidateCount: liveDiscovery.supplyCandidateCount,
+      sources: liveDiscovery.sources.map((source) => ({
+        source: source.source,
+        side: source.side,
+        success: source.success,
+        rawCount: source.rawCount,
+        candidateCount: source.candidateCount,
+        latencyMs: source.latencyMs,
+        error: source.error,
+      })),
       error: liveDiscovery.error,
     },
     runtimeIngestion,

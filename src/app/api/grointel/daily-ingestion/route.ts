@@ -32,7 +32,11 @@ async function run(req: NextRequest, body?: any) {
   const demandTarget = positiveInt(String(body?.demandTarget || url.searchParams.get("demandTarget") || ""), 100, 200);
   const supplyTarget = positiveInt(String(body?.supplyTarget || url.searchParams.get("supplyTarget") || ""), 100, 200);
   const liveDiscovery = includeLive
-    ? await fetchLiveWeb3DiscoveryCandidates({ limit: Math.max(60, Math.min(120, demandTarget)), timeoutMs: 6000 })
+    ? await fetchLiveWeb3DiscoveryCandidates({
+        demandLimit: Math.max(60, Math.min(120, demandTarget)),
+        supplyLimit: Math.max(20, Math.min(60, supplyTarget)),
+        timeoutMs: 6000,
+      })
     : null;
   const batch = buildDailyWeb3IngestionBatch(date, demandTarget, supplyTarget, liveDiscovery?.candidates || []);
   const runtime = getGroIntelWorldRuntime();
@@ -66,9 +70,20 @@ async function run(req: NextRequest, body?: any) {
           latencyMs: liveDiscovery.latencyMs,
           rawCount: liveDiscovery.rawCount,
           candidateCount: liveDiscovery.candidateCount,
+          demandCandidateCount: liveDiscovery.demandCandidateCount,
+          supplyCandidateCount: liveDiscovery.supplyCandidateCount,
+          sources: liveDiscovery.sources.map((source) => ({
+            source: source.source,
+            side: source.side,
+            success: source.success,
+            rawCount: source.rawCount,
+            candidateCount: source.candidateCount,
+            latencyMs: source.latencyMs,
+            error: source.error,
+          })),
           error: liveDiscovery.error,
         }
-      : { attempted: false, success: false, source: "defillama", candidateCount: 0 },
+      : { attempted: false, success: false, source: "multi_live", candidateCount: 0, demandCandidateCount: 0, supplyCandidateCount: 0, sources: [] },
     runtimeIngestion,
     memory,
     world: {

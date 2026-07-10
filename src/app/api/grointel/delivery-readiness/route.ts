@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     const [ai, memory, liveDiscovery] = await Promise.all([
       getAIGatewayStatus(),
       loadWorldMemorySummary(20),
-      fetchLiveWeb3DiscoveryCandidates({ limit: 100, timeoutMs: 4500 }),
+      fetchLiveWeb3DiscoveryCandidates({ demandLimit: 100, supplyLimit: 60, timeoutMs: 4500 }),
     ]);
     const dailyIngestion = buildDailyWeb3IngestionBatch(new Date().toISOString().slice(0, 10), 100, 100, liveDiscovery.candidates);
     const discovery = web3DiscoveryStats(world.targets);
@@ -158,20 +158,31 @@ export async function GET(req: NextRequest) {
       ),
       readinessCheck(
         "live_discovery_connector",
-        liveDiscovery.success && liveDiscovery.candidateCount >= 50 ? "pass" : "warn",
+        liveDiscovery.success && liveDiscovery.demandCandidateCount >= 50 && liveDiscovery.supplyCandidateCount >= 1 ? "pass" : "warn",
         liveDiscovery.success
-          ? "GroIntel is actively pulling real Web3 protocol candidates from a live external source."
-          : "GroIntel can fall back to its bootstrap pool, but the live source is temporarily unavailable.",
+          ? "GroIntel is actively pulling real Web3 demand and supply candidates from live external sources."
+          : "GroIntel can fall back to its bootstrap pool, but live sources are temporarily unavailable.",
         {
           source: liveDiscovery.source,
           sourceUrl: liveDiscovery.sourceUrl,
           success: liveDiscovery.success,
           rawCount: liveDiscovery.rawCount,
           candidateCount: liveDiscovery.candidateCount,
+          demandCandidateCount: liveDiscovery.demandCandidateCount,
+          supplyCandidateCount: liveDiscovery.supplyCandidateCount,
+          sources: liveDiscovery.sources.map((source) => ({
+            source: source.source,
+            side: source.side,
+            success: source.success,
+            rawCount: source.rawCount,
+            candidateCount: source.candidateCount,
+            latencyMs: source.latencyMs,
+            error: source.error || null,
+          })),
           latencyMs: liveDiscovery.latencyMs,
           error: liveDiscovery.error || null,
         },
-        "Check DefiLlama connectivity or add the next live Web3 source connector.",
+        "Check DefiLlama/media feed connectivity or add the next live Web3 source connector.",
       ),
     ];
 
@@ -211,6 +222,8 @@ export async function GET(req: NextRequest) {
         activeDiscoverySources: dailyIngestion.sourceSummary.activeSources,
         avgDailyDiscoveryScore: dailyIngestion.sourceSummary.avgDiscoveryScore,
         liveDiscoveryCandidates: liveDiscovery.candidateCount,
+        liveDemandDiscoveryCandidates: liveDiscovery.demandCandidateCount,
+        liveSupplyDiscoveryCandidates: liveDiscovery.supplyCandidateCount,
         liveDiscoveryRawCount: liveDiscovery.rawCount,
       },
       nextActions: checks.filter((check) => check.state !== "pass").map((check) => ({

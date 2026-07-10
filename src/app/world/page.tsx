@@ -39,7 +39,7 @@ export default async function WorldPage() {
   const memory = await loadWorldMemorySummary(8);
   const life = getGroIntelLifeStatus();
   const ai = await getAIGatewayStatus();
-  const liveDiscovery = await fetchLiveWeb3DiscoveryCandidates({ limit: 60, timeoutMs: 4500 });
+  const liveDiscovery = await fetchLiveWeb3DiscoveryCandidates({ demandLimit: 60, supplyLimit: 40, timeoutMs: 4500 });
   const dailyIngestion = buildDailyWeb3IngestionBatch(new Date().toISOString().slice(0, 10), 100, 100, liveDiscovery.candidates);
   const supplyProfiles = getExpandedSupplyProfiles();
   const { score, topGaps, topPriorities, progress, targets, observations, signals, evidence, connectorHealth } = world;
@@ -61,7 +61,7 @@ export default async function WorldPage() {
     { label: "L4 memory", pass: memory.evolutionMemories.length > 0 },
     { label: "Growth events", pass: memory.growthEvents.length > 0 },
     { label: "Daily 100+100", pass: dailyIngestion.demand.length >= 100 && dailyIngestion.supply.length >= 100 },
-    { label: "Live source", pass: liveDiscovery.success && liveDiscovery.candidateCount > 0 },
+    { label: "Live source", pass: liveDiscovery.success && liveDiscovery.demandCandidateCount > 0 && liveDiscovery.supplyCandidateCount > 0 },
   ];
   const readinessScore = Math.round((readinessChecks.filter((check) => check.pass).length / readinessChecks.length) * 100);
   const readinessStatus = readinessScore === 100 ? "Ready" : readinessScore >= 75 ? "Degraded" : "Blocked";
@@ -221,7 +221,7 @@ export default async function WorldPage() {
                   Batch: {dailyIngestion.id}. Source map: {dailyIngestion.sourceSummary.coveredSources}/{dailyIngestion.sourceSummary.registeredSources} covered, average discovery score {dailyIngestion.sourceSummary.avgDiscoveryScore}. Cron execution: daily at 00:30 UTC via <span className="font-mono">/api/grointel/daily-ingestion/run</span>.
                 </p>
                 <p className={`mt-2 text-xs leading-5 ${liveDiscovery.success ? "text-emerald-200" : "text-amber-200"}`}>
-                  Live discovery: {liveDiscovery.success ? `DefiLlama connected, ${liveDiscovery.candidateCount} candidates from ${liveDiscovery.rawCount} protocols in ${liveDiscovery.latencyMs}ms.` : `DefiLlama fallback active: ${liveDiscovery.error || "source unavailable"}.`}
+                  Live discovery: {liveDiscovery.success ? `${liveDiscovery.demandCandidateCount} demand and ${liveDiscovery.supplyCandidateCount} supply candidates from ${liveDiscovery.sources.length} live sources in ${liveDiscovery.latencyMs}ms.` : `Live fallback active: ${liveDiscovery.error || "sources unavailable"}.`}
                 </p>
               </div>
               <div className="grid gap-2 text-xs sm:grid-cols-3 lg:min-w-[28rem]">
@@ -239,7 +239,7 @@ export default async function WorldPage() {
                 </div>
                 <div className="rounded-lg bg-black/30 p-3 sm:col-span-3">
                   <p className="text-gray-500">Live source</p>
-                  <p className="mt-1 text-fuchsia-100">{liveDiscovery.success ? `${liveDiscovery.candidateCount} DefiLlama candidates` : "fallback to bootstrap pool"}</p>
+                  <p className="mt-1 text-fuchsia-100">{liveDiscovery.success ? `${liveDiscovery.demandCandidateCount} demand / ${liveDiscovery.supplyCandidateCount} supply` : "fallback to bootstrap pool"}</p>
                 </div>
                 <div className="rounded-lg bg-black/30 p-3 sm:col-span-3">
                   <p className="text-gray-500">Samples</p>
