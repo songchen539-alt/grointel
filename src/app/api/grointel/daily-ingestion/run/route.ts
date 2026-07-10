@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildDailyWeb3IngestionBatch, dailyCandidateToRealityTarget } from "@/lib/grointel/dailyIngestion";
+import { fetchLiveWeb3DiscoveryCandidates } from "@/lib/grointel/liveDiscovery";
 import { saveDailyIngestionBatch } from "@/lib/grointel/worldMemory";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 
@@ -19,7 +20,8 @@ export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) return unauthorized();
 
   const date = new Date().toISOString().slice(0, 10);
-  const batch = buildDailyWeb3IngestionBatch(date, 100, 100);
+  const liveDiscovery = await fetchLiveWeb3DiscoveryCandidates({ limit: 100, timeoutMs: 6000 });
+  const batch = buildDailyWeb3IngestionBatch(date, 100, 100, liveDiscovery.candidates);
   const runtime = getGroIntelWorldRuntime();
   const runtimeIngestion = runtime.ingestTargets(batch.targets.map(dailyCandidateToRealityTarget), "daily_ingestion_cron");
   const memory = await saveDailyIngestionBatch(batch);
@@ -35,6 +37,16 @@ export async function GET(req: NextRequest) {
       supplyCount: batch.supply.length,
       targetCount: batch.targets.length,
       sourceSummary: batch.sourceSummary,
+    },
+    liveDiscovery: {
+      attempted: liveDiscovery.attempted,
+      success: liveDiscovery.success,
+      source: liveDiscovery.source,
+      sourceUrl: liveDiscovery.sourceUrl,
+      latencyMs: liveDiscovery.latencyMs,
+      rawCount: liveDiscovery.rawCount,
+      candidateCount: liveDiscovery.candidateCount,
+      error: liveDiscovery.error,
     },
     runtimeIngestion,
     memory,

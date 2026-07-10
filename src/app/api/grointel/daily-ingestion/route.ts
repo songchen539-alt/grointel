@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildDailyWeb3IngestionBatch, dailyCandidateToRealityTarget } from "@/lib/grointel/dailyIngestion";
+import { fetchLiveWeb3DiscoveryCandidates } from "@/lib/grointel/liveDiscovery";
 import { saveDailyIngestionBatch } from "@/lib/grointel/worldMemory";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
 
@@ -26,10 +27,14 @@ async function run(req: NextRequest, body?: any) {
 
   const url = new URL(req.url);
   const shouldRun = url.searchParams.get("run") === "1" || body?.run === true;
+  const includeLive = url.searchParams.get("live") !== "0" && body?.live !== false;
   const date = String(body?.date || url.searchParams.get("date") || new Date().toISOString().slice(0, 10));
   const demandTarget = positiveInt(String(body?.demandTarget || url.searchParams.get("demandTarget") || ""), 100, 200);
   const supplyTarget = positiveInt(String(body?.supplyTarget || url.searchParams.get("supplyTarget") || ""), 100, 200);
-  const batch = buildDailyWeb3IngestionBatch(date, demandTarget, supplyTarget);
+  const liveDiscovery = includeLive
+    ? await fetchLiveWeb3DiscoveryCandidates({ limit: Math.max(60, Math.min(120, demandTarget)), timeoutMs: 6000 })
+    : null;
+  const batch = buildDailyWeb3IngestionBatch(date, demandTarget, supplyTarget, liveDiscovery?.candidates || []);
   const runtime = getGroIntelWorldRuntime();
 
   const runtimeIngestion = runtime.ingestTargets(
@@ -52,6 +57,18 @@ async function run(req: NextRequest, body?: any) {
       targetCount: batch.targets.length,
       sourceSummary: batch.sourceSummary,
     },
+    liveDiscovery: liveDiscovery
+      ? {
+          attempted: liveDiscovery.attempted,
+          success: liveDiscovery.success,
+          source: liveDiscovery.source,
+          sourceUrl: liveDiscovery.sourceUrl,
+          latencyMs: liveDiscovery.latencyMs,
+          rawCount: liveDiscovery.rawCount,
+          candidateCount: liveDiscovery.candidateCount,
+          error: liveDiscovery.error,
+        }
+      : { attempted: false, success: false, source: "defillama", candidateCount: 0 },
     runtimeIngestion,
     memory,
     world: {

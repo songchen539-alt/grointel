@@ -5,7 +5,7 @@ export type DailyIngestionSide = "demand" | "supply";
 
 export type DailyIngestionCandidate = RealityTarget & {
   side: DailyIngestionSide;
-  source: Web3DiscoverySource | "daily_bootstrap";
+  source: Web3DiscoverySource | "daily_bootstrap" | string;
   priority: number;
   tags: string[];
   ingestionReason: string;
@@ -343,8 +343,10 @@ function normalizeIdentity(identity: string) {
 
 function sourceMatches(candidate: DailyIngestionCandidate) {
   const identity = normalizeIdentity(candidate.identity);
+  const candidateSource = String(candidate.source || "");
   return GLOBAL_WEB3_DISCOVERY_SOURCES.filter((source) => {
     if (source.side !== "both" && source.side !== candidate.side) return false;
+    if (candidateSource.includes(source.id)) return true;
     if (identity.includes(source.id.replace("-feeds", ""))) return true;
     if (candidate.source === "media_research" && ["media", "research"].includes(source.category)) return true;
     if (candidate.source === "data_security" && ["market_data", "security", "research"].includes(source.category)) return true;
@@ -422,13 +424,20 @@ function selectBalanced(candidates: DailyIngestionCandidate[], count: number, da
   return selected.slice(0, count);
 }
 
-export function buildDailyWeb3IngestionBatch(date = new Date().toISOString().slice(0, 10), demandTarget = 100, supplyTarget = 100): DailyIngestionBatch {
+export function buildDailyWeb3IngestionBatch(
+  date = new Date().toISOString().slice(0, 10),
+  demandTarget = 100,
+  supplyTarget = 100,
+  liveCandidates: DailyIngestionCandidate[] = [],
+): DailyIngestionBatch {
   const discoveryCandidates = WEB3_DISCOVERY_TARGETS.map(fromDiscovery);
   const demandCandidates = [
+    ...liveCandidates.filter((target) => target.side === "demand"),
     ...discoveryCandidates.filter((target) => target.side === "demand"),
     ...DAILY_WEB3_DEMAND_CANDIDATES,
   ];
   const supplyCandidates = [
+    ...liveCandidates.filter((target) => target.side === "supply"),
     ...discoveryCandidates.filter((target) => target.side === "supply"),
     ...DAILY_WEB3_SUPPLY_CANDIDATES,
   ];

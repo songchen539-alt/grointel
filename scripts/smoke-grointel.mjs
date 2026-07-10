@@ -127,9 +127,14 @@ async function main() {
   assert(dailyIngestion.batch?.supplyCount >= 100, "daily ingestion should prepare at least 100 KOL/supply entities");
   assert(dailyIngestion.batch?.sourceSummary?.registeredSources >= 12, "daily ingestion should expose global discovery source registry");
   assert(dailyIngestion.batch?.sourceSummary?.avgDiscoveryScore >= 70, "daily ingestion should score candidates with source-aware quality");
+  assert(dailyIngestion.liveDiscovery?.attempted === true, "daily ingestion should attempt a live Web3 discovery source");
+  assert(dailyIngestion.liveDiscovery?.source === "defillama", "daily ingestion should expose the active live source");
+  if (dailyIngestion.liveDiscovery?.success) {
+    assert(dailyIngestion.liveDiscovery.candidateCount > 0, "successful live discovery should produce candidates");
+  }
   assert(dailyIngestion.world?.web3DemandCount >= 100, "daily ingestion preview should enter company entities into runtime world");
   assert(dailyIngestion.world?.web3SupplyCount >= 100, "daily ingestion preview should enter KOL/supply entities into runtime world");
-  console.log(`ok daily ingestion: demand=${dailyIngestion.batch.demandCount} supply=${dailyIngestion.batch.supplyCount} sources=${dailyIngestion.batch.sourceSummary.registeredSources}`);
+  console.log(`ok daily ingestion: demand=${dailyIngestion.batch.demandCount} supply=${dailyIngestion.batch.supplyCount} sources=${dailyIngestion.batch.sourceSummary.registeredSources} live=${dailyIngestion.liveDiscovery.success ? dailyIngestion.liveDiscovery.candidateCount : "fallback"}`);
 
   const readiness = await request("/api/grointel/delivery-readiness");
   assert(readiness.success, "delivery readiness should respond");
