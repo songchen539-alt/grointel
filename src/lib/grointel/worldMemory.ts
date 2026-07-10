@@ -151,8 +151,7 @@ async function saveLegacyGrowthEvents(db: any, events: Web3GrowthEvent[]): Promi
 async function saveLegacyDailyIngestion(db: any, batch: DailyIngestionBatch): Promise<boolean> {
   try {
     const now = new Date().toISOString();
-    for (const target of batch.targets) {
-      await db.from("world_raw_observations").insert({
+    const rawObservations = batch.targets.map((target) => ({
         url: target.identity,
         title: `${target.name} daily Web3 ${target.side} ingestion`,
         raw_text: JSON.stringify({
@@ -166,9 +165,9 @@ async function saveLegacyDailyIngestion(db: any, batch: DailyIngestionBatch): Pr
         content_hash: `${batch.id}_${target.id}`,
         language: "en",
         status: "ingested",
-      });
+    }));
 
-      await db.from("world_events").insert({
+    const events = batch.targets.map((target) => ({
         event_type: `grointel_daily_${target.side}_ingestion`,
         event_title: `${target.name} entered GroIntel ${target.side} world`,
         event_summary: `${target.name} (${target.identity}) entered GroIntel as a Web3 ${target.side} entity for daily matching and future observation.`,
@@ -183,9 +182,9 @@ async function saveLegacyDailyIngestion(db: any, batch: DailyIngestionBatch): Pr
         evidence_source_name: target.source,
         evidence_item_type: `daily_${target.side}_entity`,
         extraction_method: "grointel_daily_ingestion",
-      });
+    }));
 
-      await db.from("world_growth_signals").insert({
+    const growthSignals = batch.targets.map((target) => ({
         signal_type: target.side === "demand" ? "web3_growth_demand_candidate" : "web3_growth_supply_candidate",
         signal_strength: target.priority,
         signal_reason: `${target.name} entered GroIntel daily Web3 ${target.side} pool with tags: ${target.tags.join(", ")}.`,
@@ -193,8 +192,14 @@ async function saveLegacyDailyIngestion(db: any, batch: DailyIngestionBatch): Pr
         likely_buyers: target.side === "supply" ? target.tags : [],
         urgency: target.priority >= 85 ? "high" : target.priority >= 72 ? "medium" : "low",
         confidence: Math.max(50, Math.min(92, target.priority)),
-      });
-    }
+    }));
+
+    const rawResult = await db.from("world_raw_observations").insert(rawObservations);
+    if (rawResult.error) throw rawResult.error;
+    const eventResult = await db.from("world_events").insert(events);
+    if (eventResult.error) throw eventResult.error;
+    const signalResult = await db.from("world_growth_signals").insert(growthSignals);
+    if (signalResult.error) throw signalResult.error;
     return true;
   } catch {
     return false;
