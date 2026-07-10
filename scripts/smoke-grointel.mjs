@@ -108,6 +108,13 @@ async function main() {
   assert(memoryStatus.ready || memoryStatus.legacyReady, "primary or legacy world memory should be available");
   console.log(`ok memory status: ready=${Boolean(memoryStatus.ready)} legacyReady=${Boolean(memoryStatus.legacyReady)}`);
 
+  const memoryMigration = await request("/api/grointel/world-memory-migration");
+  assert(memoryMigration.success, "world memory migration status should respond");
+  assert(memoryMigration.migration?.path?.includes("013_world_memory.sql"), "world memory migration should point to 013 migration");
+  assert(memoryMigration.migration?.sha256, "world memory migration should expose a SQL checksum");
+  assert(memoryMigration.primary?.requiredTables >= 9, "world memory migration should list primary memory tables");
+  console.log(`ok memory migration: ready=${Boolean(memoryMigration.ready)} missing=${(memoryMigration.primary?.missingTables || []).length}`);
+
   const aiHealth = await request("/api/grointel/ai-health");
   assert(aiHealth.success, "AI health should respond");
   assert(aiHealth.active?.chat, "AI health should expose active chat provider");

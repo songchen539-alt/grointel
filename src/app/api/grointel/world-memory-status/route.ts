@@ -1,30 +1,8 @@
 import { NextResponse } from "next/server";
+import { LEGACY_WORLD_TABLES, WORLD_MEMORY_MIGRATION_PATH, WORLD_MEMORY_TABLES } from "@/lib/grointel/worldMemoryMigration";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-const WORLD_TABLES = [
-  "world_targets",
-  "world_heartbeat_runs",
-  "world_observations",
-  "world_signals",
-  "world_evidence",
-  "world_entity_memories",
-  "world_decision_memories",
-  "world_evolution_memories",
-  "world_growth_events",
-];
-
-const LEGACY_WORLD_TABLES = [
-  "world_contexts",
-  "world_repair_runs",
-  "world_raw_observations",
-  "world_growth_signals",
-  "world_events",
-  "world_entities",
-  "world_decision_makers",
-  "world_relationships",
-];
 
 function headers() {
   return {
@@ -39,8 +17,8 @@ export async function GET() {
       success: true,
       configured: false,
       ready: false,
-      migration: "supabase/migrations/013_world_memory.sql",
-      tables: WORLD_TABLES.map((table) => ({ table, exists: false, error: "Supabase is not configured" })),
+      migration: WORLD_MEMORY_MIGRATION_PATH,
+      tables: WORLD_MEMORY_TABLES.map((table) => ({ table, exists: false, error: "Supabase is not configured" })),
     });
   }
 
@@ -61,14 +39,17 @@ export async function GET() {
     }
   };
 
-  const tables = await Promise.all(WORLD_TABLES.map(checkTable));
+  const tables = await Promise.all(WORLD_MEMORY_TABLES.map(checkTable));
   const legacyTables = await Promise.all(LEGACY_WORLD_TABLES.map(checkTable));
+  const missingTables = tables.filter((table) => !table.exists).map((table) => table.table);
 
   return NextResponse.json({
     success: true,
     configured: true,
     ready: tables.every((table) => table.exists),
-    migration: "supabase/migrations/013_world_memory.sql",
+    migration: WORLD_MEMORY_MIGRATION_PATH,
+    missingTables,
+    missingCount: missingTables.length,
     tables,
     legacyReady: legacyTables.some((table) => table.exists),
     legacyTables,

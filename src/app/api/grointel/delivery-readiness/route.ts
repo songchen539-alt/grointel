@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
           memoryError: memory.error,
           saveError: memorySave?.error || null,
         },
-        "Apply the primary world memory migration or keep legacy projection healthy until migration is available.",
+        "Apply the primary world memory migration or inspect /api/grointel/world-memory-migration.",
       ),
       readinessCheck(
         "four_layer_memory",
@@ -234,6 +234,7 @@ export async function GET(req: NextRequest) {
         "/api/grointel/ai-health",
         "/api/grointel/web3-discovery?limit=5",
         "/api/grointel/daily-ingestion?live=1",
+        "/api/grointel/world-memory-migration",
         "/api/grointel/heartbeat?limit=2",
         "/api/grointel/world?limit=2",
         "/api/grointel/identity-intake",

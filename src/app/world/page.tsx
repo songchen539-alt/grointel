@@ -151,11 +151,12 @@ export default async function WorldPage() {
                     : "Supabase memory is not configured in this environment"}
                 </p>
               </div>
-              <div className="flex gap-2 text-xs">
+              <div className="flex flex-wrap justify-end gap-2 text-xs">
                 <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L1 {memory.recentEvidence.length + memory.recentSignals.length}</span>
                 <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L2 {memory.entityMemories.length}</span>
                 <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L3 {memory.decisionMemories.length}</span>
                 <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-gray-300">L4 {memory.evolutionMemories.length}</span>
+                <a href="/api/grointel/world-memory-migration" className="rounded-md border border-emerald-400/20 px-2.5 py-1 text-emerald-200 transition-colors hover:bg-emerald-400/10">Migration</a>
               </div>
             </div>
             {memory.error && usingLegacyMemory && (
