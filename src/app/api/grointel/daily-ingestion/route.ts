@@ -22,6 +22,27 @@ function positiveInt(value: string | null, fallback: number, max: number) {
   return Math.max(1, Math.min(max, Math.floor(parsed)));
 }
 
+function liveQualitySummary(candidates: any[] = []) {
+  const scored = candidates.filter((candidate) => typeof candidate.liveQualityScore === "number");
+  const highQuality = scored.filter((candidate) => candidate.liveQualityScore >= 70);
+  const coveredSources = new Set(scored.flatMap((candidate) => candidate.liveSourceCoverage || []));
+  return {
+    scoredCount: scored.length,
+    highQualityCount: highQuality.length,
+    avgLiveQualityScore: scored.length > 0
+      ? Math.round(scored.reduce((sum, candidate) => sum + candidate.liveQualityScore, 0) / scored.length)
+      : 0,
+    coveredSources: coveredSources.size,
+    samples: highQuality.slice(0, 5).map((candidate) => ({
+      name: candidate.name,
+      side: candidate.side,
+      source: candidate.source,
+      liveQualityScore: candidate.liveQualityScore,
+      liveSourceCoverage: candidate.liveSourceCoverage || [],
+    })),
+  };
+}
+
 async function run(req: NextRequest, body?: any) {
   if (!isAuthorized(req)) return unauthorized();
 
@@ -72,6 +93,7 @@ async function run(req: NextRequest, body?: any) {
           candidateCount: liveDiscovery.candidateCount,
           demandCandidateCount: liveDiscovery.demandCandidateCount,
           supplyCandidateCount: liveDiscovery.supplyCandidateCount,
+          qualitySummary: liveQualitySummary(liveDiscovery.candidates),
           sources: liveDiscovery.sources.map((source) => ({
             source: source.source,
             side: source.side,

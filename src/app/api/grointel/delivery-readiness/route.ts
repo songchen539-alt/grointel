@@ -39,6 +39,20 @@ function scoreChecks(checks: ReturnType<typeof readinessCheck>[]) {
   return Math.round((points / checks.length) * 100);
 }
 
+function liveQualitySummary(candidates: any[] = []) {
+  const scored = candidates.filter((candidate) => typeof candidate.liveQualityScore === "number");
+  const highQuality = scored.filter((candidate) => candidate.liveQualityScore >= 70);
+  const coveredSources = new Set(scored.flatMap((candidate) => candidate.liveSourceCoverage || []));
+  return {
+    scoredCount: scored.length,
+    highQualityCount: highQuality.length,
+    avgLiveQualityScore: scored.length > 0
+      ? Math.round(scored.reduce((sum, candidate) => sum + candidate.liveQualityScore, 0) / scored.length)
+      : 0,
+    coveredSources: coveredSources.size,
+  };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -66,6 +80,7 @@ export async function GET(req: NextRequest) {
     }, WEB3_GROWTH_EVENTS, liveSupplyProfiles);
     const liveSupplyMatchCount = liveProbeDecision.recommendedConcretePartners.filter((partner) => String(partner.source || "").endsWith("_live")).length;
     const liveDemandMatchCount = liveDiscovery.candidates.filter((candidate) => candidate.side === "demand" && candidate.source === "defillama_live").length;
+    const liveQuality = liveQualitySummary(liveDiscovery.candidates);
     const discovery = web3DiscoveryStats(world.targets);
     const life = getGroIntelLifeStatus();
 
@@ -182,6 +197,7 @@ export async function GET(req: NextRequest) {
           candidateCount: liveDiscovery.candidateCount,
           demandCandidateCount: liveDiscovery.demandCandidateCount,
           supplyCandidateCount: liveDiscovery.supplyCandidateCount,
+          qualitySummary: liveQuality,
           sources: liveDiscovery.sources.map((source) => ({
             source: source.source,
             side: source.side,
@@ -248,6 +264,8 @@ export async function GET(req: NextRequest) {
         liveDemandDiscoveryCandidates: liveDiscovery.demandCandidateCount,
         liveSupplyDiscoveryCandidates: liveDiscovery.supplyCandidateCount,
         liveDiscoveryRawCount: liveDiscovery.rawCount,
+        liveDiscoveryHighQualityCandidates: liveQuality.highQualityCount,
+        liveDiscoveryAvgQualityScore: liveQuality.avgLiveQualityScore,
         companyToLiveSupplyMatches: liveSupplyMatchCount,
         supplyToLiveDemandMatches: liveDemandMatchCount,
       },
