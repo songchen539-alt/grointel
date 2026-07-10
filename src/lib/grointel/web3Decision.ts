@@ -24,6 +24,8 @@ export interface Web3GrowthDecision {
     source?: string;
     tags?: string[];
     matchSignals?: string[];
+    liveQualityScore?: number;
+    liveSourceCoverage?: string[];
   }>;
   collaborationPatterns: string[];
   avoidPatterns: string[];
@@ -183,7 +185,13 @@ function discoveryToSupplyProfile(target: Web3DiscoveryTarget): Web3SupplyProfil
   };
 }
 
-export type ExpandedWeb3SupplyProfile = Web3SupplyProfile & { source?: string; tags?: string[]; priority?: number };
+export type ExpandedWeb3SupplyProfile = Web3SupplyProfile & {
+  source?: string;
+  tags?: string[];
+  priority?: number;
+  liveQualityScore?: number;
+  liveSourceCoverage?: string[];
+};
 
 function dailyCandidateToSupplyProfile(candidate: DailyIngestionCandidate): ExpandedWeb3SupplyProfile | null {
   if (candidate.side !== "supply") return null;
@@ -252,6 +260,8 @@ function dailyCandidateToSupplyProfile(candidate: DailyIngestionCandidate): Expa
     source: candidate.source,
     tags: candidate.tags,
     priority: candidate.priority,
+    liveQualityScore: typeof (candidate as any).liveQualityScore === "number" ? (candidate as any).liveQualityScore : undefined,
+    liveSourceCoverage: Array.isArray((candidate as any).liveSourceCoverage) ? (candidate as any).liveSourceCoverage : undefined,
   };
 }
 
@@ -334,22 +344,36 @@ function scoreSupplyProfile(demand: Web3GrowthDemand, profile: Web3SupplyProfile
   if (demand.riskTolerance === "low" && profile.risks.some((risk) => /speculation|volatility|hype|retail/i.test(risk))) score -= 10;
   if (demand.riskTolerance === "low" && profile.supplyType === "security") score += 8;
   if ("priority" in profile && typeof profile.priority === "number") score += Math.round((profile.priority - 75) / 5);
+  if ("liveQualityScore" in profile && typeof profile.liveQualityScore === "number") score += Math.round((profile.liveQualityScore - 70) / 4);
+  if ("liveSourceCoverage" in profile && Array.isArray(profile.liveSourceCoverage)) score += Math.min(6, profile.liveSourceCoverage.length * 2);
 
   return Math.max(0, Math.min(100, score));
 }
 
+function liveQualityMeta(profile: Web3SupplyProfile) {
+  const expanded = profile as ExpandedWeb3SupplyProfile;
+  return {
+    score: typeof expanded.liveQualityScore === "number" ? expanded.liveQualityScore : undefined,
+    coverage: Array.isArray(expanded.liveSourceCoverage) ? expanded.liveSourceCoverage : [],
+  };
+}
+
 function supplyFitReason(profile: Web3SupplyProfile, demand: Web3GrowthDemand) {
+  const liveMeta = liveQualityMeta(profile);
+  const liveQuality = typeof liveMeta.score === "number"
+    ? ` It carries a live quality score of ${liveMeta.score}/100 from ${liveMeta.coverage.length > 0 ? liveMeta.coverage.join(", ") : "live discovery"}.`
+    : "";
   const goal = demand.growthGoal.toLowerCase();
   if (goal.includes("trust") || goal.includes("risk") || goal.includes("security")) {
-    return `${profile.name} is useful when the campaign depends on ${profile.bestFor[0]}; validate with ${profile.proofSignals[0]}.`;
+    return `${profile.name} is useful when the campaign depends on ${profile.bestFor[0]}; validate with ${profile.proofSignals[0]}.${liveQuality}`;
   }
   if (goal.includes("quest") || goal.includes("onboarding") || goal.includes("wallet")) {
-    return `${profile.name} can help turn Web3 attention into ${profile.proofSignals[0]} through ${profile.collaborationFormats[0]}.`;
+    return `${profile.name} can help turn Web3 attention into ${profile.proofSignals[0]} through ${profile.collaborationFormats[0]}.${liveQuality}`;
   }
   if (goal.includes("defi") || goal.includes("protocol")) {
-    return `${profile.name} fits protocol education and high-intent audiences; use ${profile.collaborationFormats[0]} and track ${profile.proofSignals[0]}.`;
+    return `${profile.name} fits protocol education and high-intent audiences; use ${profile.collaborationFormats[0]} and track ${profile.proofSignals[0]}.${liveQuality}`;
   }
-  return `${profile.name} matches ${profile.audience[0]} and is best for ${profile.bestFor[0]}; start with ${profile.collaborationFormats[0]}.`;
+  return `${profile.name} matches ${profile.audience[0]} and is best for ${profile.bestFor[0]}; start with ${profile.collaborationFormats[0]}.${liveQuality}`;
 }
 
 export function decideWeb3Growth(
@@ -371,15 +395,20 @@ export function decideWeb3Growth(
   const recommendedSupply = [...new Set(successful.map(supplyFromEvent))];
   const recommendedPartnerProfiles = [...new Set(successful.map((event) => `${event.partner} (${event.partnerType}, ${event.chainOrSector})`))];
   const scoredConcretePartners = getExpandedSupplyProfiles(extraSupplyProfiles)
-    .map((profile) => ({
-      ...profile,
-      fitScore: scoreSupplyProfile(demand, profile),
-      fitReason: supplyFitReason(profile, demand),
-      suggestedFormat: profile.collaborationFormats[0] || "Targeted collaboration",
-      keyMetric: profile.proofSignals[0] || "qualified conversion",
-      primaryRisk: profile.risks[0] || "Audience fit risk",
-      matchSignals: matchSignals(demand, profile),
-    }))
+    .map((profile) => {
+      const liveMeta = liveQualityMeta(profile);
+      return {
+        ...profile,
+        fitScore: scoreSupplyProfile(demand, profile),
+        fitReason: supplyFitReason(profile, demand),
+        suggestedFormat: profile.collaborationFormats[0] || "Targeted collaboration",
+        keyMetric: profile.proofSignals[0] || "qualified conversion",
+        primaryRisk: profile.risks[0] || "Audience fit risk",
+        matchSignals: matchSignals(demand, profile),
+        liveQualityScore: liveMeta.score,
+        liveSourceCoverage: liveMeta.coverage,
+      };
+    })
     .sort((a, b) => b.fitScore - a.fitScore || a.supplyType.localeCompare(b.supplyType) || a.name.localeCompare(b.name));
   const recommendedConcretePartners = diversifyPartners(scoredConcretePartners, 10);
   const collaborationPatterns = [...new Set(successful.map((event) => event.reusablePattern))];

@@ -5,9 +5,10 @@ import { WEB3_GROWTH_EVENTS } from "@/lib/grointel/web3World";
 
 export const dynamic = "force-dynamic";
 
-function demandMatchScore(candidate: { priority: number; tags: string[] }, supplyTags: string[]) {
+function demandMatchScore(candidate: { priority: number; tags: string[]; liveQualityScore?: number }, supplyTags: string[]) {
   const overlap = candidate.tags.filter((tag) => supplyTags.includes(tag)).length;
-  return Math.max(1, Math.min(100, Math.round(50 + candidate.priority * 0.3 + overlap * 8)));
+  const qualityBonus = typeof candidate.liveQualityScore === "number" ? Math.max(0, Math.round((candidate.liveQualityScore - 70) / 3)) : 0;
+  return Math.max(1, Math.min(100, Math.round(50 + candidate.priority * 0.3 + overlap * 8 + qualityBonus)));
 }
 
 export async function GET() {
@@ -31,6 +32,8 @@ export async function GET() {
       supplyType: partner.supplyType,
       fitScore: partner.fitScore,
       source: partner.source,
+      liveQualityScore: partner.liveQualityScore,
+      liveSourceCoverage: partner.liveSourceCoverage || [],
     }));
 
   const probeSupply = liveSupplyProfiles[0];
@@ -44,6 +47,8 @@ export async function GET() {
       fitScore: demandMatchScore(candidate, supplyTags),
       source: candidate.source,
       tags: candidate.tags,
+      liveQualityScore: (candidate as any).liveQualityScore,
+      liveSourceCoverage: (candidate as any).liveSourceCoverage || [],
       suggestedCollaboration: probeSupply?.collaborationFormats[0] || "targeted Web3 growth pilot",
       keyMetric: probeSupply?.proofSignals[0] || "qualified conversion",
     }))
