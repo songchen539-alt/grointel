@@ -1,5 +1,6 @@
 import { WEB3_GROWTH_EVENTS, WEB3_SUPPLY_PROFILES, type Web3GrowthEvent, type Web3SupplyProfile } from "./web3World";
 import { WEB3_DISCOVERY_TARGETS, type Web3DiscoveryTarget } from "./web3Discovery";
+import type { DailyIngestionCandidate } from "./dailyIngestion";
 
 export interface Web3GrowthDemand {
   projectName: string;
@@ -182,11 +183,95 @@ function discoveryToSupplyProfile(target: Web3DiscoveryTarget): Web3SupplyProfil
   };
 }
 
-export function getExpandedSupplyProfiles() {
+export type ExpandedWeb3SupplyProfile = Web3SupplyProfile & { source?: string; tags?: string[]; priority?: number };
+
+function dailyCandidateToSupplyProfile(candidate: DailyIngestionCandidate): ExpandedWeb3SupplyProfile | null {
+  if (candidate.side !== "supply") return null;
+  const text = `${candidate.name} ${candidate.identity} ${candidate.domain} ${candidate.tags.join(" ")}`.toLowerCase();
+  const supplyType: Web3SupplyProfile["supplyType"] = includesAny(text, ["media", "news", "writer", "journalist", "podcast", "editorial"])
+    ? "media"
+    : includesAny(text, ["research", "analyst", "data", "defi"])
+      ? "research"
+      : includesAny(text, ["security", "risk", "audit", "hack"])
+        ? "security"
+        : candidate.kind === "partner"
+          ? "media"
+          : "kol";
+  const capabilityByType: Record<Web3SupplyProfile["supplyType"], string[]> = {
+    kol: ["crypto-native conversation", "audience activation", "narrative amplification"],
+    media: ["live editorial coverage", "sponsored education", "current narrative distribution"],
+    community: ["community activation", "culture fit", "retention feedback"],
+    platform: ["campaign mechanics", "tracked onboarding", "conversion reporting"],
+    research: ["current market analysis", "protocol education", "research-led credibility"],
+    security: ["risk scrutiny", "trust validation", "security education"],
+    creator: ["content creation", "audience education", "community conversion"],
+  };
+  const formatsByType: Record<Web3SupplyProfile["supplyType"], string[]> = {
+    kol: ["public conversation", "launch amplification", "founder discussion"],
+    media: ["live media brief", "sponsored educational article", "founder interview"],
+    community: ["community activation", "creator campaign", "feedback sprint"],
+    platform: ["quest campaign", "tracked onboarding sprint", "credential funnel"],
+    research: ["research thread", "protocol breakdown", "analyst briefing"],
+    security: ["risk transparency review", "security education", "trust signal campaign"],
+    creator: ["educational content", "product walkthrough", "campaign landing funnel"],
+  };
+  const proofByType: Record<Web3SupplyProfile["supplyType"], string[]> = {
+    kol: ["qualified traffic", "wallet/account creation", "social velocity"],
+    media: ["content engagement", "qualified traffic", "lead/account conversion"],
+    community: ["community joins", "activation quality", "retention after campaign"],
+    platform: ["quest completion", "qualified wallets", "retained active users"],
+    research: ["high-intent traffic", "qualified partner conversations", "research engagement"],
+    security: ["trust sentiment", "reduced concern volume", "security disclosure engagement"],
+    creator: ["content completion", "referral conversion", "qualified account creation"],
+  };
+  const risksByType: Record<Web3SupplyProfile["supplyType"], string[]> = {
+    kol: ["audience may reject shallow promotion", "attention can decay quickly"],
+    media: ["requires substantive story", "editorial standards limit pure promotion"],
+    community: ["community backlash if trust is weak", "culture fit matters more than reach"],
+    platform: ["incentive farming and low retention", "anti-Sybil design required"],
+    research: ["requires accurate technical claims", "slower than hype-led channels"],
+    security: ["can amplify unresolved risk", "not a normal paid promotion fit"],
+    creator: ["content quality and disclosure matter", "audience fit must be validated"],
+  };
+
+  return {
+    id: candidate.id,
+    name: candidate.name,
+    identity: candidate.identity,
+    supplyType,
+    audience: [
+      `${candidate.tags.slice(0, 4).join(" / ")} audience`,
+      candidate.domain.replace(/^Web3\s*\/\s*/i, ""),
+      "crypto-native users",
+    ],
+    capabilities: capabilityByType[supplyType],
+    bestFor: candidate.tags.map((tag) => `${tag} growth`).slice(0, 4).concat([candidate.domain.replace(/^Web3\s*\/\s*/i, "")]),
+    collaborationFormats: formatsByType[supplyType],
+    proofSignals: proofByType[supplyType],
+    risks: risksByType[supplyType],
+    source: candidate.source,
+    tags: candidate.tags,
+    priority: candidate.priority,
+  };
+}
+
+export function dailySupplyCandidatesToProfiles(candidates: DailyIngestionCandidate[] = []) {
+  return candidates
+    .map(dailyCandidateToSupplyProfile)
+    .filter((profile): profile is ExpandedWeb3SupplyProfile => Boolean(profile));
+}
+
+export function getExpandedSupplyProfiles(extraProfiles: ExpandedWeb3SupplyProfile[] = []) {
   const profiles = [...WEB3_SUPPLY_PROFILES];
   const seen = new Set(profiles.map((profile) => `${profile.name}|${profile.identity}`.toLowerCase()));
   for (const target of WEB3_DISCOVERY_TARGETS.filter((item) => item.segment === "supply")) {
     const profile = discoveryToSupplyProfile(target);
+    const key = `${profile.name}|${profile.identity}`.toLowerCase();
+    if (seen.has(key)) continue;
+    profiles.push(profile);
+    seen.add(key);
+  }
+  for (const profile of extraProfiles) {
     const key = `${profile.name}|${profile.identity}`.toLowerCase();
     if (seen.has(key)) continue;
     profiles.push(profile);
@@ -267,7 +352,11 @@ function supplyFitReason(profile: Web3SupplyProfile, demand: Web3GrowthDemand) {
   return `${profile.name} matches ${profile.audience[0]} and is best for ${profile.bestFor[0]}; start with ${profile.collaborationFormats[0]}.`;
 }
 
-export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEvent[] = WEB3_GROWTH_EVENTS): Web3GrowthDecision {
+export function decideWeb3Growth(
+  demand: Web3GrowthDemand,
+  events: Web3GrowthEvent[] = WEB3_GROWTH_EVENTS,
+  extraSupplyProfiles: ExpandedWeb3SupplyProfile[] = [],
+): Web3GrowthDecision {
   const matchedEvents = events
     .map((event) => ({
       ...event,
@@ -281,7 +370,7 @@ export function decideWeb3Growth(demand: Web3GrowthDemand, events: Web3GrowthEve
   const risky = matchedEvents.filter((event) => event.outcome === "failure" || event.outcome === "risk");
   const recommendedSupply = [...new Set(successful.map(supplyFromEvent))];
   const recommendedPartnerProfiles = [...new Set(successful.map((event) => `${event.partner} (${event.partnerType}, ${event.chainOrSector})`))];
-  const scoredConcretePartners = getExpandedSupplyProfiles()
+  const scoredConcretePartners = getExpandedSupplyProfiles(extraSupplyProfiles)
     .map((profile) => ({
       ...profile,
       fitScore: scoreSupplyProfile(demand, profile),

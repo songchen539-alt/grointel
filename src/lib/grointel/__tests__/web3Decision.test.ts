@@ -37,5 +37,28 @@ assert(decision.measurementPlan.length > 0, "should produce measurable campaign 
 assert(decision.qualificationQuestions.length >= 4, "should produce qualification questions");
 assert(decision.confidence > 0 && decision.confidence <= 100, "confidence should be bounded");
 
+const liveDecision = decideWeb3Growth({
+  projectName: "Live Media Test",
+  sector: "Ethereum L2",
+  growthGoal: "Acquire real users through media education and KOL partnerships",
+  targetAudience: "crypto-native builders",
+  riskTolerance: "low",
+}, WEB3_GROWTH_EVENTS, [{
+  id: "web3.live.supply.media.test-writer",
+  name: "Live Feed Writer",
+  identity: "example.com/authors/live-feed-writer",
+  supplyType: "media",
+  audience: ["ethereum / media / builders audience", "live Web3 media coverage", "crypto-native users"],
+  capabilities: ["live editorial coverage", "sponsored education", "current narrative distribution"],
+  bestFor: ["ethereum growth", "media growth", "builder education"],
+  collaborationFormats: ["live media brief", "sponsored educational article", "founder interview"],
+  proofSignals: ["content engagement", "qualified traffic", "lead/account conversion"],
+  risks: ["requires substantive story", "editorial standards limit pure promotion"],
+  source: "web3_media_feeds_live",
+  tags: ["media", "ethereum", "builders", "education"],
+  priority: 96,
+}]);
+assert(liveDecision.recommendedConcretePartners.some((partner) => partner.source === "web3_media_feeds_live"), "should inject live supply profiles into concrete recommendations");
+
 console.log(`=== Results: ${passed} passed, ${failed} failed, ${passed + failed} total ===`);
 if (failed > 0) process.exit(1);

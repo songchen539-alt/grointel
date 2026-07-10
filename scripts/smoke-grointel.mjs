@@ -79,6 +79,9 @@ async function main() {
   assert((decision.decision?.recommendedConcretePartners || []).length > 0, "web3 decision should recommend concrete KOL/supply partners");
   assert(decision.decision.recommendedConcretePartners.length >= 8, "web3 decision should use expanded KOL/supply pool");
   assert(decision.decision.recommendedConcretePartners.some((partner) => partner.source || (partner.tags || []).length > 0), "web3 decision should include discovery-sourced KOL/supply partners");
+  assert(decision.liveMatching?.attempted === true, "web3 decision should attempt live supply matching");
+  assert(decision.liveMatching?.injectedSupplyProfiles > 0, "web3 decision should inject live supply profiles");
+  assert(decision.decision.recommendedConcretePartners.some((partner) => partner.source === "web3_media_feeds_live"), "web3 decision should recommend at least one live media-feed supply partner");
   assert(new Set(decision.decision.recommendedConcretePartners.map((partner) => partner.supplyType)).size >= 3, "web3 decision should diversify supply partner types");
   assert(decision.aiInsight?.growthState, "web3 decision should include AI growth insight");
   console.log(`ok web3 decision: ${decision.memory.eventCount} events / ${decision.decision.confidence}% confidence / ${decision.decision.recommendedConcretePartners[0].name}`);
@@ -96,6 +99,8 @@ async function main() {
   });
   assert(brief.success, "web3 collaboration brief should succeed");
   assert((brief.brief?.partnerBriefs || []).length >= 3, "brief should include multiple partner briefs");
+  assert(brief.liveMatching?.attempted === true, "collaboration brief should attempt live supply matching");
+  assert(brief.liveMatching?.injectedSupplyProfiles > 0, "collaboration brief should inject live supply profiles");
   assert(brief.brief.partnerBriefs[0].outreachMessage, "brief should include outreach copy");
   assert(brief.brief.partnerBriefs[0].suggestedDeliverables.length >= 3, "brief should include deliverables");
   assert(brief.brief.partnerBriefs[0].successMetrics.length >= 2, "brief should include success metrics");
