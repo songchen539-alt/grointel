@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       targetAudience: "crypto-native builders and DeFi users",
       riskTolerance: "low",
     }, WEB3_GROWTH_EVENTS, liveSupplyProfiles);
-    const liveSupplyMatchCount = liveProbeDecision.recommendedConcretePartners.filter((partner) => partner.source === "web3_media_feeds_live").length;
+    const liveSupplyMatchCount = liveProbeDecision.recommendedConcretePartners.filter((partner) => String(partner.source || "").endsWith("_live")).length;
     const liveDemandMatchCount = liveDiscovery.candidates.filter((candidate) => candidate.side === "demand" && candidate.source === "defillama_live").length;
     const discovery = web3DiscoveryStats(world.targets);
     const life = getGroIntelLifeStatus();

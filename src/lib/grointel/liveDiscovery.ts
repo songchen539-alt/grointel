@@ -44,7 +44,7 @@ type GitHubRepo = {
   };
 };
 
-export type LiveDiscoverySourceId = "defillama" | "web3_media_feeds" | "github_repos";
+export type LiveDiscoverySourceId = "defillama" | "web3_media_feeds" | "github_repos" | "youtube_creator_feeds";
 
 export type LiveDiscoverySourceResult = {
   attempted: boolean;
@@ -121,6 +121,33 @@ const WEB3_MEDIA_FEEDS: MediaFeedSource[] = [
   },
 ];
 
+const YOUTUBE_CREATOR_FEEDS: MediaFeedSource[] = [
+  {
+    id: "bankless-youtube",
+    name: "Bankless",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCAl9Ld79qaZxp9JzEOwd3aA",
+    identity: "youtube.com/@Bankless",
+    priority: 90,
+    baseTags: ["youtube", "media", "ethereum", "education"],
+  },
+  {
+    id: "coin-bureau-youtube",
+    name: "Coin Bureau",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCqK_GSMbpiV8spgD3ZGloSw",
+    identity: "youtube.com/@CoinBureau",
+    priority: 88,
+    baseTags: ["youtube", "retail", "education", "markets"],
+  },
+  {
+    id: "whiteboard-crypto-youtube",
+    name: "Whiteboard Crypto",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCsYYksPHiGqXHPoHI-fm5sg",
+    identity: "youtube.com/@WhiteboardCrypto",
+    priority: 82,
+    baseTags: ["youtube", "education", "retail", "explainers"],
+  },
+];
+
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 function clamp(value: number, min: number, max: number) {
@@ -149,6 +176,12 @@ function extractTag(block: string, tag: string) {
 
 function extractTags(block: string, tag: string) {
   return Array.from(block.matchAll(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi")))
+    .map((match) => stripXml(match[1]))
+    .filter(Boolean);
+}
+
+function extractCategoryTerms(block: string) {
+  return Array.from(block.matchAll(/<category\b[^>]*\bterm=["']([^"']+)["'][^>]*\/?>/gi))
     .map((match) => stripXml(match[1]))
     .filter(Boolean);
 }
@@ -271,12 +304,12 @@ function topicTags(items: ParsedFeedItem[]) {
 }
 
 function parseFeedItems(xml: string): ParsedFeedItem[] {
-  return Array.from(xml.matchAll(/<item\b[\s\S]*?<\/item>/gi)).map((match) => {
+  return Array.from(xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)).map((match) => {
     const block = match[0];
     return {
       title: extractTag(block, "title"),
-      creator: extractTag(block, "dc:creator") || extractTag(block, "author") || undefined,
-      categories: extractTags(block, "category"),
+      creator: extractTag(block, "dc:creator") || extractTag(block, "name") || extractTag(block, "author") || undefined,
+      categories: [...extractTags(block, "category"), ...extractCategoryTerms(block)],
     };
   }).filter((item) => item.title);
 }
@@ -320,6 +353,23 @@ function creatorCandidates(source: MediaFeedSource, items: ParsedFeedItem[], lim
       tags: Array.from(new Set(["kol", "media", "writer", ...source.baseTags, ...topicTags(creatorItems)])),
       ingestionReason: "Live Web3 media feed identified this author as an active coverage supply node for current growth narratives.",
     }));
+}
+
+function youtubeCreatorCandidate(source: MediaFeedSource, items: ParsedFeedItem[]): DailyIngestionCandidate {
+  const tags = Array.from(new Set(["kol", "creator", "youtube", "video", ...source.baseTags, ...topicTags(items)])).slice(0, 10);
+  const recentTitles = items.slice(0, 3).map((item) => item.title).join(" | ");
+  return {
+    id: `web3.live.supply.youtube.${source.id}`,
+    name: source.name,
+    identity: source.identity,
+    kind: "kol",
+    domain: `Web3 / YouTube creator and video education supply${recentTitles ? ` covering ${recentTitles}` : ""}`,
+    side: "supply",
+    source: "youtube_creator_feeds_live",
+    priority: Math.round(clamp(source.priority + Math.min(5, items.length / 3), 72, 96)),
+    tags,
+    ingestionReason: "Live YouTube creator feed observed recent Web3 videos, making this channel an active supply node for growth education and narrative distribution.",
+  };
 }
 
 async function fetchWithTimeout(url: string, timeoutMs: number) {
@@ -469,6 +519,41 @@ async function fetchWeb3MediaSupply(limit: number, timeoutMs: number): Promise<L
   };
 }
 
+async function fetchYoutubeCreatorSupply(limit: number, timeoutMs: number): Promise<LiveDiscoverySourceResult> {
+  const startedAt = Date.now();
+  const perFeedTimeout = Math.max(1500, Math.floor(timeoutMs / 2));
+  const results = await Promise.all(YOUTUBE_CREATOR_FEEDS.map(async (source) => {
+    try {
+      const response = await fetchWithTimeout(source.url, perFeedTimeout);
+      if (!response.ok) throw new Error(`${source.name} responded ${response.status}`);
+      const xml = await response.text();
+      const items = parseFeedItems(xml).slice(0, 20);
+      return { source, items, error: null as string | null };
+    } catch (error) {
+      return { source, items: [] as ParsedFeedItem[], error: error instanceof Error ? error.message : String(error) };
+    }
+  }));
+
+  const candidates = results
+    .filter((result) => result.items.length > 0)
+    .map((result) => youtubeCreatorCandidate(result.source, result.items))
+    .slice(0, limit);
+  const errors = results.filter((result) => result.error).map((result) => `${result.source.name}: ${result.error}`);
+
+  return {
+    attempted: true,
+    success: candidates.length > 0,
+    source: "youtube_creator_feeds",
+    sourceUrl: YOUTUBE_CREATOR_FEEDS.map((source) => source.url).join(", "),
+    side: "supply",
+    latencyMs: Date.now() - startedAt,
+    rawCount: results.reduce((sum, result) => sum + result.items.length, 0),
+    candidateCount: candidates.length,
+    candidates,
+    error: errors.length > 0 ? errors.join("; ") : undefined,
+  };
+}
+
 export async function fetchLiveWeb3DiscoveryCandidates(options: LiveDiscoveryOptions = {}): Promise<LiveDiscoveryResult> {
   const startedAt = Date.now();
   const limit = Math.max(1, Math.min(options.limit || DEFAULT_LIMIT, 200));
@@ -479,7 +564,8 @@ export async function fetchLiveWeb3DiscoveryCandidates(options: LiveDiscoveryOpt
   const sources = await Promise.all([
     fetchDefiLlamaDemand(Math.ceil(demandLimit * 0.75), timeoutMs),
     fetchGithubDemand(Math.max(10, Math.ceil(demandLimit * 0.25)), timeoutMs),
-    fetchWeb3MediaSupply(supplyLimit, timeoutMs),
+    fetchWeb3MediaSupply(Math.ceil(supplyLimit * 0.65), timeoutMs),
+    fetchYoutubeCreatorSupply(Math.max(3, Math.ceil(supplyLimit * 0.35)), timeoutMs),
   ]);
   const candidates = sources.flatMap((source) => source.candidates);
   const success = sources.some((source) => source.success);

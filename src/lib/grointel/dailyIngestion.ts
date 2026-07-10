@@ -45,7 +45,7 @@ export const GLOBAL_WEB3_DISCOVERY_SOURCES: GlobalDiscoverySource[] = [
   { id: "dune", name: "Dune", side: "demand", category: "market_data", signalTypes: ["dashboard", "usage", "community"], trust: 76, freshness: "weekly", status: "planned" },
   { id: "github", name: "GitHub", side: "demand", category: "developer", signalTypes: ["repo", "developer", "activity"], trust: 78, freshness: "daily", status: "active" },
   { id: "x-twitter", name: "X/Twitter", side: "supply", category: "social", signalTypes: ["kol", "audience", "conversation"], trust: 68, freshness: "daily", status: "planned" },
-  { id: "youtube", name: "YouTube", side: "supply", category: "social", signalTypes: ["creator", "video", "audience"], trust: 72, freshness: "weekly", status: "planned" },
+  { id: "youtube", name: "YouTube", side: "supply", category: "social", signalTypes: ["creator", "video", "audience"], trust: 72, freshness: "daily", status: "active" },
   { id: "substack", name: "Substack/Newsletters", side: "supply", category: "media", signalTypes: ["newsletter", "writer", "audience"], trust: 72, freshness: "weekly", status: "planned" },
   { id: "podcasts", name: "Crypto Podcasts", side: "supply", category: "media", signalTypes: ["podcast", "guest", "audience"], trust: 70, freshness: "weekly", status: "planned" },
   { id: "blockworks", name: "Blockworks", side: "supply", category: "media", signalTypes: ["media", "institutional", "podcast"], trust: 80, freshness: "daily", status: "active" },
