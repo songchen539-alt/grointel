@@ -3,9 +3,11 @@ import { getAIGatewayStatus } from "@/lib/ai/gateway/status";
 import { getGroIntelLifeStatus } from "@/lib/grointel/lifeStatus";
 import { buildDailyWeb3IngestionBatch } from "@/lib/grointel/dailyIngestion";
 import { fetchLiveWeb3DiscoveryCandidates } from "@/lib/grointel/liveDiscovery";
+import { dailySupplyCandidatesToProfiles, decideWeb3Growth } from "@/lib/grointel/web3Decision";
 import { web3DiscoveryStats } from "@/lib/grointel/web3Discovery";
 import { loadWorldMemorySummary, saveWorldMemory, seedGrowthEvents } from "@/lib/grointel/worldMemory";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
+import { WEB3_GROWTH_EVENTS } from "@/lib/grointel/web3World";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +56,16 @@ export async function GET(req: NextRequest) {
       fetchLiveWeb3DiscoveryCandidates({ demandLimit: 100, supplyLimit: 60, timeoutMs: 4500 }),
     ]);
     const dailyIngestion = buildDailyWeb3IngestionBatch(new Date().toISOString().slice(0, 10), 100, 100, liveDiscovery.candidates);
+    const liveSupplyProfiles = dailySupplyCandidatesToProfiles(liveDiscovery.candidates);
+    const liveProbeDecision = decideWeb3Growth({
+      projectName: "GroIntel Readiness Probe",
+      sector: "Ethereum L2 / DeFi",
+      growthGoal: "Acquire real users through media education, KOL partnerships, and research-led growth",
+      targetAudience: "crypto-native builders and DeFi users",
+      riskTolerance: "low",
+    }, WEB3_GROWTH_EVENTS, liveSupplyProfiles);
+    const liveSupplyMatchCount = liveProbeDecision.recommendedConcretePartners.filter((partner) => partner.source === "web3_media_feeds_live").length;
+    const liveDemandMatchCount = liveDiscovery.candidates.filter((candidate) => candidate.side === "demand" && candidate.source === "defillama_live").length;
     const discovery = web3DiscoveryStats(world.targets);
     const life = getGroIntelLifeStatus();
 
@@ -184,6 +196,17 @@ export async function GET(req: NextRequest) {
         },
         "Check DefiLlama/media feed connectivity or add the next live Web3 source connector.",
       ),
+      readinessCheck(
+        "bidirectional_live_matching",
+        liveSupplyMatchCount > 0 && liveDemandMatchCount >= 50 ? "pass" : "warn",
+        "GroIntel can match company demand to live supply and KOL/media supply back to live company demand.",
+        {
+          companyToLiveSupplyMatches: liveSupplyMatchCount,
+          supplyToLiveDemandMatches: liveDemandMatchCount,
+          endpoint: "/api/grointel/bidirectional-matching-readiness",
+        },
+        "Inspect /api/grointel/bidirectional-matching-readiness and tune live matching if either direction weakens.",
+      ),
     ];
 
     const status = overallStatus(checks);
@@ -225,6 +248,8 @@ export async function GET(req: NextRequest) {
         liveDemandDiscoveryCandidates: liveDiscovery.demandCandidateCount,
         liveSupplyDiscoveryCandidates: liveDiscovery.supplyCandidateCount,
         liveDiscoveryRawCount: liveDiscovery.rawCount,
+        companyToLiveSupplyMatches: liveSupplyMatchCount,
+        supplyToLiveDemandMatches: liveDemandMatchCount,
       },
       nextActions: checks.filter((check) => check.state !== "pass").map((check) => ({
         key: check.key,
@@ -234,6 +259,7 @@ export async function GET(req: NextRequest) {
         "/api/grointel/ai-health",
         "/api/grointel/web3-discovery?limit=5",
         "/api/grointel/daily-ingestion?live=1",
+        "/api/grointel/bidirectional-matching-readiness",
         "/api/grointel/world-memory-migration",
         "/api/grointel/heartbeat?limit=2",
         "/api/grointel/world?limit=2",

@@ -111,6 +111,13 @@ async function main() {
   assert(brief.aiInsight?.growthState, "brief should include AI growth insight");
   console.log(`ok web3 collaboration brief: ${brief.brief.partnerBriefs.length} partners / ${brief.brief.partnerBriefs[0].partnerName}`);
 
+  const bidirectional = await request("/api/grointel/bidirectional-matching-readiness");
+  assert(bidirectional.success, "bidirectional matching readiness should respond");
+  assert(bidirectional.ready, "bidirectional live matching should be ready");
+  assert((bidirectional.companyToSupply?.liveMatches || []).length > 0, "company-to-supply should include live supply matches");
+  assert((bidirectional.supplyToCompany?.liveDemandMatches || []).some((match) => match.source === "defillama_live"), "supply-to-company should include live demand matches");
+  console.log(`ok bidirectional matching: liveSupply=${bidirectional.companyToSupply.liveMatches.length} liveDemand=${bidirectional.supplyToCompany.liveDemandMatches.length}`);
+
   const memoryStatus = await request("/api/grointel/world-memory-status");
   assert(memoryStatus.success !== false, "world memory status should respond");
   assert(memoryStatus.ready || memoryStatus.legacyReady, "primary or legacy world memory should be available");
