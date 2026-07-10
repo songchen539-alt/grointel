@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAIGatewayStatus } from "@/lib/ai/gateway/status";
 import { getGroIntelLifeStatus } from "@/lib/grointel/lifeStatus";
 import { buildDailyWeb3IngestionBatch } from "@/lib/grointel/dailyIngestion";
+import { fetchLiveWeb3DiscoveryCandidates } from "@/lib/grointel/liveDiscovery";
 import { web3DiscoveryStats } from "@/lib/grointel/web3Discovery";
 import { loadWorldMemorySummary, saveWorldMemory, seedGrowthEvents } from "@/lib/grointel/worldMemory";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
@@ -47,8 +48,12 @@ export async function GET(req: NextRequest) {
     const world = shouldObserve ? await runtime.observeTargets(safeLimit) : runtime.snapshot();
     const memorySave = shouldObserve ? await saveWorldMemory(world, "delivery_readiness") : null;
     const growthEventSeed = shouldObserve ? await seedGrowthEvents() : null;
-    const [ai, memory] = await Promise.all([getAIGatewayStatus(), loadWorldMemorySummary(20)]);
-    const dailyIngestion = buildDailyWeb3IngestionBatch(new Date().toISOString().slice(0, 10), 100, 100);
+    const [ai, memory, liveDiscovery] = await Promise.all([
+      getAIGatewayStatus(),
+      loadWorldMemorySummary(20),
+      fetchLiveWeb3DiscoveryCandidates({ limit: 100, timeoutMs: 4500 }),
+    ]);
+    const dailyIngestion = buildDailyWeb3IngestionBatch(new Date().toISOString().slice(0, 10), 100, 100, liveDiscovery.candidates);
     const discovery = web3DiscoveryStats(world.targets);
     const life = getGroIntelLifeStatus();
 
@@ -151,6 +156,23 @@ export async function GET(req: NextRequest) {
         dailyIngestion.sourceSummary,
         "Add more active discovery sources and source-backed candidate extraction.",
       ),
+      readinessCheck(
+        "live_discovery_connector",
+        liveDiscovery.success && liveDiscovery.candidateCount >= 50 ? "pass" : "warn",
+        liveDiscovery.success
+          ? "GroIntel is actively pulling real Web3 protocol candidates from a live external source."
+          : "GroIntel can fall back to its bootstrap pool, but the live source is temporarily unavailable.",
+        {
+          source: liveDiscovery.source,
+          sourceUrl: liveDiscovery.sourceUrl,
+          success: liveDiscovery.success,
+          rawCount: liveDiscovery.rawCount,
+          candidateCount: liveDiscovery.candidateCount,
+          latencyMs: liveDiscovery.latencyMs,
+          error: liveDiscovery.error || null,
+        },
+        "Check DefiLlama connectivity or add the next live Web3 source connector.",
+      ),
     ];
 
     const status = overallStatus(checks);
@@ -188,6 +210,8 @@ export async function GET(req: NextRequest) {
         discoverySources: dailyIngestion.sourceSummary.registeredSources,
         activeDiscoverySources: dailyIngestion.sourceSummary.activeSources,
         avgDailyDiscoveryScore: dailyIngestion.sourceSummary.avgDiscoveryScore,
+        liveDiscoveryCandidates: liveDiscovery.candidateCount,
+        liveDiscoveryRawCount: liveDiscovery.rawCount,
       },
       nextActions: checks.filter((check) => check.state !== "pass").map((check) => ({
         key: check.key,
@@ -196,7 +220,7 @@ export async function GET(req: NextRequest) {
       verificationPaths: [
         "/api/grointel/ai-health",
         "/api/grointel/web3-discovery?limit=5",
-        "/api/grointel/daily-ingestion",
+        "/api/grointel/daily-ingestion?live=1",
         "/api/grointel/heartbeat?limit=2",
         "/api/grointel/world?limit=2",
         "/api/grointel/identity-intake",
