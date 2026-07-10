@@ -155,6 +155,7 @@ async function main() {
   assert((dailyIngestion.liveDiscovery?.sources || []).some((source) => source.source === "github_repos"), "daily ingestion should include GitHub repositories as a live developer source");
   assert((dailyIngestion.liveDiscovery?.sources || []).some((source) => source.source === "web3_media_feeds"), "daily ingestion should include Web3 media feeds as a live supply source");
   assert((dailyIngestion.liveDiscovery?.sources || []).some((source) => source.source === "youtube_creator_feeds"), "daily ingestion should include YouTube creator feeds as a live KOL source");
+  assert((dailyIngestion.liveDiscovery?.sources || []).some((source) => source.source === "web3_content_feeds"), "daily ingestion should include newsletters, podcasts, and research feeds as live supply sources");
   if (dailyIngestion.liveDiscovery?.success) {
     assert(dailyIngestion.liveDiscovery.candidateCount > 0, "successful live discovery should produce candidates");
     assert(dailyIngestion.liveDiscovery.demandCandidateCount > 0, "successful live discovery should produce demand candidates");

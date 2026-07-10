@@ -22,6 +22,11 @@ type MediaFeedSource = {
   baseTags: string[];
 };
 
+type ContentFeedSource = MediaFeedSource & {
+  contentType: "newsletter" | "podcast" | "research";
+  supplyKind: "kol" | "partner";
+};
+
 type ParsedFeedItem = {
   title: string;
   creator?: string;
@@ -44,7 +49,7 @@ type GitHubRepo = {
   };
 };
 
-export type LiveDiscoverySourceId = "defillama" | "web3_media_feeds" | "github_repos" | "youtube_creator_feeds";
+export type LiveDiscoverySourceId = "defillama" | "web3_media_feeds" | "github_repos" | "youtube_creator_feeds" | "web3_content_feeds";
 
 export type LiveDiscoverySourceResult = {
   attempted: boolean;
@@ -145,6 +150,49 @@ const YOUTUBE_CREATOR_FEEDS: MediaFeedSource[] = [
     identity: "youtube.com/@WhiteboardCrypto",
     priority: 82,
     baseTags: ["youtube", "education", "retail", "explainers"],
+  },
+];
+
+const WEB3_CONTENT_FEEDS: ContentFeedSource[] = [
+  {
+    id: "ournetwork-newsletter",
+    name: "OurNetwork",
+    url: "https://ournetwork.substack.com/feed",
+    identity: "ournetwork.substack.com",
+    priority: 82,
+    baseTags: ["newsletter", "analytics", "data", "research"],
+    contentType: "newsletter",
+    supplyKind: "partner",
+  },
+  {
+    id: "empire-podcast",
+    name: "Empire",
+    url: "https://feeds.megaphone.fm/empire",
+    identity: "blockworks.com/podcast/empire",
+    priority: 84,
+    baseTags: ["podcast", "media", "founders", "policy"],
+    contentType: "podcast",
+    supplyKind: "partner",
+  },
+  {
+    id: "ethereum-foundation-blog",
+    name: "Ethereum Foundation Blog",
+    url: "https://blog.ethereum.org/feed.xml",
+    identity: "blog.ethereum.org",
+    priority: 86,
+    baseTags: ["research", "ethereum", "developers", "ecosystem"],
+    contentType: "research",
+    supplyKind: "partner",
+  },
+  {
+    id: "vitalik-blog",
+    name: "Vitalik Buterin",
+    url: "https://vitalik.eth.limo/feed.xml",
+    identity: "vitalik.eth.limo",
+    priority: 88,
+    baseTags: ["research", "ethereum", "founder", "thought-leader"],
+    contentType: "research",
+    supplyKind: "kol",
   },
 ];
 
@@ -372,6 +420,34 @@ function youtubeCreatorCandidate(source: MediaFeedSource, items: ParsedFeedItem[
   };
 }
 
+function contentFeedCandidate(source: ContentFeedSource, items: ParsedFeedItem[]): DailyIngestionCandidate {
+  const tags = Array.from(new Set([
+    source.supplyKind === "kol" ? "kol" : "partner",
+    source.contentType,
+    "content",
+    ...source.baseTags,
+    ...topicTags(items),
+  ])).slice(0, 10);
+  const recentTitles = items.slice(0, 3).map((item) => item.title).join(" | ");
+  const supplyLabel = source.contentType === "podcast"
+    ? "podcast and interview supply"
+    : source.contentType === "newsletter"
+      ? "newsletter and analytics supply"
+      : "research and thought-leadership supply";
+  return {
+    id: `web3.live.supply.content.${source.id}`,
+    name: source.name,
+    identity: source.identity,
+    kind: source.supplyKind,
+    domain: `Web3 / ${supplyLabel}${recentTitles ? ` covering ${recentTitles}` : ""}`,
+    side: "supply",
+    source: "web3_content_feeds_live",
+    priority: Math.round(clamp(source.priority + Math.min(5, items.length / 4), 72, 96)),
+    tags,
+    ingestionReason: `Live ${source.contentType} feed observed recent Web3 content, making this source an active supply node for growth narrative, education, and trust-building.`,
+  };
+}
+
 async function fetchWithTimeout(url: string, timeoutMs: number) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -554,6 +630,41 @@ async function fetchYoutubeCreatorSupply(limit: number, timeoutMs: number): Prom
   };
 }
 
+async function fetchWeb3ContentSupply(limit: number, timeoutMs: number): Promise<LiveDiscoverySourceResult> {
+  const startedAt = Date.now();
+  const perFeedTimeout = Math.max(1500, Math.floor(timeoutMs / 2));
+  const results = await Promise.all(WEB3_CONTENT_FEEDS.map(async (source) => {
+    try {
+      const response = await fetchWithTimeout(source.url, perFeedTimeout);
+      if (!response.ok) throw new Error(`${source.name} responded ${response.status}`);
+      const xml = await response.text();
+      const items = parseFeedItems(xml).slice(0, 25);
+      return { source, items, error: null as string | null };
+    } catch (error) {
+      return { source, items: [] as ParsedFeedItem[], error: error instanceof Error ? error.message : String(error) };
+    }
+  }));
+
+  const candidates = results
+    .filter((result) => result.items.length > 0)
+    .map((result) => contentFeedCandidate(result.source, result.items))
+    .slice(0, limit);
+  const errors = results.filter((result) => result.error).map((result) => `${result.source.name}: ${result.error}`);
+
+  return {
+    attempted: true,
+    success: candidates.length > 0,
+    source: "web3_content_feeds",
+    sourceUrl: WEB3_CONTENT_FEEDS.map((source) => source.url).join(", "),
+    side: "supply",
+    latencyMs: Date.now() - startedAt,
+    rawCount: results.reduce((sum, result) => sum + result.items.length, 0),
+    candidateCount: candidates.length,
+    candidates,
+    error: errors.length > 0 ? errors.join("; ") : undefined,
+  };
+}
+
 export async function fetchLiveWeb3DiscoveryCandidates(options: LiveDiscoveryOptions = {}): Promise<LiveDiscoveryResult> {
   const startedAt = Date.now();
   const limit = Math.max(1, Math.min(options.limit || DEFAULT_LIMIT, 200));
@@ -564,8 +675,9 @@ export async function fetchLiveWeb3DiscoveryCandidates(options: LiveDiscoveryOpt
   const sources = await Promise.all([
     fetchDefiLlamaDemand(Math.ceil(demandLimit * 0.75), timeoutMs),
     fetchGithubDemand(Math.max(10, Math.ceil(demandLimit * 0.25)), timeoutMs),
-    fetchWeb3MediaSupply(Math.ceil(supplyLimit * 0.65), timeoutMs),
-    fetchYoutubeCreatorSupply(Math.max(3, Math.ceil(supplyLimit * 0.35)), timeoutMs),
+    fetchWeb3MediaSupply(Math.ceil(supplyLimit * 0.5), timeoutMs),
+    fetchYoutubeCreatorSupply(Math.max(3, Math.ceil(supplyLimit * 0.25)), timeoutMs),
+    fetchWeb3ContentSupply(Math.max(4, Math.ceil(supplyLimit * 0.25)), timeoutMs),
   ]);
   const candidates = sources.flatMap((source) => source.candidates);
   const success = sources.some((source) => source.success);
