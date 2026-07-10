@@ -4,6 +4,7 @@ import { loadWorldMemorySummary } from "@/lib/grointel/worldMemory";
 import { getExpandedSupplyProfiles } from "@/lib/grointel/web3Decision";
 import { getGroIntelLifeStatus } from "@/lib/grointel/lifeStatus";
 import { getAIGatewayStatus } from "@/lib/ai/gateway/status";
+import { buildDailyWeb3IngestionBatch } from "@/lib/grointel/dailyIngestion";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export default async function WorldPage() {
   const memory = await loadWorldMemorySummary(8);
   const life = getGroIntelLifeStatus();
   const ai = await getAIGatewayStatus();
+  const dailyIngestion = buildDailyWeb3IngestionBatch(new Date().toISOString().slice(0, 10), 100, 100);
   const supplyProfiles = getExpandedSupplyProfiles();
   const { score, topGaps, topPriorities, progress, targets, observations, signals, evidence, connectorHealth } = world;
   const observedTargetIds = new Set(observations.map((observation) => observation.target.id));
@@ -56,6 +58,7 @@ export default async function WorldPage() {
     { label: "L3 memory", pass: memory.decisionMemories.length > 0 },
     { label: "L4 memory", pass: memory.evolutionMemories.length > 0 },
     { label: "Growth events", pass: memory.growthEvents.length > 0 },
+    { label: "Daily 100+100", pass: dailyIngestion.demand.length >= 100 && dailyIngestion.supply.length >= 100 },
   ];
   const readinessScore = Math.round((readinessChecks.filter((check) => check.pass).length / readinessChecks.length) * 100);
   const readinessStatus = readinessScore === 100 ? "Ready" : readinessScore >= 75 ? "Degraded" : "Blocked";
@@ -202,6 +205,36 @@ export default async function WorldPage() {
               <a href="/api/grointel/web3-discovery" className="w-fit rounded-lg border border-violet-400/20 px-3 py-2 text-xs font-medium text-violet-200 transition-colors hover:bg-violet-400/10">
                 Open discovery API
               </a>
+            </div>
+          </div>
+          <div className="mt-4 rounded-lg border border-fuchsia-400/10 bg-fuchsia-400/[0.04] p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs text-fuchsia-200">Daily Global Ingestion</p>
+                <p className="mt-1 text-sm leading-6 text-gray-300">
+                  Today's batch is ready to enter GroIntel: {dailyIngestion.demand.length} Web3 growth-demand companies and {dailyIngestion.supply.length} KOL/media/research/community supply entities.
+                </p>
+                <p className="mt-2 text-xs leading-5 text-gray-500">
+                  Batch: {dailyIngestion.id}. Cron execution: daily at 00:30 UTC via <span className="font-mono">/api/grointel/daily-ingestion/run</span>.
+                </p>
+              </div>
+              <div className="grid gap-2 text-xs sm:grid-cols-3 lg:min-w-[28rem]">
+                <div className="rounded-lg bg-black/30 p-3">
+                  <p className="text-gray-500">Demand batch</p>
+                  <p className="mt-1 text-fuchsia-100">{dailyIngestion.demand.length}/100</p>
+                </div>
+                <div className="rounded-lg bg-black/30 p-3">
+                  <p className="text-gray-500">Supply batch</p>
+                  <p className="mt-1 text-fuchsia-100">{dailyIngestion.supply.length}/100</p>
+                </div>
+                <div className="rounded-lg bg-black/30 p-3">
+                  <p className="text-gray-500">Samples</p>
+                  <p className="mt-1 text-fuchsia-100">{dailyIngestion.demand[0]?.name} / {dailyIngestion.supply[0]?.name}</p>
+                </div>
+                <a href="/api/grointel/daily-ingestion" className="rounded-lg border border-fuchsia-400/20 px-3 py-2 text-center text-xs font-medium text-fuchsia-200 transition-colors hover:bg-fuchsia-400/10 sm:col-span-3">
+                  Open daily ingestion API
+                </a>
+              </div>
             </div>
           </div>
           <div className="mt-4 rounded-lg border border-sky-400/10 bg-sky-400/[0.04] p-4">
