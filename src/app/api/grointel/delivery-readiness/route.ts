@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAIGatewayStatus } from "@/lib/ai/gateway/status";
 import { getGroIntelLifeStatus } from "@/lib/grointel/lifeStatus";
+import { buildDailyWeb3IngestionBatch } from "@/lib/grointel/dailyIngestion";
 import { web3DiscoveryStats } from "@/lib/grointel/web3Discovery";
 import { loadWorldMemorySummary, saveWorldMemory, seedGrowthEvents } from "@/lib/grointel/worldMemory";
 import { getGroIntelWorldRuntime } from "@/lib/grointel/worldRuntime";
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
     const memorySave = shouldObserve ? await saveWorldMemory(world, "delivery_readiness") : null;
     const growthEventSeed = shouldObserve ? await seedGrowthEvents() : null;
     const [ai, memory] = await Promise.all([getAIGatewayStatus(), loadWorldMemorySummary(20)]);
+    const dailyIngestion = buildDailyWeb3IngestionBatch(new Date().toISOString().slice(0, 10), 100, 100);
     const discovery = web3DiscoveryStats(world.targets);
     const life = getGroIntelLifeStatus();
 
@@ -131,6 +133,17 @@ export async function GET(req: NextRequest) {
         { growthEvents: memory.growthEvents.length, seedSaved: growthEventSeed?.saved || null, seedError: growthEventSeed?.error || null },
         "Seed Web3 growth event memory.",
       ),
+      readinessCheck(
+        "daily_100_100_ingestion",
+        dailyIngestion.demand.length >= 100 && dailyIngestion.supply.length >= 100 ? "pass" : "fail",
+        "GroIntel has a daily ingestion batch capable of putting 100 Web3 demand entities and 100 Web3 KOL/supply entities into the system.",
+        {
+          demandBatchSize: dailyIngestion.demand.length,
+          supplyBatchSize: dailyIngestion.supply.length,
+          endpoint: "/api/grointel/daily-ingestion?run=1",
+        },
+        "Expand daily ingestion candidates and run the daily ingestion endpoint.",
+      ),
     ];
 
     const status = overallStatus(checks);
@@ -163,6 +176,8 @@ export async function GET(req: NextRequest) {
         decisionMemories: memory.decisionMemories.length,
         evolutionMemories: memory.evolutionMemories.length,
         growthEvents: memory.growthEvents.length,
+        dailyDemandBatch: dailyIngestion.demand.length,
+        dailySupplyBatch: dailyIngestion.supply.length,
       },
       nextActions: checks.filter((check) => check.state !== "pass").map((check) => ({
         key: check.key,
@@ -171,6 +186,7 @@ export async function GET(req: NextRequest) {
       verificationPaths: [
         "/api/grointel/ai-health",
         "/api/grointel/web3-discovery?limit=5",
+        "/api/grointel/daily-ingestion",
         "/api/grointel/heartbeat?limit=2",
         "/api/grointel/world?limit=2",
         "/api/grointel/identity-intake",

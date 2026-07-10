@@ -26,6 +26,8 @@ The first focused market is Web3. The current working path is:
 14. `/api/grointel/heartbeat` runs the scheduled reality observation cycle and seeds Web3 event memory.
 15. `/api/grointel/delivery-readiness` gives a single delivery status across AI, Web3 demand, KOL supply, reality loop, memory, and growth-event evidence.
 16. `/world` now surfaces the same delivery-readiness state so operators can see whether the living world is ready without opening raw API JSON.
+17. `/api/grointel/daily-ingestion` prepares a daily 100 Web3 demand entities + 100 Web3 KOL/supply entities batch.
+18. `/api/grointel/daily-ingestion/run` executes the daily batch and persists it into primary world memory or legacy world tables.
 
 ## Live Routes
 
@@ -42,6 +44,8 @@ The first focused market is Web3. The current working path is:
 - `/api/grointel/web3-discovery` - expanded Web3 company/KOL discovery registry and runtime target pool.
 - `/api/grointel/world-memory-status` - persistent world memory table status.
 - `/api/grointel/delivery-readiness` - delivery self-check for real AI, demand/supply pool, heartbeat, four-layer memory, and growth-event memory.
+- `/api/grointel/daily-ingestion` - preview daily 100 demand + 100 supply ingestion.
+- `/api/grointel/daily-ingestion/run` - run daily ingestion for cron/manual execution.
 
 ## Four-Layer Memory
 
@@ -143,6 +147,8 @@ GroIntel now falls back to these legacy tables when the primary `013_world_memor
 - `/api/grointel/web3-discovery` exposes the expanded Web3 demand/supply registry used by heartbeat and World runtime
 - `/api/grointel/delivery-readiness` reports `ready`, `score=100`, real AI passing, Web3 demand/supply counts, and non-empty L2/L3/L4 memory
 - `/world` shows a Delivery Readiness band with score, pass/watch checks, and a link to the readiness API
+- `/api/grointel/daily-ingestion` prepares 100 demand-side Web3 companies/protocols and 100 supply-side KOL/media/research/community entities per day
+- Vercel cron runs `/api/grointel/daily-ingestion/run` daily after heartbeat to put those entities into runtime world and persistent/legacy memory
 
 ## AI Gateway
 
@@ -197,6 +203,7 @@ Production smoke checks used:
 - `GET https://grointel.vercel.app/world`
 - `GET https://grointel.vercel.app/api/grointel/world-memory-status`
 - `GET https://grointel.vercel.app/api/grointel/delivery-readiness`
+- `GET https://grointel.vercel.app/api/grointel/daily-ingestion`
 
 Optional heartbeat smoke:
 

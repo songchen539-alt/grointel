@@ -1,5 +1,6 @@
 import { getServerClient } from "@/lib/supabase/server";
 import type { RealityWorldSnapshot } from "./worldRuntime";
+import type { DailyIngestionBatch, DailyIngestionCandidate } from "./dailyIngestion";
 import { WEB3_GROWTH_EVENTS, type Web3GrowthEvent } from "./web3World";
 
 export interface WorldMemorySaveResult {
@@ -20,6 +21,13 @@ export interface WorldMemorySummary {
   evolutionMemories: Record<string, any>[];
   growthEvents: Record<string, any>[];
   error: string | null;
+}
+
+export interface DailyIngestionSaveResult extends WorldMemorySaveResult {
+  batchId: string;
+  demand: number;
+  supply: number;
+  targetCount: number;
 }
 
 function memoryId(prefix: string, observedAt: string, id: string) {
@@ -138,6 +146,99 @@ async function saveLegacyGrowthEvents(db: any, events: Web3GrowthEvent[]): Promi
   } catch {
     return false;
   }
+}
+
+async function saveLegacyDailyIngestion(db: any, batch: DailyIngestionBatch): Promise<boolean> {
+  try {
+    const now = new Date().toISOString();
+    for (const target of batch.targets) {
+      await db.from("world_raw_observations").insert({
+        url: target.identity,
+        title: `${target.name} daily Web3 ${target.side} ingestion`,
+        raw_text: JSON.stringify({
+          target,
+          batch_id: batch.id,
+          ingestion_side: target.side,
+          tags: target.tags,
+          reason: target.ingestionReason,
+        }),
+        observed_at: now,
+        content_hash: `${batch.id}_${target.id}`,
+        language: "en",
+        status: "ingested",
+      });
+
+      await db.from("world_events").insert({
+        event_type: `grointel_daily_${target.side}_ingestion`,
+        event_title: `${target.name} entered GroIntel ${target.side} world`,
+        event_summary: `${target.name} (${target.identity}) entered GroIntel as a Web3 ${target.side} entity for daily matching and future observation.`,
+        event_date: batch.date,
+        detected_at: now,
+        source_url: target.identity,
+        source_name: "GroIntel daily ingestion",
+        confidence: Math.max(50, Math.min(92, target.priority)),
+        importance: Math.max(50, Math.min(100, target.priority)),
+        evidence_url: target.identity,
+        evidence_title: target.ingestionReason,
+        evidence_source_name: target.source,
+        evidence_item_type: `daily_${target.side}_entity`,
+        extraction_method: "grointel_daily_ingestion",
+      });
+
+      await db.from("world_growth_signals").insert({
+        signal_type: target.side === "demand" ? "web3_growth_demand_candidate" : "web3_growth_supply_candidate",
+        signal_strength: target.priority,
+        signal_reason: `${target.name} entered GroIntel daily Web3 ${target.side} pool with tags: ${target.tags.join(", ")}.`,
+        inferred_growth_needs: target.side === "demand" ? target.tags : [],
+        likely_buyers: target.side === "supply" ? target.tags : [],
+        urgency: target.priority >= 85 ? "high" : target.priority >= 72 ? "medium" : "low",
+        confidence: Math.max(50, Math.min(92, target.priority)),
+      });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function entityMemoryPayload(target: DailyIngestionCandidate, now: string) {
+  return {
+    target_id: target.id,
+    identity: target.identity,
+    kind: target.kind,
+    domain: target.domain,
+    signal_count: 1,
+    evidence_count: 1,
+    confidence: Math.max(50, Math.min(92, target.priority)),
+    profile: {
+      name: target.name,
+      side: target.side,
+      source: target.source,
+      tags: target.tags,
+      ingestion_reason: target.ingestionReason,
+      recent_signals: [
+        {
+          category: target.side === "demand" ? "web3_growth_demand_candidate" : "web3_growth_supply_candidate",
+          summary: `${target.name} entered the GroIntel daily Web3 ${target.side} world.`,
+          confidence: target.priority,
+          source: "grointel_daily_ingestion",
+          url: target.identity,
+        },
+      ],
+      recent_evidence: [
+        {
+          connector: "grointel_daily_ingestion",
+          summary: target.ingestionReason,
+          confidence: target.priority,
+          source: target.source,
+          url: target.identity,
+        },
+      ],
+    },
+    first_observed_at: now,
+    last_observed_at: now,
+    updated_at: now,
+  };
 }
 
 function legacyEventToGrowthEvent(event: Record<string, any>): Web3GrowthEvent {
@@ -531,6 +632,151 @@ export async function seedGrowthEvents(events: Web3GrowthEvent[] = WEB3_GROWTH_E
       return { configured: true, saved: true, runId: null, error: `Saved to legacy world_events because world_growth_events is unavailable: ${error.message}` };
     }
     return { configured: true, saved: false, runId: null, error: error.message || "Failed to seed growth events" };
+  }
+}
+
+export async function saveDailyIngestionBatch(batch: DailyIngestionBatch): Promise<DailyIngestionSaveResult> {
+  const supabase = getServerClient();
+  const base = {
+    batchId: batch.id,
+    demand: batch.demand.length,
+    supply: batch.supply.length,
+    targetCount: batch.targets.length,
+  };
+  if (!supabase) {
+    return { ...base, configured: false, saved: false, runId: null, error: "Supabase is not configured" };
+  }
+  const db = supabase as any;
+  const now = new Date().toISOString();
+
+  try {
+    const { data: run, error: runError } = await db
+      .from("world_heartbeat_runs")
+      .insert({
+        status: "alive",
+        source: "daily_ingestion",
+        tick_count: 0,
+        target_count: batch.targets.length,
+        observation_count: batch.targets.length,
+        signal_count: batch.targets.length,
+        evidence_count: batch.targets.length,
+        intelligence_index: 70,
+        snapshot: {
+          batch_id: batch.id,
+          date: batch.date,
+          demand: batch.demand.length,
+          supply: batch.supply.length,
+        },
+      })
+      .select("id")
+      .single();
+    if (runError) throw runError;
+    const runId = run?.id as string;
+
+    const { error: targetError } = await db.from("world_targets").upsert(batch.targets.map((target) => ({
+      id: target.id,
+      name: target.name,
+      identity: target.identity,
+      kind: target.kind,
+      domain: target.domain,
+      metadata: target,
+      last_observed_at: now,
+      updated_at: now,
+    })));
+    if (targetError) throw targetError;
+
+    const observations = batch.targets.map((target) => ({
+      id: memoryId("daily_obs", now, target.id),
+      run_id: runId,
+      target_id: target.id,
+      target,
+      signal_count: 1,
+      evidence_count: 1,
+      connectors_used: ["grointel_daily_ingestion"],
+      observed_at: now,
+      raw: target,
+    }));
+    const { error: observationError } = await db.from("world_observations").upsert(observations);
+    if (observationError) throw observationError;
+
+    const { error: signalError } = await db.from("world_signals").upsert(batch.targets.map((target) => ({
+      id: memoryId("daily_sig", now, target.id),
+      run_id: runId,
+      observation_id: memoryId("daily_obs", now, target.id),
+      target_id: target.id,
+      entity: target.identity,
+      type: "daily_ingestion",
+      category: target.side === "demand" ? "web3_growth_demand_candidate" : "web3_growth_supply_candidate",
+      summary: `${target.name} entered GroIntel as a Web3 ${target.side} entity.`,
+      confidence: Math.max(50, Math.min(92, target.priority)),
+      source: "grointel_daily_ingestion",
+      url: target.identity,
+      raw: target,
+      observed_at: now,
+    })));
+    if (signalError) throw signalError;
+
+    const { error: evidenceError } = await db.from("world_evidence").upsert(batch.targets.map((target) => ({
+      id: memoryId("daily_ev", now, target.id),
+      run_id: runId,
+      observation_id: memoryId("daily_obs", now, target.id),
+      target_id: target.id,
+      entity: target.identity,
+      connector: "grointel_daily_ingestion",
+      source: target.source,
+      url: target.identity,
+      evidence_summary: target.ingestionReason,
+      confidence: Math.max(50, Math.min(92, target.priority)),
+      raw: target,
+      observed_at: now,
+    })));
+    if (evidenceError) throw evidenceError;
+
+    const { error: entityError } = await db.from("world_entity_memories").upsert(batch.targets.map((target) => entityMemoryPayload(target, now)));
+    if (entityError) throw entityError;
+
+    const { error: decisionError } = await db.from("world_decision_memories").insert({
+      run_id: runId,
+      decision_type: "daily_web3_ingestion_update",
+      confidence: 76,
+      reasoning: `GroIntel ingested ${batch.demand.length} Web3 demand entities and ${batch.supply.length} Web3 supply entities for future matching.`,
+      gaps: [],
+      priorities: [
+        { priority: "Observe high-priority newly ingested demand entities." },
+        { priority: "Match high-priority newly ingested KOL/supply entities against company growth needs." },
+      ],
+    });
+    if (decisionError) throw decisionError;
+
+    const { error: evolutionError } = await db.from("world_evolution_memories").insert({
+      run_id: runId,
+      intelligence_index: 76,
+      reality_coverage: 72,
+      knowledge_quality: 68,
+      decision_accuracy: 62,
+      business_outcomes: 60,
+      progress: {
+        batch_id: batch.id,
+        demand_ingested: batch.demand.length,
+        supply_ingested: batch.supply.length,
+      },
+      lesson: "Daily ingestion expands GroIntel from bootstrap matching into a compounding Web3 world memory.",
+    });
+    if (evolutionError) throw evolutionError;
+
+    return { ...base, configured: true, saved: true, runId, error: null };
+  } catch (error: any) {
+    const legacySaved = await saveLegacyDailyIngestion(db, batch);
+    if (legacySaved) {
+      return {
+        ...base,
+        configured: true,
+        saved: true,
+        runId: null,
+        error: `Saved daily ingestion to legacy world tables because primary world memory is unavailable: ${error.message}`,
+      };
+    }
+    return { ...base, configured: true, saved: false, runId: null, error: error.message || "Failed to save daily ingestion" };
   }
 }
 

@@ -117,6 +117,39 @@ class GroIntelWorldRuntime {
     }
   }
 
+  ingestTargets(targets: RealityTarget[], source = "manual_ingestion"): { added: number; skipped: number; total: number } {
+    this.ensureAgentReachConnector();
+    const existing = new Set(this.targets.map((target) => target.id));
+    const existingIdentities = new Set(this.targets.map((target) => target.identity.toLowerCase()));
+    let added = 0;
+    let skipped = 0;
+
+    for (const target of targets) {
+      const identityKey = target.identity.toLowerCase();
+      if (existing.has(target.id) || existingIdentities.has(identityKey)) {
+        skipped++;
+        continue;
+      }
+      this.targets.push(target);
+      existing.add(target.id);
+      existingIdentities.add(identityKey);
+      added++;
+    }
+
+    if (added > 0) {
+      this.lastExpandedAt = new Date().toISOString();
+      this.flow.recordEvent(
+        "coverage",
+        "Web3 / daily ingestion",
+        `Ingested ${added} new reality targets from ${source}`,
+        Math.min(100, added),
+      );
+      this.updateMetrics();
+    }
+
+    return { added, skipped, total: this.targets.length };
+  }
+
   private selectObservationTargets(limit: number): RealityTarget[] {
     const safeLimit = Math.max(1, Math.min(limit, this.targets.length));
     const demandTargets = this.targets.filter((target) => target.kind === "company");

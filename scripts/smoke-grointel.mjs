@@ -120,6 +120,15 @@ async function main() {
   assert(discovery.stats?.web3SupplyCount >= 30, "Web3 discovery should include an expanded KOL/supply pool");
   console.log(`ok web3 discovery: demand=${discovery.stats.web3DemandCount} supply=${discovery.stats.web3SupplyCount}`);
 
+  const dailyIngestion = await request("/api/grointel/daily-ingestion?demandTarget=100&supplyTarget=100");
+  assert(dailyIngestion.success, "daily ingestion should respond");
+  assert(dailyIngestion.mode === "preview", "daily ingestion smoke should preview by default");
+  assert(dailyIngestion.batch?.demandCount >= 100, "daily ingestion should prepare at least 100 demand/company entities");
+  assert(dailyIngestion.batch?.supplyCount >= 100, "daily ingestion should prepare at least 100 KOL/supply entities");
+  assert(dailyIngestion.world?.web3DemandCount >= 100, "daily ingestion preview should enter company entities into runtime world");
+  assert(dailyIngestion.world?.web3SupplyCount >= 100, "daily ingestion preview should enter KOL/supply entities into runtime world");
+  console.log(`ok daily ingestion: demand=${dailyIngestion.batch.demandCount} supply=${dailyIngestion.batch.supplyCount}`);
+
   const readiness = await request("/api/grointel/delivery-readiness");
   assert(readiness.success, "delivery readiness should respond");
   assert(readiness.readyForDelivery, "delivery readiness should not be blocked");
@@ -129,6 +138,8 @@ async function main() {
   assert(readiness.counts?.entityMemories > 0, "delivery readiness should expose L2 memory");
   assert(readiness.counts?.decisionMemories > 0, "delivery readiness should expose L3 memory");
   assert(readiness.counts?.evolutionMemories > 0, "delivery readiness should expose L4 memory");
+  assert(readiness.counts?.dailyDemandBatch >= 100, "delivery readiness should expose daily 100 demand ingestion");
+  assert(readiness.counts?.dailySupplyBatch >= 100, "delivery readiness should expose daily 100 KOL/supply ingestion");
   console.log(`ok delivery readiness: ${readiness.status} / score=${readiness.score}`);
 
   if (includeHeartbeat) {

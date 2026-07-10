@@ -13,6 +13,8 @@ Production: https://grointel.vercel.app
 - `/world` - Web3 Living World, reality loop, memory, AI, discovery, and delivery readiness.
 - `/agent-reach` - source and connector doctor.
 - `/api/grointel/delivery-readiness` - single delivery self-check.
+- `/api/grointel/daily-ingestion` - preview the daily 100 company + 100 KOL/supply ingestion batch.
+- `/api/grointel/daily-ingestion/run` - cron/manual execution for daily ingestion.
 - `/api/grointel/heartbeat` - scheduled/manual reality observation heartbeat.
 - `/api/grointel/ai-health` - AI provider health.
 - `/api/grointel/web3-discovery` - expanded Web3 company/KOL target registry.
@@ -61,6 +63,7 @@ Vercel cron is configured in `vercel.json`:
 
 ```text
 0 0 * * * -> /api/grointel/heartbeat
+30 0 * * * -> /api/grointel/daily-ingestion/run
 ```
 
 Vercel Hobby only supports daily cron frequency. Manual heartbeat is available at `/api/grointel/heartbeat?limit=2`.

@@ -5,6 +5,10 @@
   "installCommand": "npm install",
   "crons": [
     {
+      "path": "/api/grointel/daily-ingestion/run",
+      "schedule": "30 0 * * *"
+    },
+    {
       "path": "/api/grointel/heartbeat",
       "schedule": "0 0 * * *"
     }
