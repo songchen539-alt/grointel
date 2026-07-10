@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateMockBusinessScan, createInitialBusinessKnowledge, normalizeWebsite } from "@/lib/intelligence/businessIntelligence";
 import { generateMockCapabilityScan, createInitialCapabilityKnowledge, normalizeProfileUrl } from "@/lib/intelligence/capabilityIntelligence";
-import { decideWeb3Growth } from "@/lib/grointel/web3Decision";
+import { dailySupplyCandidatesToProfiles, decideWeb3Growth } from "@/lib/grointel/web3Decision";
 import { buildWeb3CollaborationBrief } from "@/lib/grointel/web3CollaborationBrief";
 import { generateWeb3AIGrowthInsight, generateWeb3KOLSupplyInsight } from "@/lib/grointel/aiGrowthInsight";
+import { fetchLiveWeb3DiscoveryCandidates } from "@/lib/grointel/liveDiscovery";
+import type { DailyIngestionCandidate } from "@/lib/grointel/dailyIngestion";
 import { WEB3_GROWTH_EVENTS, WEB3_SUPPLY_PROFILES, WEB3_TARGETS, type Web3SupplyProfile } from "@/lib/grointel/web3World";
 
 export const dynamic = "force-dynamic";
@@ -11,11 +13,13 @@ export const dynamic = "force-dynamic";
 type EntitySide = "company" | "kol";
 
 const capabilityDomains = ["x.com", "twitter.com", "youtube.com", "youtu.be", "linkedin.com", "github.com", "substack.com", "tiktok.com", "instagram.com", "bilibili.com"];
+const web3SupplyDomains = ["bankless.com", "decrypt.co", "thedefiant.io", "coindesk.com", "blockworks.co", "messari.io", "delphidigital.io", "unchainedcrypto.com"];
 const web3Terms = ["web3", "crypto", "defi", "nft", "dao", "l2", "ethereum", "bitcoin", "wallet", "exchange", "airdrop", "quest", "socialfi", "gamefi"];
 
 function classifyIdentity(input: string, declaredSide?: string): { side: EntitySide; confidence: number; reason: string } {
   const lower = input.toLowerCase();
   if (declaredSide === "company" || declaredSide === "kol") return { side: declaredSide, confidence: 90, reason: "User-selected side." };
+  if (web3SupplyDomains.some((domain) => lower.includes(domain))) return { side: "kol", confidence: 84, reason: "The identity matches a Web3 media, research, or audience supply domain." };
   if (capabilityDomains.some((domain) => lower.includes(domain))) return { side: "kol", confidence: 82, reason: "The identity points to a public creator, professional, or capability profile." };
   if (/\b(kol|creator|influencer|agency|newsletter|podcast|community|founder)\b/i.test(input)) return { side: "kol", confidence: 68, reason: "The wording indicates a capability provider or audience owner." };
   return { side: "company", confidence: 64, reason: "The identity looks like a company, product, or website." };
@@ -23,7 +27,9 @@ function classifyIdentity(input: string, declaredSide?: string): { side: EntityS
 
 function isWeb3Identity(input: string, industry?: string) {
   const lower = `${input} ${industry || ""}`.toLowerCase();
-  return web3Terms.some((term) => lower.includes(term)) || WEB3_TARGETS.some((target) => lower.includes(target.name.toLowerCase()) || lower.includes(target.identity.toLowerCase()));
+  return web3Terms.some((term) => lower.includes(term))
+    || web3SupplyDomains.some((domain) => lower.includes(domain))
+    || WEB3_TARGETS.some((target) => lower.includes(target.name.toLowerCase()) || lower.includes(target.identity.toLowerCase()));
 }
 
 function companyQuestions(confidence: Record<string, number>) {
@@ -57,6 +63,14 @@ function findSupplyProfile(identity: string, displayName?: string): Web3SupplyPr
   }) || null;
 }
 
+function findLiveSupplyProfile(identity: string, profiles: Web3SupplyProfile[]) {
+  const normalized = identity.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
+  return profiles.find((profile) => {
+    const profileIdentity = profile.identity.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
+    return normalized.includes(profileIdentity) || profileIdentity.includes(normalized);
+  }) || null;
+}
+
 function supplyProfileText(profile: Web3SupplyProfile) {
   return [
     profile.supplyType,
@@ -68,9 +82,52 @@ function supplyProfileText(profile: Web3SupplyProfile) {
   ].join(" ").toLowerCase();
 }
 
-function web3CompanyMatches(profile?: Web3SupplyProfile | null) {
+function demandCandidateText(candidate: DailyIngestionCandidate) {
+  return [candidate.name, candidate.identity, candidate.domain, ...candidate.tags, candidate.ingestionReason].join(" ").toLowerCase();
+}
+
+function scoreDemandCandidateForSupply(candidate: DailyIngestionCandidate, profile?: Web3SupplyProfile | null) {
+  const candidateText = demandCandidateText(candidate);
   const supplyText = profile ? supplyProfileText(profile) : "";
-  return WEB3_GROWTH_EVENTS
+  let fitScore = Math.round(Math.min(92, 48 + candidate.priority * 0.28));
+  if (profile && profile.bestFor.some((item) => candidateText.includes(item.split(" ")[0].toLowerCase()))) fitScore += 10;
+  if (profile && profile.capabilities.some((item) => candidateText.includes(item.split(" ")[0].toLowerCase()))) fitScore += 8;
+  if (supplyText.includes("media") && candidateText.match(/l2|ethereum|defi|protocol|bridge|staking/)) fitScore += 10;
+  if (supplyText.includes("research") && candidateText.match(/defi|protocol|staking|rwa|lending|bridge/)) fitScore += 12;
+  if (supplyText.includes("security") && candidateText.match(/bridge|staking|protocol|wallet/)) fitScore += 10;
+  if (supplyText.includes("creator") && candidateText.match(/consumer|social|gaming|nft/)) fitScore += 8;
+  return Math.max(1, Math.min(100, fitScore));
+}
+
+function liveDemandCompanyMatches(profile: Web3SupplyProfile | null | undefined, candidates: DailyIngestionCandidate[]) {
+  return candidates
+    .filter((candidate) => candidate.side === "demand")
+    .map((candidate) => {
+      const fitScore = scoreDemandCandidateForSupply(candidate, profile);
+      const primaryTag = candidate.tags[0] || "web3";
+      return {
+        company: candidate.name,
+        identity: candidate.identity,
+        sector: candidate.domain,
+        growthNeed: `Needs ${profile?.supplyType || "Web3 supply"} help to convert ${primaryTag} attention into qualified growth.`,
+        usefulWhen: candidate.tags.slice(0, 4).map((tag) => `${tag} campaign`),
+        evidence: candidate.ingestionReason,
+        fitScore,
+        fitReason: profile
+          ? `${profile.name} can help ${candidate.name} with ${profile.collaborationFormats[0]} because the company is a live ${candidate.tags.slice(0, 3).join("/")} demand candidate.`
+          : `${candidate.name} is a live Web3 demand candidate that may need qualified KOL, media, or partner supply.`,
+        suggestedCollaboration: profile?.collaborationFormats[0] || "targeted Web3 growth pilot",
+        keyMetric: profile?.proofSignals[0] || "qualified conversion",
+        source: candidate.source,
+        tags: candidate.tags,
+      };
+    })
+    .sort((a, b) => b.fitScore - a.fitScore || a.company.localeCompare(b.company));
+}
+
+function web3CompanyMatches(profile?: Web3SupplyProfile | null, liveDemandCandidates: DailyIngestionCandidate[] = []) {
+  const supplyText = profile ? supplyProfileText(profile) : "";
+  const historicalMatches = WEB3_GROWTH_EVENTS
     .filter((event) => event.outcome === "success" || event.outcome === "mixed")
     .map((event) => {
       const eventText = [
@@ -110,8 +167,15 @@ function web3CompanyMatches(profile?: Web3SupplyProfile | null) {
         keyMetric: profile?.proofSignals[0] || event.measurableSignals?.[0] || "qualified conversion",
       };
     })
-    .sort((a, b) => b.fitScore - a.fitScore)
-    .slice(0, 5);
+    .sort((a, b) => b.fitScore - a.fitScore);
+  const combined = [...liveDemandCompanyMatches(profile, liveDemandCandidates), ...historicalMatches];
+  const seen = new Set<string>();
+  return combined.filter((match) => {
+    const key = `${match.company}|${"identity" in match ? match.identity : ""}`.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 8);
 }
 
 export async function POST(req: NextRequest) {
@@ -126,8 +190,15 @@ export async function POST(req: NextRequest) {
       const scan = generateMockCapabilityScan(profileUrl);
       const knowledge = createInitialCapabilityKnowledge(scan);
       const web3 = isWeb3Identity(identity, String(knowledge.audience_dna?.primary_audiences || ""));
-      const supplyProfile = findSupplyProfile(profileUrl, String(knowledge.capability_identity?.name || ""));
-      const recommendedCompanyProfiles = web3 ? web3CompanyMatches(supplyProfile) : [];
+      const liveDiscovery = web3
+        ? await fetchLiveWeb3DiscoveryCandidates({ demandLimit: 80, supplyLimit: 30, timeoutMs: 5000 })
+        : null;
+      const liveSupplyProfiles = dailySupplyCandidatesToProfiles(liveDiscovery?.candidates || []);
+      const supplyProfile = findSupplyProfile(profileUrl, String(knowledge.capability_identity?.name || ""))
+        || findLiveSupplyProfile(profileUrl, liveSupplyProfiles);
+      const recommendedCompanyProfiles = web3
+        ? web3CompanyMatches(supplyProfile, liveDiscovery?.candidates.filter((candidate) => candidate.side === "demand") || [])
+        : [];
       const web3KOLSupplyInsight = web3
         ? await generateWeb3KOLSupplyInsight({
           identity: knowledge.capability_identity,
@@ -156,6 +227,23 @@ export async function POST(req: NextRequest) {
         },
         missingQuestions: capabilityQuestions(knowledge.knowledge_confidence),
         recommendedCompanyProfiles,
+        liveMatching: liveDiscovery
+          ? {
+              attempted: liveDiscovery.attempted,
+              success: liveDiscovery.success,
+              demandCandidateCount: liveDiscovery.demandCandidateCount,
+              supplyCandidateCount: liveDiscovery.supplyCandidateCount,
+              liveSupplyProfileMatched: Boolean(supplyProfile && liveSupplyProfiles.some((profile) => profile.identity === supplyProfile.identity)),
+              sources: liveDiscovery.sources.map((source) => ({
+                source: source.source,
+                side: source.side,
+                success: source.success,
+                candidateCount: source.candidateCount,
+                rawCount: source.rawCount,
+                error: source.error,
+              })),
+            }
+          : { attempted: false, success: false, demandCandidateCount: 0, supplyCandidateCount: 0, liveSupplyProfileMatched: false, sources: [] },
         web3KOLSupplyInsight,
         nextActions: [
           "Confirm the audience and proof fields that decide matching quality.",

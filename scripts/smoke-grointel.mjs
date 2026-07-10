@@ -56,6 +56,9 @@ async function main() {
   assert(kol.success, "KOL identity intake should succeed");
   assert(kol.side === "kol", "x.com/cobie should classify as KOL");
   assert((kol.recommendedCompanyProfiles || []).length > 0, "KOL should receive recommended company profiles");
+  assert(kol.liveMatching?.attempted === true, "KOL identity should attempt live demand matching");
+  assert(kol.liveMatching?.demandCandidateCount > 0, "KOL identity should use live demand candidates");
+  assert(kol.recommendedCompanyProfiles.some((company) => company.source === "defillama_live"), "KOL should receive at least one live demand company match");
   assert(kol.web3KOLSupplyInsight, "KOL identity should attach an AI supply insight");
   assert(kol.recommendedCompanyProfiles[0].fitScore > 0, "KOL company match should include fit score");
   assert(kol.recommendedCompanyProfiles[0].fitReason, "KOL company match should explain fit");
