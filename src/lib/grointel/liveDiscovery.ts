@@ -86,6 +86,11 @@ type LiveDiscoveryOptions = {
   supplyLimit?: number;
 };
 
+type LiveCandidateWithQuality = DailyIngestionCandidate & {
+  liveQualityScore?: number;
+  liveSourceCoverage?: string[];
+};
+
 const DEFILLAMA_PROTOCOLS_URL = "https://api.llama.fi/protocols";
 const GITHUB_SEARCH_URL = "https://api.github.com/search/repositories";
 const DEFAULT_LIMIT = 80;
@@ -205,6 +210,67 @@ function clamp(value: number, min: number, max: number) {
 function normalizeUrl(url: string) {
   if (!url) return "";
   return url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
+}
+
+function normalizeIdentityKey(candidate: DailyIngestionCandidate) {
+  const identity = String(candidate.identity || "")
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/$/, "");
+  const name = slug(candidate.name || "");
+  return `${candidate.side}:${identity || name}`;
+}
+
+function liveQualityScore(candidate: DailyIngestionCandidate, sourceCoverage: string[]) {
+  const tagBreadth = Math.min(10, candidate.tags.length * 2);
+  const sourceBonus = Math.min(12, sourceCoverage.length * 4);
+  const liveSignalBonus = String(candidate.source || "").includes("_live") ? 5 : 0;
+  const supplySpecificBonus = candidate.side === "supply" && candidate.tags.some((tag) => ["kol", "media", "creator", "newsletter", "podcast", "research"].includes(tag)) ? 5 : 0;
+  const demandSpecificBonus = candidate.side === "demand" && candidate.tags.some((tag) => ["defi", "protocol", "developer", "github", "wallet"].includes(tag)) ? 5 : 0;
+  return Math.round(clamp(candidate.priority * 0.68 + tagBreadth + sourceBonus + liveSignalBonus + supplySpecificBonus + demandSpecificBonus, 1, 100));
+}
+
+function withLiveQuality(candidate: DailyIngestionCandidate, sourceCoverage: string[]): LiveCandidateWithQuality {
+  const coverage = Array.from(new Set(sourceCoverage));
+  const score = liveQualityScore(candidate, coverage);
+  return {
+    ...candidate,
+    priority: Math.max(candidate.priority, score),
+    tags: Array.from(new Set(candidate.tags)).slice(0, 12),
+    liveQualityScore: score,
+    liveSourceCoverage: coverage,
+    sourceCoverage: Array.from(new Set([...(candidate.sourceCoverage || []), ...coverage])),
+    ingestionReason: `${candidate.ingestionReason} Live quality ${score}/100 from ${coverage.join(", ")}.`,
+  };
+}
+
+function mergeLiveCandidates(sources: LiveDiscoverySourceResult[]) {
+  const grouped = new Map<string, { candidate: DailyIngestionCandidate; coverage: string[] }>();
+  for (const source of sources) {
+    for (const candidate of source.candidates) {
+      const key = normalizeIdentityKey(candidate);
+      const current = grouped.get(key);
+      if (!current) {
+        grouped.set(key, { candidate, coverage: [source.source] });
+        continue;
+      }
+      const mergedTags = Array.from(new Set([...current.candidate.tags, ...candidate.tags])).slice(0, 12);
+      const betterCandidate = candidate.priority > current.candidate.priority ? candidate : current.candidate;
+      grouped.set(key, {
+        candidate: {
+          ...betterCandidate,
+          priority: Math.max(current.candidate.priority, candidate.priority),
+          tags: mergedTags,
+          ingestionReason: `${betterCandidate.ingestionReason} Cross-source live merge retained strongest profile for ${betterCandidate.name}.`,
+        },
+        coverage: Array.from(new Set([...current.coverage, source.source])),
+      });
+    }
+  }
+  return Array.from(grouped.values())
+    .map(({ candidate, coverage }) => withLiveQuality(candidate, coverage))
+    .sort((a, b) => (b.liveQualityScore || b.priority) - (a.liveQualityScore || a.priority) || a.name.localeCompare(b.name));
 }
 
 function stripXml(value: string) {
@@ -679,7 +745,7 @@ export async function fetchLiveWeb3DiscoveryCandidates(options: LiveDiscoveryOpt
     fetchYoutubeCreatorSupply(Math.max(3, Math.ceil(supplyLimit * 0.25)), timeoutMs),
     fetchWeb3ContentSupply(Math.max(4, Math.ceil(supplyLimit * 0.25)), timeoutMs),
   ]);
-  const candidates = sources.flatMap((source) => source.candidates);
+  const candidates = mergeLiveCandidates(sources);
   const success = sources.some((source) => source.success);
   const errors = sources.filter((source) => source.error).map((source) => `${source.source}: ${source.error}`);
 

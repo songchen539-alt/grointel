@@ -160,6 +160,7 @@ async function main() {
     assert(dailyIngestion.liveDiscovery.candidateCount > 0, "successful live discovery should produce candidates");
     assert(dailyIngestion.liveDiscovery.demandCandidateCount > 0, "successful live discovery should produce demand candidates");
     assert(dailyIngestion.liveDiscovery.supplyCandidateCount > 0, "successful live discovery should produce supply candidates");
+    assert(dailyIngestion.liveDiscovery.candidates?.some((candidate) => candidate.liveQualityScore >= 70 && candidate.liveSourceCoverage?.length > 0), "successful live discovery should quality-score live candidates with source coverage");
   }
   assert(dailyIngestion.world?.web3DemandCount >= 100, "daily ingestion preview should enter company entities into runtime world");
   assert(dailyIngestion.world?.web3SupplyCount >= 100, "daily ingestion preview should enter KOL/supply entities into runtime world");
