@@ -28,7 +28,23 @@ type ParsedFeedItem = {
   categories: string[];
 };
 
-export type LiveDiscoverySourceId = "defillama" | "web3_media_feeds";
+type GitHubRepo = {
+  full_name?: string;
+  html_url?: string;
+  description?: string;
+  stargazers_count?: number;
+  forks_count?: number;
+  fork?: boolean;
+  archived?: boolean;
+  language?: string;
+  topics?: string[];
+  owner?: {
+    login?: string;
+    html_url?: string;
+  };
+};
+
+export type LiveDiscoverySourceId = "defillama" | "web3_media_feeds" | "github_repos";
 
 export type LiveDiscoverySourceResult = {
   attempted: boolean;
@@ -66,6 +82,7 @@ type LiveDiscoveryOptions = {
 };
 
 const DEFILLAMA_PROTOCOLS_URL = "https://api.llama.fi/protocols";
+const GITHUB_SEARCH_URL = "https://api.github.com/search/repositories";
 const DEFAULT_LIMIT = 80;
 const DEFAULT_TIMEOUT_MS = 6000;
 
@@ -190,6 +207,50 @@ function toProtocolCandidate(protocol: DefiLlamaProtocol): DailyIngestionCandida
   };
 }
 
+function githubPriority(repo: GitHubRepo) {
+  const stars = Math.max(0, repo.stargazers_count || 0);
+  const forks = Math.max(0, repo.forks_count || 0);
+  const starsBonus = Math.log10(stars + 1) * 8;
+  const forksBonus = Math.log10(forks + 1) * 4;
+  const topicBonus = Math.min(8, (repo.topics || []).length);
+  return Math.round(clamp(52 + starsBonus + forksBonus + topicBonus, 58, 96));
+}
+
+function githubTags(repo: GitHubRepo) {
+  const topics = (repo.topics || []).map((topic) => topic.toLowerCase()).filter(Boolean);
+  const language = repo.language ? [repo.language.toLowerCase()] : [];
+  const text = `${repo.full_name || ""} ${repo.description || ""} ${topics.join(" ")}`.toLowerCase();
+  const inferred = [
+    text.includes("ethereum") ? "ethereum" : "",
+    text.includes("defi") ? "defi" : "",
+    text.includes("wallet") ? "wallet" : "",
+    text.includes("dao") ? "dao" : "",
+    text.includes("nft") ? "nft" : "",
+    text.includes("sdk") ? "developers" : "",
+    text.includes("solana") ? "solana" : "",
+    text.includes("bridge") ? "bridge" : "",
+  ].filter(Boolean);
+  return Array.from(new Set(["developer", "github", ...topics.slice(0, 5), ...language, ...inferred])).slice(0, 10);
+}
+
+function toGithubCandidate(repo: GitHubRepo): DailyIngestionCandidate {
+  const fullName = String(repo.full_name || repo.owner?.login || "unknown/web3-repo");
+  const owner = fullName.split("/")[0] || repo.owner?.login || fullName;
+  const description = repo.description ? `: ${repo.description}` : "";
+  return {
+    id: `web3.live.demand.github.${slug(fullName)}`,
+    name: fullName,
+    identity: repo.html_url || repo.owner?.html_url || `https://github.com/${fullName}`,
+    kind: "company",
+    domain: `Web3 / open-source developer project${description}`,
+    side: "demand",
+    source: "github_live",
+    priority: githubPriority(repo),
+    tags: githubTags(repo),
+    ingestionReason: `${owner} is a live GitHub Web3 developer project with ${(repo.stargazers_count || 0).toLocaleString()} stars and active open-source discovery signals.`,
+  };
+}
+
 function topicTags(items: ParsedFeedItem[]) {
   const text = items
     .flatMap((item) => [item.title, ...item.categories])
@@ -269,7 +330,10 @@ async function fetchWithTimeout(url: string, timeoutMs: number) {
       signal: controller.signal,
       cache: "no-store",
       redirect: "follow",
-      headers: { "accept": "application/rss+xml, application/xml, text/xml, application/json, */*" },
+      headers: {
+        "accept": "application/rss+xml, application/xml, text/xml, application/json, */*",
+        "user-agent": "GroIntel-LiveDiscovery/1.0",
+      },
     });
   } finally {
     clearTimeout(timer);
@@ -306,6 +370,60 @@ async function fetchDefiLlamaDemand(limit: number, timeoutMs: number): Promise<L
       success: false,
       source: "defillama",
       sourceUrl: DEFILLAMA_PROTOCOLS_URL,
+      side: "demand",
+      latencyMs: Date.now() - startedAt,
+      rawCount: 0,
+      candidateCount: 0,
+      candidates: [],
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+async function fetchGithubDemand(limit: number, timeoutMs: number): Promise<LiveDiscoverySourceResult> {
+  const startedAt = Date.now();
+  const queries = [
+    "topic:web3 stars:>100 fork:false archived:false",
+    "topic:defi stars:>100 fork:false archived:false",
+    "topic:ethereum stars:>100 fork:false archived:false",
+    "topic:solana stars:>100 fork:false archived:false",
+  ];
+  const perQuery = Math.max(5, Math.ceil(limit / queries.length));
+  try {
+    const responses = await Promise.all(queries.map(async (query) => {
+      const url = `${GITHUB_SEARCH_URL}?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=${perQuery}`;
+      const response = await fetchWithTimeout(url, timeoutMs);
+      if (!response.ok) throw new Error(`GitHub search responded ${response.status}`);
+      const body = await response.json() as { total_count?: number; items?: GitHubRepo[] };
+      return body.items || [];
+    }));
+    const seen = new Set<string>();
+    const repos = responses.flat().filter((repo) => {
+      if (repo.fork || repo.archived) return false;
+      const key = String(repo.full_name || repo.html_url || "").toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => githubPriority(b) - githubPriority(a));
+    const candidates = repos.slice(0, limit).map(toGithubCandidate);
+
+    return {
+      attempted: true,
+      success: candidates.length > 0,
+      source: "github_repos",
+      sourceUrl: GITHUB_SEARCH_URL,
+      side: "demand",
+      latencyMs: Date.now() - startedAt,
+      rawCount: repos.length,
+      candidateCount: candidates.length,
+      candidates,
+    };
+  } catch (error) {
+    return {
+      attempted: true,
+      success: false,
+      source: "github_repos",
+      sourceUrl: GITHUB_SEARCH_URL,
       side: "demand",
       latencyMs: Date.now() - startedAt,
       rawCount: 0,
@@ -359,7 +477,8 @@ export async function fetchLiveWeb3DiscoveryCandidates(options: LiveDiscoveryOpt
   const timeoutMs = options.timeoutMs || DEFAULT_TIMEOUT_MS;
 
   const sources = await Promise.all([
-    fetchDefiLlamaDemand(demandLimit, timeoutMs),
+    fetchDefiLlamaDemand(Math.ceil(demandLimit * 0.75), timeoutMs),
+    fetchGithubDemand(Math.max(10, Math.ceil(demandLimit * 0.25)), timeoutMs),
     fetchWeb3MediaSupply(supplyLimit, timeoutMs),
   ]);
   const candidates = sources.flatMap((source) => source.candidates);
