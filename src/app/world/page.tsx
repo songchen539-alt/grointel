@@ -215,7 +215,7 @@ export default async function WorldPage() {
                   Today's batch is ready to enter GroIntel: {dailyIngestion.demand.length} Web3 growth-demand companies and {dailyIngestion.supply.length} KOL/media/research/community supply entities.
                 </p>
                 <p className="mt-2 text-xs leading-5 text-gray-500">
-                  Batch: {dailyIngestion.id}. Cron execution: daily at 00:30 UTC via <span className="font-mono">/api/grointel/daily-ingestion/run</span>.
+                  Batch: {dailyIngestion.id}. Source map: {dailyIngestion.sourceSummary.coveredSources}/{dailyIngestion.sourceSummary.registeredSources} covered, average discovery score {dailyIngestion.sourceSummary.avgDiscoveryScore}. Cron execution: daily at 00:30 UTC via <span className="font-mono">/api/grointel/daily-ingestion/run</span>.
                 </p>
               </div>
               <div className="grid gap-2 text-xs sm:grid-cols-3 lg:min-w-[28rem]">
@@ -228,6 +228,10 @@ export default async function WorldPage() {
                   <p className="mt-1 text-fuchsia-100">{dailyIngestion.supply.length}/100</p>
                 </div>
                 <div className="rounded-lg bg-black/30 p-3">
+                  <p className="text-gray-500">Source score</p>
+                  <p className="mt-1 text-fuchsia-100">{dailyIngestion.sourceSummary.avgDiscoveryScore}/100</p>
+                </div>
+                <div className="rounded-lg bg-black/30 p-3 sm:col-span-3">
                   <p className="text-gray-500">Samples</p>
                   <p className="mt-1 text-fuchsia-100">{dailyIngestion.demand[0]?.name} / {dailyIngestion.supply[0]?.name}</p>
                 </div>

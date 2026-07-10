@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
       demandCount: batch.demand.length,
       supplyCount: batch.supply.length,
       targetCount: batch.targets.length,
+      sourceSummary: batch.sourceSummary,
     },
     runtimeIngestion,
     memory,

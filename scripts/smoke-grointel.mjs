@@ -125,9 +125,11 @@ async function main() {
   assert(dailyIngestion.mode === "preview", "daily ingestion smoke should preview by default");
   assert(dailyIngestion.batch?.demandCount >= 100, "daily ingestion should prepare at least 100 demand/company entities");
   assert(dailyIngestion.batch?.supplyCount >= 100, "daily ingestion should prepare at least 100 KOL/supply entities");
+  assert(dailyIngestion.batch?.sourceSummary?.registeredSources >= 12, "daily ingestion should expose global discovery source registry");
+  assert(dailyIngestion.batch?.sourceSummary?.avgDiscoveryScore >= 70, "daily ingestion should score candidates with source-aware quality");
   assert(dailyIngestion.world?.web3DemandCount >= 100, "daily ingestion preview should enter company entities into runtime world");
   assert(dailyIngestion.world?.web3SupplyCount >= 100, "daily ingestion preview should enter KOL/supply entities into runtime world");
-  console.log(`ok daily ingestion: demand=${dailyIngestion.batch.demandCount} supply=${dailyIngestion.batch.supplyCount}`);
+  console.log(`ok daily ingestion: demand=${dailyIngestion.batch.demandCount} supply=${dailyIngestion.batch.supplyCount} sources=${dailyIngestion.batch.sourceSummary.registeredSources}`);
 
   const readiness = await request("/api/grointel/delivery-readiness");
   assert(readiness.success, "delivery readiness should respond");
@@ -140,6 +142,7 @@ async function main() {
   assert(readiness.counts?.evolutionMemories > 0, "delivery readiness should expose L4 memory");
   assert(readiness.counts?.dailyDemandBatch >= 100, "delivery readiness should expose daily 100 demand ingestion");
   assert(readiness.counts?.dailySupplyBatch >= 100, "delivery readiness should expose daily 100 KOL/supply ingestion");
+  assert(readiness.counts?.discoverySources >= 12, "delivery readiness should expose global discovery sources");
   console.log(`ok delivery readiness: ${readiness.status} / score=${readiness.score}`);
 
   if (includeHeartbeat) {

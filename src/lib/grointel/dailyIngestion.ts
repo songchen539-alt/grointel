@@ -9,6 +9,19 @@ export type DailyIngestionCandidate = RealityTarget & {
   priority: number;
   tags: string[];
   ingestionReason: string;
+  discoveryScore?: number;
+  sourceCoverage?: string[];
+};
+
+export type GlobalDiscoverySource = {
+  id: string;
+  name: string;
+  side: "demand" | "supply" | "both";
+  category: "project_index" | "market_data" | "social" | "media" | "research" | "developer" | "security" | "community" | "funding";
+  signalTypes: string[];
+  trust: number;
+  freshness: "daily" | "weekly" | "monthly";
+  status: "active" | "planned";
 };
 
 export type DailyIngestionBatch = {
@@ -19,7 +32,28 @@ export type DailyIngestionBatch = {
   demand: DailyIngestionCandidate[];
   supply: DailyIngestionCandidate[];
   targets: DailyIngestionCandidate[];
+  sourceSummary: ReturnType<typeof buildSourceSummary>;
 };
+
+export const GLOBAL_WEB3_DISCOVERY_SOURCES: GlobalDiscoverySource[] = [
+  { id: "coingecko", name: "CoinGecko", side: "demand", category: "market_data", signalTypes: ["market", "token", "category"], trust: 82, freshness: "daily", status: "active" },
+  { id: "coinmarketcap", name: "CoinMarketCap", side: "demand", category: "market_data", signalTypes: ["market", "token", "category"], trust: 78, freshness: "daily", status: "active" },
+  { id: "defillama", name: "DefiLlama", side: "demand", category: "market_data", signalTypes: ["tvl", "revenue", "protocol"], trust: 88, freshness: "daily", status: "active" },
+  { id: "l2beat", name: "L2Beat", side: "demand", category: "research", signalTypes: ["l2", "risk", "ecosystem"], trust: 88, freshness: "weekly", status: "active" },
+  { id: "rootdata", name: "RootData", side: "both", category: "funding", signalTypes: ["funding", "team", "project"], trust: 78, freshness: "weekly", status: "planned" },
+  { id: "cryptorank", name: "CryptoRank", side: "demand", category: "funding", signalTypes: ["fundraising", "token", "launch"], trust: 74, freshness: "weekly", status: "planned" },
+  { id: "dune", name: "Dune", side: "demand", category: "market_data", signalTypes: ["dashboard", "usage", "community"], trust: 76, freshness: "weekly", status: "planned" },
+  { id: "github", name: "GitHub", side: "demand", category: "developer", signalTypes: ["repo", "developer", "activity"], trust: 78, freshness: "weekly", status: "planned" },
+  { id: "x-twitter", name: "X/Twitter", side: "supply", category: "social", signalTypes: ["kol", "audience", "conversation"], trust: 68, freshness: "daily", status: "planned" },
+  { id: "youtube", name: "YouTube", side: "supply", category: "social", signalTypes: ["creator", "video", "audience"], trust: 72, freshness: "weekly", status: "planned" },
+  { id: "substack", name: "Substack/Newsletters", side: "supply", category: "media", signalTypes: ["newsletter", "writer", "audience"], trust: 72, freshness: "weekly", status: "planned" },
+  { id: "podcasts", name: "Crypto Podcasts", side: "supply", category: "media", signalTypes: ["podcast", "guest", "audience"], trust: 70, freshness: "weekly", status: "planned" },
+  { id: "blockworks", name: "Blockworks", side: "supply", category: "media", signalTypes: ["media", "institutional", "podcast"], trust: 80, freshness: "daily", status: "active" },
+  { id: "coindesk", name: "CoinDesk", side: "supply", category: "media", signalTypes: ["news", "conference", "institutional"], trust: 82, freshness: "daily", status: "active" },
+  { id: "messari", name: "Messari", side: "both", category: "research", signalTypes: ["research", "protocol", "sector"], trust: 86, freshness: "weekly", status: "active" },
+  { id: "security-feeds", name: "Security Feeds", side: "supply", category: "security", signalTypes: ["risk", "exploit", "trust"], trust: 82, freshness: "daily", status: "planned" },
+  { id: "community-directories", name: "Community Directories", side: "supply", category: "community", signalTypes: ["dao", "builder", "community"], trust: 66, freshness: "monthly", status: "planned" },
+];
 
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -303,11 +337,69 @@ function fromDiscovery(target: (typeof WEB3_DISCOVERY_TARGETS)[number]): DailyIn
   };
 }
 
+function normalizeIdentity(identity: string) {
+  return identity.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
+}
+
+function sourceMatches(candidate: DailyIngestionCandidate) {
+  const identity = normalizeIdentity(candidate.identity);
+  return GLOBAL_WEB3_DISCOVERY_SOURCES.filter((source) => {
+    if (source.side !== "both" && source.side !== candidate.side) return false;
+    if (identity.includes(source.id.replace("-feeds", ""))) return true;
+    if (candidate.source === "media_research" && ["media", "research"].includes(source.category)) return true;
+    if (candidate.source === "data_security" && ["market_data", "security", "research"].includes(source.category)) return true;
+    if (candidate.tags.some((tag) => source.signalTypes.includes(tag))) return true;
+    if (candidate.tags.some((tag) => tag.includes(source.category))) return true;
+    return false;
+  });
+}
+
+function scoreCandidate(candidate: DailyIngestionCandidate): DailyIngestionCandidate {
+  const sources = sourceMatches(candidate);
+  const sourceTrust = sources.length > 0
+    ? Math.round(sources.reduce((sum, source) => sum + source.trust, 0) / sources.length)
+    : 58;
+  const activeBonus = sources.some((source) => source.status === "active") ? 6 : 0;
+  const freshnessBonus = sources.some((source) => source.freshness === "daily") ? 5 : sources.some((source) => source.freshness === "weekly") ? 3 : 1;
+  const tagBreadthBonus = Math.min(8, candidate.tags.length * 2);
+  const sideBonus = candidate.side === "demand"
+    ? candidate.tags.some((tag) => ["consumer", "defi", "wallet", "infrastructure", "gaming"].includes(tag)) ? 5 : 0
+    : candidate.tags.some((tag) => ["media", "research", "security", "community", "education", "data"].includes(tag)) ? 5 : 0;
+  const discoveryScore = Math.max(1, Math.min(100, Math.round(candidate.priority * 0.55 + sourceTrust * 0.3 + activeBonus + freshnessBonus + tagBreadthBonus + sideBonus)));
+  return {
+    ...candidate,
+    discoveryScore,
+    sourceCoverage: sources.map((source) => source.id),
+  };
+}
+
+function buildSourceSummary(targets: DailyIngestionCandidate[]) {
+  const coveredSources = new Set(targets.flatMap((target) => target.sourceCoverage || []));
+  const activeSources = GLOBAL_WEB3_DISCOVERY_SOURCES.filter((source) => source.status === "active").length;
+  const plannedSources = GLOBAL_WEB3_DISCOVERY_SOURCES.filter((source) => source.status === "planned").length;
+  const scored = targets.filter((target) => typeof target.discoveryScore === "number");
+  const avgDiscoveryScore = scored.length > 0
+    ? Math.round(scored.reduce((sum, target) => sum + (target.discoveryScore || 0), 0) / scored.length)
+    : 0;
+  const coverageByCategory = GLOBAL_WEB3_DISCOVERY_SOURCES.reduce<Record<string, number>>((acc, source) => {
+    acc[source.category] = (acc[source.category] || 0) + (coveredSources.has(source.id) ? 1 : 0);
+    return acc;
+  }, {});
+  return {
+    registeredSources: GLOBAL_WEB3_DISCOVERY_SOURCES.length,
+    activeSources,
+    plannedSources,
+    coveredSources: coveredSources.size,
+    avgDiscoveryScore,
+    coverageByCategory,
+  };
+}
+
 function uniqueByIdentity(candidates: DailyIngestionCandidate[]) {
   const seen = new Set<string>();
   const result: DailyIngestionCandidate[] = [];
   for (const item of candidates) {
-    const key = item.identity.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    const key = normalizeIdentity(item.identity);
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(item);
@@ -317,7 +409,7 @@ function uniqueByIdentity(candidates: DailyIngestionCandidate[]) {
 
 function selectBalanced(candidates: DailyIngestionCandidate[], count: number, date: string) {
   const dayOffset = Math.floor(Date.parse(`${date}T00:00:00.000Z`) / 86400000);
-  const ordered = uniqueByIdentity(candidates).sort((a, b) => b.priority - a.priority || a.name.localeCompare(b.name));
+  const ordered = uniqueByIdentity(candidates.map(scoreCandidate)).sort((a, b) => (b.discoveryScore || b.priority) - (a.discoveryScore || a.priority) || a.name.localeCompare(b.name));
   if (ordered.length <= count) return ordered;
   const top = ordered.slice(0, Math.ceil(count * 0.7));
   const rotatingPool = ordered.slice(top.length);
@@ -342,6 +434,7 @@ export function buildDailyWeb3IngestionBatch(date = new Date().toISOString().sli
   ];
   const demand = selectBalanced(demandCandidates, demandTarget, date);
   const supply = selectBalanced(supplyCandidates, supplyTarget, date);
+  const targets = [...demand, ...supply];
   return {
     id: `web3_daily_ingestion_${date}`,
     date,
@@ -349,7 +442,8 @@ export function buildDailyWeb3IngestionBatch(date = new Date().toISOString().sli
     supplyTarget,
     demand,
     supply,
-    targets: [...demand, ...supply],
+    targets,
+    sourceSummary: buildSourceSummary(targets),
   };
 }
 

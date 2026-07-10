@@ -144,6 +144,13 @@ export async function GET(req: NextRequest) {
         },
         "Expand daily ingestion candidates and run the daily ingestion endpoint.",
       ),
+      readinessCheck(
+        "global_discovery_sources",
+        dailyIngestion.sourceSummary.registeredSources >= 12 && dailyIngestion.sourceSummary.avgDiscoveryScore >= 70 ? "pass" : "warn",
+        "GroIntel has a registered global Web3 source map and scores daily candidates by source coverage, freshness, and relevance.",
+        dailyIngestion.sourceSummary,
+        "Add more active discovery sources and source-backed candidate extraction.",
+      ),
     ];
 
     const status = overallStatus(checks);
@@ -178,6 +185,9 @@ export async function GET(req: NextRequest) {
         growthEvents: memory.growthEvents.length,
         dailyDemandBatch: dailyIngestion.demand.length,
         dailySupplyBatch: dailyIngestion.supply.length,
+        discoverySources: dailyIngestion.sourceSummary.registeredSources,
+        activeDiscoverySources: dailyIngestion.sourceSummary.activeSources,
+        avgDailyDiscoveryScore: dailyIngestion.sourceSummary.avgDiscoveryScore,
       },
       nextActions: checks.filter((check) => check.state !== "pass").map((check) => ({
         key: check.key,
