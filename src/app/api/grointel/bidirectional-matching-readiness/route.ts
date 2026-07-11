@@ -34,6 +34,10 @@ export async function GET() {
       source: partner.source,
       liveQualityScore: partner.liveQualityScore,
       liveSourceCoverage: partner.liveSourceCoverage || [],
+      audienceFit: partner.audienceFit,
+      recommendedAction: partner.recommendedAction,
+      measurement: partner.measurement,
+      riskControl: partner.riskControl,
     }));
 
   const probeSupply = liveSupplyProfiles[0];

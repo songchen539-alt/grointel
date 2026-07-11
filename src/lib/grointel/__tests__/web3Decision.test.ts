@@ -27,6 +27,10 @@ assert(decision.recommendedPartnerProfiles.length > 0, "should recommend partner
 assert(decision.recommendedConcretePartners.length > 0, "should recommend concrete Web3 supply partners");
 assert(decision.recommendedConcretePartners.length >= 8, "should recommend from expanded Web3 supply pool");
 assert(decision.recommendedConcretePartners[0].fitScore > 0, "concrete partner should have fit score");
+assert(Boolean(decision.recommendedConcretePartners[0].audienceFit), "concrete partner should explain audience fit");
+assert(Boolean(decision.recommendedConcretePartners[0].recommendedAction), "concrete partner should include a recommended action");
+assert(Boolean(decision.recommendedConcretePartners[0].measurement), "concrete partner should include measurement guidance");
+assert(Boolean(decision.recommendedConcretePartners[0].riskControl), "concrete partner should include risk control guidance");
 assert(decision.recommendedConcretePartners.some((partner) => partner.source || (partner.tags && partner.tags.length > 0)), "should include discovery-sourced partners");
 assert(new Set(decision.recommendedConcretePartners.map((partner) => partner.supplyType)).size >= 3, "should diversify supply partner types");
 assert(decision.matchedEvents.length > 0, "should match historical events");

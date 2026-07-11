@@ -26,6 +26,10 @@ export interface Web3GrowthDecision {
     matchSignals?: string[];
     liveQualityScore?: number;
     liveSourceCoverage?: string[];
+    audienceFit: string;
+    recommendedAction: string;
+    measurement: string;
+    riskControl: string;
   }>;
   collaborationPatterns: string[];
   avoidPatterns: string[];
@@ -376,6 +380,37 @@ function supplyFitReason(profile: Web3SupplyProfile, demand: Web3GrowthDemand) {
   return `${profile.name} matches ${profile.audience[0]} and is best for ${profile.bestFor[0]}; start with ${profile.collaborationFormats[0]}.${liveQuality}`;
 }
 
+function audienceFit(profile: Web3SupplyProfile, demand: Web3GrowthDemand) {
+  const target = demand.targetAudience || "the target Web3 audience";
+  return `${profile.name} reaches ${profile.audience[0]} and should be evaluated against ${target}.`;
+}
+
+function recommendedAction(profile: Web3SupplyProfile, demand: Web3GrowthDemand) {
+  const goal = demand.growthGoal.toLowerCase();
+  if (goal.includes("trust") || goal.includes("risk") || goal.includes("security")) {
+    return `Use ${profile.collaborationFormats[0]} to make the project's risk posture and proof points explicit before broad amplification.`;
+  }
+  if (goal.includes("quest") || goal.includes("onboarding") || goal.includes("wallet")) {
+    return `Run ${profile.collaborationFormats[0]} with tracked referrals and a narrow activation event before scaling spend.`;
+  }
+  if (goal.includes("research") || goal.includes("education") || goal.includes("defi") || goal.includes("protocol")) {
+    return `Start with ${profile.collaborationFormats[0]} focused on the strongest product narrative, then retarget engaged users.`;
+  }
+  return `Start with ${profile.collaborationFormats[0]} and validate whether this partner can produce qualified demand, not only attention.`;
+}
+
+function measurement(profile: Web3SupplyProfile) {
+  return `Primary metric: ${profile.proofSignals[0]}; supporting checks: ${profile.proofSignals.slice(1, 3).join(", ") || "qualified engagement and retained activity"}.`;
+}
+
+function riskControl(profile: Web3SupplyProfile, demand: Web3GrowthDemand) {
+  const risk = profile.risks[0] || "Audience fit risk";
+  if (demand.riskTolerance === "low") {
+    return `Run a limited test first because ${risk}; require disclosure, tracking, and post-campaign retention checks.`;
+  }
+  return `Monitor ${risk}; keep budget gated behind measurable conversion quality.`;
+}
+
 export function decideWeb3Growth(
   demand: Web3GrowthDemand,
   events: Web3GrowthEvent[] = WEB3_GROWTH_EVENTS,
@@ -407,6 +442,10 @@ export function decideWeb3Growth(
         matchSignals: matchSignals(demand, profile),
         liveQualityScore: liveMeta.score,
         liveSourceCoverage: liveMeta.coverage,
+        audienceFit: audienceFit(profile, demand),
+        recommendedAction: recommendedAction(profile, demand),
+        measurement: measurement(profile),
+        riskControl: riskControl(profile, demand),
       };
     })
     .sort((a, b) => b.fitScore - a.fitScore || a.supplyType.localeCompare(b.supplyType) || a.name.localeCompare(b.name));
