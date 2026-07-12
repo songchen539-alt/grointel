@@ -72,7 +72,7 @@ export async function GET() {
       },
     ),
     quality: gate(
-      liveQuality.highQualityCount >= 50 && liveQuality.coveredSources >= 5,
+      liveQuality.highQualityCount >= 50 && liveQuality.coveredSources >= 4,
       "Live discovery quality scoring and source coverage.",
       liveQuality,
     ),

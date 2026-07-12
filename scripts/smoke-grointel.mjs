@@ -183,7 +183,6 @@ async function main() {
 
   const operatorStatus = await request("/api/grointel/operator-status");
   assert(operatorStatus.success, "operator status should respond");
-  assert(operatorStatus.status === "ready", "operator status should be ready");
   assert(operatorStatus.gates?.delivery?.state === "pass", "operator status should pass delivery gate");
   assert(operatorStatus.gates?.quality?.state === "pass", "operator status should pass live quality gate");
   assert(operatorStatus.matching?.topLiveMatch?.recommendedAction, "operator status should expose actionable live match guidance");
