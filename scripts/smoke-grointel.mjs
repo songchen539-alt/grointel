@@ -181,6 +181,14 @@ async function main() {
   assert(readiness.counts?.discoverySources >= 12, "delivery readiness should expose global discovery sources");
   console.log(`ok delivery readiness: ${readiness.status} / score=${readiness.score}`);
 
+  const operatorStatus = await request("/api/grointel/operator-status");
+  assert(operatorStatus.success, "operator status should respond");
+  assert(operatorStatus.status === "ready", "operator status should be ready");
+  assert(operatorStatus.gates?.delivery?.state === "pass", "operator status should pass delivery gate");
+  assert(operatorStatus.gates?.quality?.state === "pass", "operator status should pass live quality gate");
+  assert(operatorStatus.matching?.topLiveMatch?.recommendedAction, "operator status should expose actionable live match guidance");
+  console.log(`ok operator status: ${operatorStatus.status} / live=${operatorStatus.liveDiscovery.demandCandidateCount}/${operatorStatus.liveDiscovery.supplyCandidateCount}`);
+
   if (includeHeartbeat) {
     const heartbeat = await request("/api/grointel/heartbeat?limit=2");
     assert(heartbeat.success, "heartbeat should succeed");
