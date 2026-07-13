@@ -53,6 +53,7 @@ export const GLOBAL_WEB3_DISCOVERY_SOURCES: GlobalDiscoverySource[] = [
   { id: "messari", name: "Messari", side: "both", category: "research", signalTypes: ["research", "protocol", "sector"], trust: 86, freshness: "weekly", status: "active" },
   { id: "security-feeds", name: "Security Feeds", side: "supply", category: "security", signalTypes: ["risk", "exploit", "trust"], trust: 82, freshness: "daily", status: "planned" },
   { id: "community-directories", name: "Community Directories", side: "supply", category: "community", signalTypes: ["dao", "builder", "community"], trust: 66, freshness: "monthly", status: "planned" },
+  { id: "web3_event_pages", name: "Web3 Event Pages", side: "supply", category: "community", signalTypes: ["events", "hackathon", "conference", "builders", "developers", "community"], trust: 76, freshness: "daily", status: "active" },
 ];
 
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

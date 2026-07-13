@@ -49,7 +49,7 @@ type GitHubRepo = {
   };
 };
 
-export type LiveDiscoverySourceId = "defillama" | "web3_media_feeds" | "github_repos" | "youtube_creator_feeds" | "web3_content_feeds";
+export type LiveDiscoverySourceId = "defillama" | "web3_media_feeds" | "github_repos" | "youtube_creator_feeds" | "web3_content_feeds" | "web3_event_pages";
 
 export type LiveDiscoverySourceResult = {
   attempted: boolean;
@@ -201,6 +201,33 @@ const WEB3_CONTENT_FEEDS: ContentFeedSource[] = [
   },
 ];
 
+const WEB3_EVENT_PAGES: MediaFeedSource[] = [
+  {
+    id: "ethglobal",
+    name: "ETHGlobal",
+    url: "https://ethglobal.com/",
+    identity: "ethglobal.com",
+    priority: 88,
+    baseTags: ["events", "hackathon", "developers", "ethereum", "community"],
+  },
+  {
+    id: "devfolio",
+    name: "Devfolio",
+    url: "https://devfolio.co/hackathons",
+    identity: "devfolio.co",
+    priority: 80,
+    baseTags: ["events", "hackathon", "developers", "community"],
+  },
+  {
+    id: "token2049",
+    name: "TOKEN2049",
+    url: "https://www.token2049.com/",
+    identity: "token2049.com",
+    priority: 84,
+    baseTags: ["events", "conference", "institutions", "global"],
+  },
+];
+
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 function clamp(value: number, min: number, max: number) {
@@ -278,6 +305,8 @@ function stripXml(value: string) {
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
     .replace(/&amp;/g, "&")
     .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&apos;/g, "'")
     .replace(/&quot;/g, "\"")
     .replace(/<[^>]+>/g, "")
     .trim();
@@ -428,6 +457,27 @@ function parseFeedItems(xml: string): ParsedFeedItem[] {
   }).filter((item) => item.title);
 }
 
+
+function parseEventPageItems(html: string, source: MediaFeedSource): ParsedFeedItem[] {
+  const title = extractTag(html, "title") || source.name;
+  const headings = Array.from(html.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi))
+    .map((match) => stripXml(match[1]))
+    .filter((item) => item.length > 3)
+    .slice(0, 12);
+  const bodyTags = [
+    html.includes("hackathon") ? "hackathon" : "",
+    html.includes("conference") ? "conference" : "",
+    html.includes("builder") ? "builders" : "",
+    html.includes("developer") ? "developers" : "",
+    html.includes("ethereum") ? "ethereum" : "",
+    html.includes("solana") ? "solana" : "",
+    html.includes("web3") ? "web3" : "",
+  ].filter(Boolean);
+  return [
+    { title, creator: source.name, categories: source.baseTags },
+    ...headings.map((heading) => ({ title: heading, creator: source.name, categories: bodyTags })),
+  ];
+}
 function outletCandidate(source: MediaFeedSource, items: ParsedFeedItem[]): DailyIngestionCandidate {
   const tags = Array.from(new Set([...source.baseTags, ...topicTags(items)]));
   const categories = Array.from(new Set(items.flatMap((item) => item.categories).filter(Boolean))).slice(0, 5);
@@ -514,6 +564,23 @@ function contentFeedCandidate(source: ContentFeedSource, items: ParsedFeedItem[]
   };
 }
 
+
+function eventPageCandidate(source: MediaFeedSource, items: ParsedFeedItem[]): DailyIngestionCandidate {
+  const tags = Array.from(new Set(["partner", "events", "community", ...source.baseTags, ...topicTags(items)])).slice(0, 10);
+  const recentSignals = items.slice(0, 3).map((item) => item.title).join(" | ");
+  return {
+    id: `web3.live.supply.events.${source.id}`,
+    name: source.name,
+    identity: source.identity,
+    kind: "partner",
+    domain: `Web3 / live event, hackathon, and community distribution supply${recentSignals ? ` covering ${recentSignals}` : ""}`,
+    side: "supply",
+    source: "web3_event_pages_live",
+    priority: Math.round(clamp(source.priority + Math.min(5, items.length / 3), 72, 96)),
+    tags,
+    ingestionReason: "Live Web3 event page observed current ecosystem activity, making this source a practical supply node for launches, builder acquisition, sponsorship, and community growth.",
+  };
+}
 async function fetchWithTimeout(url: string, timeoutMs: number) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -731,6 +798,41 @@ async function fetchWeb3ContentSupply(limit: number, timeoutMs: number): Promise
   };
 }
 
+
+async function fetchWeb3EventSupply(limit: number, timeoutMs: number): Promise<LiveDiscoverySourceResult> {
+  const startedAt = Date.now();
+  const perPageTimeout = Math.max(1500, Math.floor(timeoutMs / 2));
+  const results = await Promise.all(WEB3_EVENT_PAGES.map(async (source) => {
+    try {
+      const response = await fetchWithTimeout(source.url, perPageTimeout);
+      if (!response.ok) throw new Error(`${source.name} responded ${response.status}`);
+      const html = await response.text();
+      const items = parseEventPageItems(html.toLowerCase(), source).slice(0, 16);
+      return { source, items, error: null as string | null };
+    } catch (error) {
+      return { source, items: [] as ParsedFeedItem[], error: error instanceof Error ? error.message : String(error) };
+    }
+  }));
+
+  const candidates = results
+    .filter((result) => result.items.length > 0)
+    .map((result) => eventPageCandidate(result.source, result.items))
+    .slice(0, limit);
+  const errors = results.filter((result) => result.error).map((result) => `${result.source.name}: ${result.error}`);
+
+  return {
+    attempted: true,
+    success: candidates.length > 0,
+    source: "web3_event_pages",
+    sourceUrl: WEB3_EVENT_PAGES.map((source) => source.url).join(", "),
+    side: "supply",
+    latencyMs: Date.now() - startedAt,
+    rawCount: results.reduce((sum, result) => sum + result.items.length, 0),
+    candidateCount: candidates.length,
+    candidates,
+    error: errors.length > 0 ? errors.join("; ") : undefined,
+  };
+}
 export async function fetchLiveWeb3DiscoveryCandidates(options: LiveDiscoveryOptions = {}): Promise<LiveDiscoveryResult> {
   const startedAt = Date.now();
   const limit = Math.max(1, Math.min(options.limit || DEFAULT_LIMIT, 200));
@@ -744,6 +846,7 @@ export async function fetchLiveWeb3DiscoveryCandidates(options: LiveDiscoveryOpt
     fetchWeb3MediaSupply(Math.ceil(supplyLimit * 0.5), timeoutMs),
     fetchYoutubeCreatorSupply(Math.max(3, Math.ceil(supplyLimit * 0.25)), timeoutMs),
     fetchWeb3ContentSupply(Math.max(4, Math.ceil(supplyLimit * 0.25)), timeoutMs),
+    fetchWeb3EventSupply(Math.max(4, Math.ceil(supplyLimit * 0.2)), timeoutMs),
   ]);
   const candidates = mergeLiveCandidates(sources);
   const success = sources.some((source) => source.success);
