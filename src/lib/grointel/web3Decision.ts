@@ -118,6 +118,7 @@ function profileText(profile: Web3SupplyProfile) {
 
 function supplyTypeFromDiscovery(target: Web3DiscoveryTarget): Web3SupplyProfile["supplyType"] {
   const text = `${target.name} ${target.identity} ${target.domain} ${target.tags.join(" ")}`.toLowerCase();
+  if (includesAny(text, ["event", "events", "hackathon", "conference", "builder", "builders", "community"])) return "community";
   if (includesAny(text, ["data", "analytics", "defillama", "nansen", "arkham", "terminal"])) return "research";
   if (includesAny(text, ["security", "risk", "rekt", "zachxbt", "intelligence"])) return "security";
   if (includesAny(text, ["media", "journalism", "news", "blockworks", "unchained", "the block", "rug radio"])) return "media";
@@ -200,8 +201,10 @@ export type ExpandedWeb3SupplyProfile = Web3SupplyProfile & {
 function dailyCandidateToSupplyProfile(candidate: DailyIngestionCandidate): ExpandedWeb3SupplyProfile | null {
   if (candidate.side !== "supply") return null;
   const text = `${candidate.name} ${candidate.identity} ${candidate.domain} ${candidate.tags.join(" ")}`.toLowerCase();
-  const supplyType: Web3SupplyProfile["supplyType"] = includesAny(text, ["media", "news", "writer", "journalist", "podcast", "editorial"])
-    ? "media"
+  const supplyType: Web3SupplyProfile["supplyType"] = includesAny(text, ["event", "events", "hackathon", "conference", "builder", "builders", "community"])
+    ? "community"
+    : includesAny(text, ["media", "news", "writer", "journalist", "podcast", "editorial"])
+      ? "media"
     : includesAny(text, ["research", "analyst", "data", "defi"])
       ? "research"
       : includesAny(text, ["security", "risk", "audit", "hack"])

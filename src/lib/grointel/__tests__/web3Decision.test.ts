@@ -1,4 +1,4 @@
-import { decideWeb3Growth } from "../web3Decision";
+import { dailySupplyCandidatesToProfiles, decideWeb3Growth } from "../web3Decision";
 import { WEB3_GROWTH_EVENTS } from "../web3World";
 
 let passed = 0;
@@ -63,6 +63,20 @@ const liveDecision = decideWeb3Growth({
   priority: 96,
 }]);
 assert(liveDecision.recommendedConcretePartners.some((partner) => partner.source === "web3_media_feeds_live"), "should inject live supply profiles into concrete recommendations");
+const eventProfiles = dailySupplyCandidatesToProfiles([{
+  id: "web3.live.supply.events.ethglobal",
+  name: "ETHGlobal",
+  identity: "ethglobal.com",
+  kind: "partner",
+  domain: "Web3 / live event, hackathon, and community distribution supply",
+  side: "supply",
+  source: "web3_event_pages_live",
+  priority: 92,
+  tags: ["partner", "events", "community", "hackathon", "developers", "security"],
+  ingestionReason: "Live Web3 event page observed current ecosystem activity.",
+}]);
+assert(eventProfiles[0]?.supplyType === "community", "event and hackathon supply should classify as community, not security");
+assert(eventProfiles[0]?.collaborationFormats[0] === "community activation", "event supply should recommend community activation format");
 
 const qualityDecision = decideWeb3Growth({
   projectName: "Quality Test",
