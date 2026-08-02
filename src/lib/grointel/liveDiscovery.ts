@@ -156,6 +156,22 @@ const YOUTUBE_CREATOR_FEEDS: MediaFeedSource[] = [
     priority: 82,
     baseTags: ["youtube", "education", "retail", "explainers"],
   },
+  {
+    id: "the-defiant-youtube",
+    name: "The Defiant",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCL0J4MLEdLP0-UyLu0hCktg",
+    identity: "youtube.com/@TheDefiant",
+    priority: 86,
+    baseTags: ["youtube", "defi", "media", "research"],
+  },
+  {
+    id: "unchained-youtube",
+    name: "Unchained",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCWiiMnsnw5Isc2PP1to9nNw",
+    identity: "youtube.com/@UnchainedCrypto",
+    priority: 84,
+    baseTags: ["youtube", "podcast", "founders", "policy"],
+  },
 ];
 
 const WEB3_CONTENT_FEEDS: ContentFeedSource[] = [
